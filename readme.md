@@ -277,7 +277,7 @@ Explicit is Good.
 
 Here is a simple user-defined function:
 
-```
+```rust
 // fun1.rs
 
 fn sqr(x: f64) -> f64 {
@@ -578,7 +578,7 @@ ints [1, 2, 3]
 floats [1.1, 2.1, 3.1]
 strings ["hello", "world"]
 ints_ints [[1, 2], [10, 20]]
-``
+```
 
 So, arrays of arrays are no problem, but the important thing is that an array contains
 values of _only one type_.  The values in an array are arranged next to each other
@@ -774,7 +774,7 @@ function, and you die an ignomious death or (worse) got pwned by some guy living
 in his Mom's basement in Minsk.
 
 The first C program I wrote (on an DOS PC)
-took out the whole comoputer. Unix systems always behaved better, and only the process died
+took out the whole computer. Unix systems always behaved better, and only the process died
 with a _segfault_. Why is this worse than a Rust (or Go) program panicking?
 Because the panic happens when the original problem happens, not when the program
 has become hopelessly confused and eaten all your homework.
