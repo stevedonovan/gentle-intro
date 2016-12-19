@@ -1,8 +1,16 @@
-## Setting Up
+        ## Setting Up
 
 This tutorial assumes that you have Rust installed locally. Fortunately this is
-[very straightforward](https://www.rust-lang.org/en-US/downloads.html). You get
-both the compiler, the Cargo package manager, the API documentation, and the Rust Book.
+[very straightforward](https://www.rust-lang.org/en-US/downloads.html).
+
+```
+$ curl https://sh.rustup.rs -sSf | sh
+$ rustup component add-docs
+```
+
+I would recommend getting the default stable version; it's easy to switch later.
+
+THis gets the compiler, the Cargo package manager, the API documentation, and the Rust Book.
 The journey of a thousand miles starts with one step, and this first step is painless.
 
 You will probably already have an editor you like, and [basic Rust support](https://areweideyet.com/)
@@ -15,14 +23,14 @@ on Linux since it's available through the package manager but it works fine on
 other platforms.
 
 The main thing is knowing how to edit, compile and run Rust programs.
-You must learn to program with your _fingers_; type in
+You learn to program with your _fingers_; type in
 the code yourself, and learn to rearrange things efficiently with your editor.
 
 Zed Shaw's [advice](https://learnpythonthehardway.org/book/intro.html) about learning
 to program in Python remains good, whatever the language. He says learning to program
 is like learning a musical instrument - the secret is practice and persistence.
-There's also good advice from Yogo and the soft martial arts like Tai Chi;
-feel the strain, but don't overstrain. You are not building dumb muscle here.
+There's also good advice from Yoga and the soft martial arts like Tai Chi;
+feel the strain, but don't over-strain. You are not building dumb muscle here.
 
 ## Hello, World!
 
@@ -220,16 +228,16 @@ fn main() {
 This can be puzzling when coming from other languages, where variables can be
 re-written by default, but there is a reason for letting the default be _read-only_. In a larger
 program, it gets hard to track where writes are taking place. So Rust makes things
-like mutability ('writeability') explicit. There's a lot of cleverness in the
+like mutability ('write-ability') explicit. There's a lot of cleverness in the
 language, but it never hides anything.
 
 Rust is both statically-typed and strongly-typed - these are often confused, but
-thnk of C (statically but weakly typed) and Python (dynamically but strongly typed).
+think of C (statically but weakly typed) and Python (dynamically but strongly typed).
 In static types the type is known at compile time, and dynamic types are only known
 at run time.
 
 At the moment, it feels like Rust is _hiding_ those types from you. What
-exactly is the type `i`?  The compiler can work it out, starting with 0,
+exactly is the type of `i`?  The compiler can work it out, starting with 0,
 with _type inference_, and comes up with `i32` (four byte signed integer.) 
 
 Let's make exactly one change - turn that `0` into `0.0`. Then we get errors:
@@ -272,8 +280,8 @@ _Functions_ are one place where the compiler will not work out types for you.
 And this in fact was a deliberate decision, since languages like Haskell have
 such powerful type inference that there are hardly any explicit type names. It's
 a case of the language being somewhat more intelligent than its users, since
-it's good Haskell style to put in a comment giving the function types. Again,
-Explicit is Good.
+it's good Haskell style to put in a comment giving the function argument types. This feels
+self-defeating.
 
 Here is a simple user-defined function:
 
@@ -333,8 +341,8 @@ help: consider removing this semicolon:
 
 ```
 
-The `()` type is the empty type, nada, `void`, zilch, `None`. Everything in Rust
-has a value, but sometimes ... it's nothing.  The compiler knows this is
+The `()` type is the empty type, nada, `void`, zilch, nothing. Everything in Rust
+has a value, but sometimes it's just nothing.  The compiler knows this is
 a common mistake, and actually _helps_ you.  (Anybody who has spent time with a
 C++ compiler will know how _damn unusual_ this is.)
 
@@ -363,9 +371,7 @@ fn clamp(x: f64, x1: f64, x2: f64) -> f64 {
 ```
 
 It's not wrong to use `return`, but code is cleaner without it. You will still
-use `return` for _returning early_ from a function.  (Early-return has a bad rep in
-some circles, but mostly it comes from the bitter experiences of C programmers, which
-aren't valid for languages which clean up properly before returning.)
+use `return` for _returning early_ from a function.
 
 Some operations can be elegantly expressed _recursively_:
 
@@ -397,11 +403,10 @@ fn main() {
     println!("res is {}",res);
 }
 ```
-This is much more how C would do it, than C++. You have to explicily pass the
+This is much more how C would do it, than C++. You have to explicitly pass the
 reference (with `&`) and explicitly _dereference_ with `*`. And then throw in `mut`
-because it's not the default. I've always felt that C++ references are 
-too easy to miss compared to C.  C# introduced the `ref` keyword so that you could
-look at a function call and _know_ that something could be modified.
+because it's not the default. (I've always felt that C++ references are 
+too easy to miss compared to C.)
 
 Basically, Rust is introducing some _friction_ here, and not-so-subtly pushing
 you towards returning values from functions directly.  Fortunately, Rust has
@@ -418,11 +423,12 @@ let bigint: i64 = 0;
 ## Learning Where to Find the Ropes
 
 It's time to start using the documentation. This will be installed on your machine,
-on Linux and MacOS it's at `/usr/local/share/doc/rust/html/std/index.html`; go there
-in your browser and make a bookmark.  Note the _search_ field at the top, since this
+and you can use `rustup doc --std` to open it in a browser.
+
+Note the _search_ field at the top, since this
 is going to be your friend; it operates completely offline.
 
- Let's say we want to see where the mathematical
+Let's say we want to see where the mathematical
 functions are, so search for 'cos'. The first two hits show it defined for both
 single and double-precision floating point numbers.  It is defined on the
 _value itself_ as a method, like so:
@@ -473,7 +479,7 @@ explicit `use` statements.
 ## Arrays and Slices
 
 All statically-typed languages have _arrays_, which are values packed nose to tail
-in memory. With a few exceptions (like Fortran and Lua) arrays are indexed from zero:
+in memory. Arrays are _indexed_ from zero:
 
 ```rust
 // array1.rs
@@ -517,7 +523,7 @@ function arguments.
 
 What _are_ used often are _array slices_. You can think of these as _views_ into
 an underlying array of values. They otherwise behave very much like an array, and
-_know their size_.
+_know their size_, unlike those dangerous animals C pointers.
 
 Note two important things here - how to write an array-slice type, and that
 you have to use `&` to pass it to the function.
@@ -633,7 +639,7 @@ Array slices, like arrays, can be _indexed_. Rust knows the size of an array at
 compile-time, but the size of a slice is only known at run-time. So `s[i]` can
 cause an out-of-bounds error when running and will _panic_.  This is really not
 what you want to happen - it can be the difference between a safe launch abort and
-scattering pieces of a very expensive satelite all over Florida. And there are
+scattering pieces of a very expensive satellite all over Florida. And there are
 _no exceptions_.
 
 Let that sink in, because it comes as a shock. You cannot wrap dodgy-may-panic
@@ -699,7 +705,7 @@ how to use them safely!
 
 ## Vectors
 
-We'll return to slice methods again, but first: vectors. These are _resizeable_
+We'll return to slice methods again, but first: vectors. These are _re-sizeable_
 arrays and behave much like Python `List` and C++ `std::vector`. The Rust type
 `Vec` (pronounced 'vector') behaves very much like an array slice in fact; the
 difference is that you can append extra values to a vector - note that it must
@@ -764,13 +770,13 @@ to allocate data on the stack, but the stack is limited; typically of the order 
 megabytes. The heap can be gigabytes, but allocating is relatively expensive, and
 such memory must be _freed_ later. In so-called 'managed' languages (like Java, Go
 and the so-called 'scripting' languages) these details are hidden from you by that
-convenient muncipal utility called the _garbage collector_. Once the system is sure
+convenient municipal utility called the _garbage collector_. Once the system is sure
 that data is no longer referenced by other data, it goes back into the pool
 of available memory.
 
 Generally, this is a price worth paying. Playing with the stack is terribly unsafe,
 because if you make one mistake you can override the return address of the current
-function, and you die an ignomious death or (worse) got pwned by some guy living
+function, and you die an ignominious death or (worse) got pwned by some guy living
 in his Mom's basement in Minsk.
 
 The first C program I wrote (on an DOS PC)
@@ -912,7 +918,7 @@ Or `chunks`:
 
 ```rust
     for s in slice.chunks(2) {
-        println!("chunkss {:?}",s);
+        println!("chunks {:?}",s);
     }
 // chunks [1, 2]
 // chunks [3, 4]
@@ -1188,7 +1194,7 @@ fn main() {
     // do your magic
 }
 ```
-`nth(1)` gives you the second eargument from the iterator, and `expect`
+`nth(1)` gives you the second argument from the iterator, and `expect`
 is like an `unwrap` with a readable message.
 
 Converting a string into a number is straightforward, but you do need to specify
@@ -1220,7 +1226,7 @@ Once you are used to it (and by that I mean, typed it out in full a few times) i
 feels more natural than the explicit `is_some` check which needed an extra
 variable to store the `Option`.
 
-But if you're not interested in failiure here, then `if let` is your friend:
+But if you're not interested in failure here, then `if let` is your friend:
 
 ```rust
     if let Some(idx) = multilingual.find('п') {
@@ -1349,7 +1355,7 @@ it with `_`.
 This is not so pretty; when most of a function is error handling, then
 the 'happy path' gets lost. Go tends to have this problem, with lots of
 explicit early returns, or just _ignoring errors_.  (That is, by the way,
-the closed thing to evil in the Rust universe.)
+the closest thing to evil in the Rust universe.)
 
 Fortunately, there is a shortcut:
 
