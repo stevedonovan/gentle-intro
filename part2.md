@@ -176,8 +176,8 @@ fn main() {
 }
 // t (12, 20)
 // add 12 mul 20
-// add 12 mul 20```
-
+// add 12 mul 20
+```
 The `let (add,mul) = t` construct is similar to that found in Python, except it only works
 with tuple values, not any source of values.
 
@@ -416,6 +416,7 @@ fn main() {
 ```
 The output is surprisingly pretty, thanks to "{:#?}" ('#' means 'extended'.)
 
+```
 root Node {
     payload: "root",
     left: Some(
@@ -433,7 +434,7 @@ root Node {
         }
     )
 }
-
+```
 Now, what happens when `root` is dropped? All fields are dropped; if the 'branches' of
 the tree are dropped, they drop _their_ fields and so on. `Box::new` may be the
 closest you will get to a `new` keyword, but we have no need for `delete` or `free`.
