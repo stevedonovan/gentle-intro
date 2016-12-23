@@ -1,36 +1,3 @@
-## Setting Up
-
-This tutorial assumes that you have Rust installed locally. Fortunately this is
-[very straightforward](https://www.rust-lang.org/en-US/downloads.html).
-
-```
-$ curl https://sh.rustup.rs -sSf | sh
-$ rustup component add-docs
-```
-
-I would recommend getting the default stable version; it's easy to switch later.
-
-THis gets the compiler, the Cargo package manager, the API documentation, and the Rust Book.
-The journey of a thousand miles starts with one step, and this first step is painless.
-
-You will probably already have an editor you like, and [basic Rust support](https://areweideyet.com/)
-is good. I'd suggest you start out with basic syntax highlighting at first, and
-work up as your programs get larger.
-
-Personally I'm a fan of [Geany](https://www.geany.org/Download/Releases) which is
-one of the few editors with Rust support out-of-the-box; it's particularly easy
-on Linux since it's available through the package manager but it works fine on
-other platforms.
-
-The main thing is knowing how to edit, compile and run Rust programs.
-You learn to program with your _fingers_; type in
-the code yourself, and learn to rearrange things efficiently with your editor.
-
-Zed Shaw's [advice](https://learnpythonthehardway.org/book/intro.html) about learning
-to program in Python remains good, whatever the language. He says learning to program
-is like learning a musical instrument - the secret is practice and persistence.
-There's also good advice from Yoga and the soft martial arts like Tai Chi;
-feel the strain, but don't over-strain. You are not building dumb muscle here.
 
 ## Hello, World!
 
