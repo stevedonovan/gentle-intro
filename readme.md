@@ -1,4 +1,4 @@
-        ## Setting Up
+## Setting Up
 
 This tutorial assumes that you have Rust installed locally. Fortunately this is
 [very straightforward](https://www.rust-lang.org/en-US/downloads.html).
