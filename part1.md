@@ -401,7 +401,7 @@ single and double-precision floating point numbers.  It is defined on the
 _value itself_ as a method, like so:
 
 ```rust
-let pi = 3.1412;
+let pi = 3.1416;
 let x = pi/2.0;
 let cosine = x.cos() 
 ```
