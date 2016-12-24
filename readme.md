@@ -1,6 +1,6 @@
 ## A Gentle Introduction To Rust
 
-The aim of this tutorial is to take you a place where you can read and write
+The aim of this tutorial is to take you to a place where you can read and write
 enough Rust to fully appreciate the excellent learning resources available
 online, in particular [The Book](https://doc.rust-lang.org/stable/book/).
 It's an opportunity to _try before you buy_, and get enough feeling for the
