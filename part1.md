@@ -451,14 +451,14 @@ in memory. Arrays are _indexed_ from zero:
 ```rust
 // array1.rs
 fn main() {
-    let arr = [10,20,30,40];
+    let arr = [10, 20, 30, 40];
     let first = arr[0];
-    println!("first {}",first);
+    println!("first {}", first);
 
     for i in 0..4 {
-        println!("[{}] = {}",i,arr[i]);
+        println!("[{}] = {}", i,arr[i]);
     }
-    println!("length {}",arr.len());   
+    println!("length {}", arr.len());   
 }
 ```
 
@@ -484,7 +484,7 @@ cannot add new elements.
 
 Arrays are not used that often in Rust, because the type of an array includes its
 size.  The type of the array in the example is
-`[i32; 4]`; the type of `[10,20]` would be `[i32; 2]` and so forth: they
+`[i32; 4]`; the type of `[10, 20]` would be `[i32; 2]` and so forth: they
 have _different types_.  So they are basically bastards to pass around as
 function arguments.
 
@@ -505,6 +505,7 @@ fn sum(values: &[i32]) -> i32 {
     }
     res
 }
+
 fn main() {
     let arr = [10,20,30,40];
     // look at that &
@@ -533,14 +534,14 @@ print with `{:?}`.
 ```rust
 // array3.rs
 fn main() {
-    let ints = [1,2,3];
-    let floats = [1.1,2.1,3.1];
-    let strings = ["hello","world"];
-    let ints_ints = [[1,2],[10,20]];
-    println!("ints {:?}",ints);
-    println!("floats {:?}",floats);
-    println!("strings {:?}",strings);
-    println!("ints_ints {:?}",ints_ints);
+    let ints = [1, 2, 3];
+    let floats = [1.1, 2.1, 3.1];
+    let strings = ["hello", "world"];
+    let ints_ints = [[1, 2], [10, 20]];
+    println!("ints {:?}", ints);
+    println!("floats {:?}", floats);
+    println!("strings {:?}", strings);
+    println!("ints_ints {:?}", ints_ints);
 }
 ```
 
@@ -555,7 +556,7 @@ ints_ints [[1, 2], [10, 20]]
 
 So, arrays of arrays are no problem, but the important thing is that an array contains
 values of _only one type_.  The values in an array are arranged next to each other
-in memory so that `[10,20]` takes 8 bytes (two 4-byte signed integers). This makes
+in memory so that `[10, 20]` takes 8 bytes (two 4-byte signed integers). This makes
 them _very_ efficient to access.
 
 If you are curious about the actual types of these variables, here is a useful trick.
@@ -579,13 +580,13 @@ Array slices give you different _views_ of the _same_ array:
 ```rust
 // slice1.rs
 fn main() {
-    let ints = [1,2,3,4,5];    
+    let ints = [1, 2, 3, 4, 5];    
     let slice1 = &ints[0..2]; 
     let slice2 = &ints[1..];  // open range!
 
-    println!("ints {:?}",ints);
-    println!("slice1 {:?}",slice1);
-    println!("slice2 {:?}",slice2);    
+    println!("ints {:?}", ints);
+    println!("slice1 {:?}", slice1);
+    println!("slice2 {:?}", slice2);    
 }
 ```
 
@@ -618,13 +619,13 @@ There is a slice method `get` which does not panic. But what does it return?
 ```rust
 // slice2.rs
 fn main() {
-    let ints = [1,2,3,4,5];    
+    let ints = [1, 2, 3, 4, 5];    
     let slice = &ints;
     let first = slice.get(0);
     let last = slice.get(5);
     
-    println!("first {:?}",first);
-    println!("last {:?}",last);
+    println!("first {:?}", first);
+    println!("last {:?}", last);
 }
 // first Some(1)
 // last None
@@ -637,9 +638,9 @@ type!  It may be _either_ `Some` or `None`.
 The `Option` type has some useful methods:
 
 ```rust
-    println!("first {} {}",first.is_some(),first.is_none());
-    println!("last {} {}",last.is_some(), last.is_none());
-    println!("first value {}",first.unwrap());
+    println!("first {} {}", first.is_some(), first.is_none());
+    println!("last {} {}", last.is_some(), last.is_none());
+    println!("first value {}", first.unwrap());
 
 // first true false
 // last false true
@@ -689,13 +690,13 @@ fn main() {
     let first = v[0];  // will panic if out-of-range
     let maybe_first = v.get(0);
     
-    println!("v is {:?}",v);
-    println!("first is {}",first);
-    println!("maybe_first is {:?}",maybe_first);
+    println!("v is {:?}", v);
+    println!("first is {}", first);
+    println!("maybe_first is {:?}", maybe_first);
 }
 // v is [10, 20, 30]
 // first is 10
-/ maybe_first is Some(10)
+// maybe_first is Some(10)
 ```
 A common beginner mistake is to forget the `mut`; you will get a helpful error
 message:
@@ -712,7 +713,7 @@ There is a very intimate relation between vectors and slices:
 ```rust
 // vec2.rs
 fn dump(arr: &[i32]) {
-    println!("arr is {:?}",arr);
+    println!("arr is {:?}", arr);
 }
 
 fn main() {
@@ -724,7 +725,7 @@ fn main() {
     dump(&v);
 
     let slice = &v[1..];
-    println!("slice is {:?}",slice);    
+    println!("slice is {:?}", slice);    
 }
 ```
 That little, so-important borrow operator `&` is _coercing_ the vector into a
@@ -780,10 +781,10 @@ which returns an `Option`. As long as that value is not `None`, we keep calling
 // iter1.rs
 fn main() {
     let mut iter = 0..3;
-    assert_eq!(iter.next(),Some(0));
-    assert_eq!(iter.next(),Some(1));
-    assert_eq!(iter.next(),Some(2));
-    assert_eq!(iter.next(),None);
+    assert_eq!(iter.next(), Some(0));
+    assert_eq!(iter.next(), Some(1));
+    assert_eq!(iter.next(), Some(2));
+    assert_eq!(iter.next(), None);
 }
 ```
 And that is exactly what `for var in iter {}` does.
@@ -799,7 +800,7 @@ Here is the first attempt to iterate over an array:
 ```rust
 // iter2.rs
 fn main() {
-    let arr = [10,20,30];
+    let arr = [10, 20, 30];
     for i in arr {
         println!("{}",i);
     }
@@ -820,17 +821,16 @@ Following `rustc`'s advice, the following program works as expected.
 ```rust
 // iter3.rs
 fn main() {
-    let arr = [10,20,30];
+    let arr = [10, 20, 30];
     for i in arr.iter() {
-        println!("{}",i);
+        println!("{}", i);
     }
 
     // slices are themselves iterators...
     let slice = &arr;
     for i in slice {
-        println!("{}",i);
+        println!("{}", i);
     }
-    
 }
 ```
 In fact, it is more efficient to iterate over an array or array slice this way
@@ -844,10 +844,10 @@ variable and a loop. Here's the _idiomatic_, pro-level way of doing the sum:
 // sum1.rs
 fn main() {
     let sum: i32  = (0..5).sum();
-    println!("sum was {}",sum);
+    println!("sum was {}", sum);
 
-    let sum: i64 = [10,20,30].iter().sum();
-    println!("sum was {}",sum);
+    let sum: i64 = [10, 20, 30].iter().sum();
+    println!("sum was {}", sum);
 }
 ```
 
@@ -868,14 +868,13 @@ values!
 ```rust
 // slice4.rs
 fn main() {
-    let ints = [1,2,3,4,5];    
+    let ints = [1, 2, 3, 4, 5];    
     let slice = &ints;
 
     for s in slice.windows(2) {
-        println!("window {:?}",s);
+        println!("window {:?}", s);
     }
-    
- }
+}
 // window [1, 2]
 // window [2, 3]
 // window [3, 4]
@@ -885,7 +884,7 @@ Or `chunks`:
 
 ```rust
     for s in slice.chunks(2) {
-        println!("chunks {:?}",s);
+        println!("chunks {:?}", s);
     }
 // chunks [1, 2]
 // chunks [3, 4]
@@ -901,7 +900,7 @@ using any compatible iterator.
 ```rust
 // vec3.rs
 fn main() {
-    let mut v1 = vec![10,20,30,40];
+    let mut v1 = vec![10, 20, 30, 40];
     v1.pop();
     
     let mut v2 = Vec::new();
@@ -909,10 +908,10 @@ fn main() {
     v2.push(20);
     v2.push(30);
     
-    assert_eq!(v1,v2);
+    assert_eq!(v1, v2);
 
     v2.extend(0..2);
-    assert_eq!(v2,&[10,20,30,0,1]);
+    assert_eq!(v2, &[10, 20, 30, 0, 1]);
 }
 ```
 Vectors compare with each other and with array slices by value.
@@ -932,10 +931,10 @@ on the vector. (If you want to make a copy first, use `clone`.)
 ```rust
 // vec4.rs
 fn main() {
-    let mut v1 = vec![1,10,5,1,2,11,2,40];
+    let mut v1 = vec![1, 10, 5, 1, 2, 11, 2, 40];
     v1.sort();
     v1.dedup();
-    assert_eq!(v1,&[1,2,5,10,11,40]);
+    assert_eq!(v1, &[1, 2, 5, 10, 11, 40]);
 }
 ```
 
@@ -957,7 +956,7 @@ similar relationship to each other as do `&[T]` to `Vec<T>`.
 ```rust
 // string1.rs
 fn dump(s: &str) {
-    println!("str '{}'",s);
+    println!("str '{}'", s);
 }
 
 fn main() {
@@ -1012,7 +1011,7 @@ fn array_to_str(arr: &[i32]) -> String {
 }
 
 fn main() {
-    let arr = array_to_str(&[10,20,30]);
+    let arr = array_to_str(&[10, 20, 30]);
     let res = format!("hello {}",arr);
     
     assert_eq!(res,"hello [10,20,30]");
@@ -1032,7 +1031,7 @@ fn main() {
     let text_s = &text[1..];
     let string_s = &string[2..4];
 
-    println!("slices {:?} {:?}",text_s, string_s);
+    println!("slices {:?} {:?}", text_s, string_s);
 }
 // slices "tatic" "na"
 ```
@@ -1048,17 +1047,16 @@ UTF-8, where a 'character' may be a number of bytes.
 fn main() {
     let multilingual = "Hi! ¡Hola! привет!";
     for ch in multilingual.chars() {
-        print!("'{}' ",ch);
+        print!("'{}' ", ch);
     }
     println!("");
-    println!("len {}",multilingual.len());
-    println!("count {}",multilingual.chars().count()) ;
-    
+    println!("len {}", multilingual.len());
+    println!("count {}", multilingual.chars().count());
 
     let maybe = multilingual.find('п');
     if maybe.is_some() {
         let hi = &multilingual[maybe.unwrap()..];
-        println!("Russian hi {}",hi);
+        println!("Russian hi {}", hi);
     }
 }
 // 'H' 'i' '!' ' ' '¡' 'H' 'o' 'l' 'a' '!' ' ' 'п' 'р' 'и' 'в' 'е' 'т' '!' 
@@ -1100,7 +1098,7 @@ a clue (we may have wanted a vector of chars, say):
 
 ```rust
     let stripped: String = text.chars()
-        .filter(|ch| ! ch.is_whitespace()).collect();
+        .filter(|ch| !ch.is_whitespace()).collect();
     // thebrownfoxandthelazydog
 ```
 The `filter` method takes a _closure_, which is Rust-speak for what C++ calls
@@ -1124,7 +1122,7 @@ over the arguments as strings, including the program name.
 // args0.rs
 fn main() {
     for arg in std::env::args() {
-        println!("'{}",arg);
+        println!("'{}", arg);
     }
 }
 ```
@@ -1179,7 +1177,7 @@ be usually written. Enter _match_:
     match multilingual.find('п') {
         Some(idx) => {
             let hi = &multilingual[idx..];
-            println!("Russian hi {}",hi);
+            println!("Russian hi {}", hi);
         },
         None => println!("couldn't find the greeting, Товарищ")
     };
@@ -1211,7 +1209,7 @@ can return a value:
         0 => "zero",
         1 => "one",
         2 => "two",
-        _ => "many"
+        _ => "many",
     };
 ```
 The `_` is like C `default` - it's a fall-back case. If you don't provide one then
@@ -1224,7 +1222,7 @@ Rust `match` statements are more powerful than `switch`:
     let text = match n {
         0...3 => "small",
         4...6 => "medium",
-        _ => "large"
+        _ => "large",
      };
 ```
 ## Reading from Files
@@ -1248,7 +1246,7 @@ fn main() {
     let mut text = String::new();
     file.read_to_string(&mut text).expect("can't read the file");
 
-    println!("file had {} bytes",text.len());
+    println!("file had {} bytes", text.len());
 
 }
 ```
@@ -1293,12 +1291,12 @@ use std::io;
 fn read_to_string(filename: &str) -> io::Result<String> {
     let mut file = match File::open(&filename) {
         Ok(f) => f,
-        Err(e) => return Err(e)
+        Err(e) => return Err(e),
     };
     let mut text = String::new();
     match file.read_to_string(&mut text) {
         Ok(_) => Ok(text),
-        Err(e) => Err(e)
+        Err(e) => Err(e),
     }
 }
 
