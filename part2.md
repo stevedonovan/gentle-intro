@@ -369,7 +369,7 @@ of `Node` (and so forth.)  This is what `Box` is for. The `Box` struct is fed a
 value, allocates enough memory for it on the heap, and moves that value to the heap.
 A `Box` always has the same size (it's basically a smart pointer.) so we're good to go.
 
-So here's the Rust equivalent, using `type` to creaate an alias:
+So here's the Rust equivalent, using `type` to create an alias:
 
 ```rust
 type NodeBox = Option<Box<Node>>;
