@@ -58,7 +58,7 @@ This tutorial assumes that you have Rust installed locally. Fortunately this is
 
 ```
 $ curl https://sh.rustup.rs -sSf | sh
-$ rustup component add-docs
+$ rustup component add rust-docs
 ```
 
 I would recommend getting the default stable version; it's easy to switch later.
