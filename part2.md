@@ -35,6 +35,27 @@ they are allowed to be copyable because they are cheap to copy. But `String` has
 memory containing "Hello dolly", and copying will involve allocating some more memory
 and copying the characters. Rust will not do this silently.
 
+Consider a `String` containing the whole text of 'Moby-Dick'. It's not a big struct,
+just has the address in memory of the text, its size, and how big the allocated block is.
+Copying this is going to be expensive, because that memory is allocated on the heap and
+the copy will need its own allocated block.
+
+```
+    | addr | ---------> Call me Ishmael.....
+    | size |                    | 
+    | cap  |                    | 
+                                | 
+    | addr | -------------------|
+    | size |
+
+    | 8 bytes |
+```
+The second value is a string slice (`&str`) which refers to the same memory as the string,
+with a size - just the guy's name.
+
+The third value is an `f64` - just 8 bytes. It does not refer to any other memory, so
+it's just as cheap to copy as to move.
+
 Re-writing with a function call reveals exactly the same error:
 
 ```rust
@@ -97,7 +118,7 @@ block:
     // a,b are visible
     for i in 0..a {
         let b = &b[1..];
-        // original b is no longer visiible - it is shadowed.
+        // original b is no longer visible - it is shadowed.
     }
     // the slice b is dropped
     // i is _not_ visible!
@@ -306,7 +327,7 @@ Methods may allow the data to be modified using a _mutable self_ argument:
         self.first_name = name.to_string();
     }
 ```
-And the data can be _moved_ into the method with a self argument:
+And the data will _move_ into the method when a plain self argument is used:
 
 ```rust
     fn to_tuple(self) -> (String,String) {
@@ -369,7 +390,7 @@ of `Node` (and so forth.)  This is what `Box` is for. The `Box` struct is fed a
 value, allocates enough memory for it on the heap, and moves that value to the heap.
 A `Box` always has the same size (it's basically a smart pointer.) so we're good to go.
 
-So here's the Rust equivalent, using `type` to creaate an alias:
+So here's the Rust equivalent, using `type` to create an alias:
 
 ```rust
 type NodeBox = Option<Box<Node>>;
@@ -518,7 +539,7 @@ the node, and then visit the right.
     // 'root'
     // 'two'
 ```
-So we're visiting the strings in order! Please note the reappearence of `ref` - `if let`
+So we're visiting the strings in order! Please note the reappearance of `ref` - `if let`
 uses exactly the same rules as `match`.
 
 `Box` is a _smart_ pointer; note that no 'unboxing' was needed to call
@@ -530,7 +551,7 @@ Please note that Rust does not spell `struct` _class_. The keyword `class` in ot
 languages is so overloaded with meaning that it effectively shuts down original thinking.
 
 Let's put it like this: Rust structs cannot _inherit_ from other structs; they are
-all unique types. There is no _subtyping_.
+all unique types. There is no _sub-typing_.
 
 So how _does_ one establish relationships between types? This is where _traits_ come in.
 
@@ -595,7 +616,7 @@ impl fmt::Debug for Person {
 (This would also work with a `File` - or even a `String`.)
 
 Now, with the implementations of `Show` in `trait1.rs`, here's a
-litte main program with big implications:
+little main program with big implications:
 
 ```rust
 fn main() {
@@ -728,7 +749,7 @@ T sqr(x: T) {
 ```
 but (to be honest) C++ is adopting cowboy tactics here. C++ template errors are famously
 bad, because all the compiler knows (ultimately) is that some operator or method is
-not defined. The C++ commmittee knows this is a problem and so they are working
+not defined. The C++ committee knows this is a problem and so they are working
 toward [concepts](https://en.wikipedia.org/wiki/Concepts_(C%2B%2B)), which are pretty
 much like trait-constrained type parameters in Rust.
 
@@ -746,6 +767,79 @@ seen, it's effectively replaced with `x*x`.  The downside is that large generic
 functions produce a lot of code, for each type used, which can result in _code bloat_.
 As always, there are trade-offs; an experienced person learns to make the right choice
 for the job.
+
+## Generic Structs
+
+Consider the example of a binary tree. It would be _seriously irritating_ to
+have to rewrite it for all possible kinds of payload. Before C++ templates, people
+would do truly awful things with the C preprocessor to write 'generic' classes.
+
+So here's our generic `Node` with its _type parameter_ `T`. It's fairly similar to
+a C++ template struct.
+
+```rust
+type NodeBox<T> = Option<Box<Node<T>>>;
+
+#[derive(Debug)]
+struct Node<T> {
+    payload: T,
+    left: NodeBox<T>,
+    right: NodeBox<T>
+}
+```
+
+The implementation shows the difference between the languages. The fundamental operation
+on the payload is comparison, so T must be comparable with `<`, i.e. implements `PartialOrd`.
+The type parameter must be declared in the `impl` block with its constraints:
+
+
+```rust
+impl <T: PartialOrd> Node<T> {
+    fn new(s: T) -> Node<T> {
+        Node{payload: s, left: None, right: None}
+    }
+
+    fn boxer(node: Node<T>) -> NodeBox<T> {
+        Some(Box::new(node))
+    }
+
+    fn set_left(&mut self, node: Node<T>) {
+        self.left = Self::boxer(node);
+    }
+
+    fn set_right(&mut self, node: Node<T>) {
+        self.right = Self::boxer(node);
+    }
+
+    fn insert(&mut self, data: T) {
+        if data < self.payload {
+            match self.left {
+            Some(ref mut n) => n.insert(data),
+            None => self.set_left(Self::new(data)),
+            }
+        } else {
+            match self.right {
+            Some(ref mut n) => n.insert(data),
+            None => self.set_right(Self::new(data)),
+            }            
+        }
+    }
+}
+
+
+fn main() {
+    let mut root = Node::new("root".to_string());    
+    root.insert("one".to_string());
+    root.insert("two".to_string());
+    root.insert("four".to_string());
+
+    println!("root {:#?}",root);
+}
+```
+
+So generic structs need their type parameter(s) specified
+in angle brackets, like C++. Unlike C++, Rust is usually smart enough to work out
+that type parameter from context. But you do need to constrain that type appropriately!
 
 ## Lifetimes Start to Bite
 
@@ -782,7 +876,7 @@ Rust cannot allow
 a situation where that reference could suddenly become invalid.
 
 Now, there are basically two kinds of string slices; those that refer to _string literals_
-like "hello" and those that borrow from value. String literals exist for the duration
+like "hello" and those that borrow from `String` values. String literals exist for the duration
 of the whole program, which is called the 'static' lifetime.
 
 So this works - we assure Rust that the string slice always refers to such static strings:
@@ -941,7 +1035,7 @@ a vector:
 ```
 This is a common pattern and it gets irritating. Fortunately, it's easy to
 add new 'consumers' of iterators. These are those methods that end the chain and
-pull all the values of the iterator, like `count` - or `collect`.
+'pull' all the values of the iterator, like `count` - or `collect`.
 
 `ToVec` has an associated type, just like an `Iterator`. It will be the type
 contained in the returned vector.
@@ -954,7 +1048,7 @@ trait ToVec {
 }
 ```
 
-And then implement `ToVec` for `Iterator`. All that `Vec` requires of its elements is that they
+And now we'll implement `ToVec` for `Iterator`. All that `Vec` requires of its elements is that they
 have a size. (Traits, being abstract, have no size.) The actual iterator type `I`
 must implement `Iterator` with its associated type `Item` set to `T`, the element
 type. There is only one free type parameter `T` since `I` is defined in terms of `T`.
@@ -1035,7 +1129,8 @@ be added to `Direction`:
         println!("start {:?}",start);
         // start Left
 ```
-So that method isn't really necessary, since we can always get the name from `Debug`.
+So that `as_str` method isn't really necessary, since we can always get the name from `Debug`.
+(But it does _not allocate_, which may be important.)
 
 You should not assume any particular ordering here - there's no implied integer
 'ordinal' value.
@@ -1129,7 +1224,7 @@ true that `Speed::Fast > Speed::Slow`.
 
 ## Enums in their Full Glory
 
-Rust enums in their full form are like C unions on steriods, like a Ferrari compared
+Rust enums in their full form are like C unions on steroids, like a Ferrari compared
 to a Fiat Uno. Consider the problem of storing different values in a type-safe way
 (often called 'Variants', somewhat confusingly.)
 
@@ -1262,6 +1357,8 @@ You can write `to_str` like this - it is completely equivalent:
     }
 ```
 
+## More about Matching
+
 Recall that the values of a tuple can be extracted with '()':
 
 ```rust
@@ -1272,8 +1369,12 @@ Recall that the values of a tuple can be extracted with '()':
     // n is i32, s is String
 ```
 
-Very similar issue! This syntax is a special case of _destructuring_; we have some
+This is a special case of _destructuring_; we have some
 data and wish to either pull it apart (like here) or just borrow its values.
+Either way, we get the parts of a structure.
+
+The syntax used for borrowing is just like that used in `match`.
+
 
 ```rust
     let (ref n,ref s) = t;
@@ -1296,5 +1397,297 @@ Destructuring works with structs as well:
     // both x and y are f32
 ```
 
+Time to revisit `match` with some new patterns. The first is exactly like a `let`
+destructuring - it only matches tuples with first element zero, but _any_ string;
+the second adds an `if` so that it only matches `(1,"hello")`.
 
+Finally, just a variable matches _anything_. This is useful if the `match` applies
+to an expression and you don't want to bind a variable to that expression. `_` works
+like a variable but is ignored (`_` behaves rather like it does in Go.) It's a common
+way to finish off a `match`, like `default` in C `switch` statements.
+
+```rust
+fn match_tuple(t: (i32,String)) {
+    let text = match t {
+        (0, s) => format!("zero {}", s),
+        (1, ref s) if s == "hello" => format!("hello one!"),
+        tt => format!("no match {:?}", tt)
+     };
+    println!("{}", text);    
+}
+```
+
+Why not just match against `(1,"hello")`? Matching is an exact business, and the compiler
+complains:
+
+```
+  = note: expected type `std::string::String`
+  = note:    found type `&'static str`
+```
+
+Why do we need `ref s`? It's a slightly obscure gotcha (look up the E00008 error) where
+if you have an _if guard_ you need to borrow, since the if guard happens in a different
+context, a move will take place otherwise. It's a case of the implementation leaking
+ever so slightly.
+
+If the type _was_ `&str` then we match it directly:
+
+```rust
+    match (42,"answer") {
+        (42,"answer") => println!("yes"),
+        _ => println!("no")
+    };
+```
+
+What applies to `match` applies to `if let`. This is a cool example, since if we
+get a `Some`, we can match inside it and only extract the string from the tuple. So it
+isn't necessary to have nested `if let` statements here.
+
+```rust
+    let ot = Some((2,"hello".to_string());
+    
+    if let Some((_,ref s)) = ot {
+        assert_eq!(s,"hello");
+    }    
+    // we just borrowed the string, no 'destructive destructuring'
+```
+
+An interesting problem happens when using `parse` (or any function which needs to work
+out its return type from context)
+
+```rust
+    if let Some(n) = "42".parse() {
+        ...
+    }
+```
+
+So what's the type of `n`? You have to give a hint somehow - what kind of integer? Is it
+even an integer?
+
+```rust
+    if let Some(n) = "42".parse::<i32>() {
+        ...
+    }
+```
+
+This somewhat non-elegant syntax is called the 'turbofish operator'. Otherwise, it
+would be even more non-elegant:
+
+```rust
+    let maybe_n: Option<i32> = "42".parse();
+    if let Some(n) = maybe_n {
+        ...
+    }
+```    
+
+## Closures
+
+A great deal of Rust's power comes from _closures_. In their simplest form, they
+act like shortcut functions:
+
+```rust
+    let f = |x| x*x;
+
+    let res = f(10);
+
+    println!("res {}",res);
+    // res 100
+```
+
+There are no explicit types in this example - everything is deduced, starting with the
+integer literal 10.
+
+We get an error if we call `f` on different types - Rust has already decided that
+`f` must be called on an integer type:
+
+```
+    let res = f(10);
+
+    let resf = f(1.2);
+  |
+8 |     let resf = f(1.2);
+  |                  ^^^ expected integral variable, found floating-point variable
+  |
+  = note: expected type `{integer}`
+  = note:    found type `{float}`
+
+```
+
+So, the first call fixes the type of the argument `x`. It's equivalent to this:
+
+```rust
+    fn f (x: i32) -> i32 {
+        x*x
+    }
+```
+
+But there's a big difference, _apart_ from the need for explicit typing.
+Here we evaluate a linear function:
+
+```rust
+    let m = 2.0;
+    let c = 1.0;
+    
+    let lin = |x| m*x + c;    
+
+    println!("res {} {}", lin(1.0), lin(2.0));
+    // res 3 5
+```
+
+You cannot do this with the explicit `fn` form - it does not know about variables
+in the enclosing scope.
+
+Now, what's the type of `lin`? Only `rustc` knows. Exactly the same situation applies
+to C++ lambdas, and for exactly the same version. Under the hood, a closure is a _struct_
+that implements the call operator. All closures are unique types
+ - but they have traits in common.
+
+So even though we don't know the exact type, we know the generic constraints:
+
+```rust
+fn apply<F>(x: f64, f: F) -> f64
+where F: Fn(f64)->f64  {
+    f(x)
+}
+...
+    let res1 = apply(3.0,lin);
+    let res2 = apply(3.14, |x| x.sin());
+```
+
+In English: `apply` works for _any_ type `T` such that `T` implements `Fn(f64)->f64` - that
+is, is a function which takes `f64` and returns `f64`.
+
+After the call to `apply(3.0,lin)`, trying to access `lin` gives an interesting error:
+
+```
+    let l = lin;
+error[E0382]: use of moved value: `lin`
+  --> closure2.rs:22:9
+   |
+16 |     let res = apply(3.0,lin);
+   |                         --- value moved here
+...
+22 |     let l = lin;
+   |         ^ value used here after move
+   |
+   = note: move occurs because `lin` has type
+    `[closure@closure2.rs:12:15: 12:26 m:&f64, c:&f64]`,
+     which does not implement the `Copy` trait    
+
+```
+
+That's it, `apply` ate our closure. And there's the actual type of the struct that
+`rustc` made up to implement it.
+
+Thinking of closures as structs is useful because they are _values_ and it's
+important to know what happens when values move.  Here's a closure that refers to a
+string.
+
+```rustc
+    fn call<F>(ch: char, f: F)
+    where F: Fn(char)->bool {
+        let res = f(ch);
+        println!("{}", res);
+    }
+
+    let s = "hello dolly".to_string();
+
+    call('d',|c| s.find(c).is_some());
+
+```
+
+The closure is _borrowing_ `s`.  (It is impossible to sneakily copy `String` values.)
+This is the default behaviour for closures.
+
+Thinking of calling a closure as a _method call_ makes it easy to understand the
+three kinds of function traits - they are the three kinds of methods:
+
+  - `Fn` struct passed as `&self`
+  - `FnMut` struct passed as `&mut self`
+  - `FnOnce` struct passed as `self`
+
+So it's possible for a closure to mutate its _captured_ references:
+
+```rust
+    fn mutate<F>(mut f: F)
+    where F: FnMut() {
+        f()
+    }
+    let mut s = "world";
+    mutate(|| s = "hello");
+    assert_eq!(s,"hello");
+```
+
+Note that `mut` - `f` needs to be mutable for this to work.
+
+At this point, if you are used to languages like JavaScript or Lua, you may wonder at the
+apparent complexity of closures compared with how straightforward they are in those languages.
+This is the necessary cost of Rust's promise to not sneakily make any allocations. In JavaScript,
+the equivalent `mutate(function() {s = "hello";})` will always result in a dynamically
+allocated closure.
+
+You can of course explicitly create a dynamically allocated closure in Rust using `Box::new`.
+This solves the problem of keeping a collection of different closures that implement the
+same trait.
+
+Here's a first try:
+
+```rust
+    let mut v = Vec::new();
+    v.push(Box::new(|x| x*x));
+    v.push(Box::new(|x| x/2.0));
+
+    for f in v.iter() {
+        let res = f(1.0);
+        println!("res {}",res);
+    }
+```    
+
+We get a very definite error on the second push:
+
+```
+  = note: expected type `[closure@closure4.rs:4:21: 4:28]`
+  = note:    found type `[closure@closure4.rs:5:21: 5:28]`
+note: no two closures, even if identical, have the same type
+```
+
+`rustc` has deduced a type which is too specific, so it's necessary to force that
+vector to have the _boxed trait type_ before things just work:
+
+```rust
+    let mut v: Vec<Box<Fn(f64)->f64>> = Vec::new();
+```
+
+You can use these boxed closures to implement callbacks and so forth.
+
+A major use of closures is within iterator methods. Recall the `range` iterator we
+defined to go over a range of floating-point numbers. It's straightforward to operate
+on this (or any other iterator) using closures:
+
+```rust
+    let sine: Vec<f64> = range(0.0,1.0,0.1).map(|x| x.sin()).collect();
+```
+
+`map` isn't defined on vectors (although it's easy enough to create a trait that does this),
+because then _every_ map  will create a new vector.  This way, we have a choice. In this
+sum, no temporary objects are created:
+
+```rust
+ let sum: f64 = range(0.0,1.0,0.1).map(|x| x.sin()).sum();
+```
+
+It will (in fact) be as fast as writing it out as an explicit loop!
+
+`filter` is another useful iterator method - it only lets through values that match
+a condition:
+
+```rust
+    let tuples = [(10,"ten"),(20,"twenty"),(30,"thirty"),(40,"forty")];
+    let ti = tuples.iter();
+    let iter = ti.filter(|t| t.0 > 20).map(|t| t.1);
+
+    for name in iter {
+        print!("{} ",name);
+    }
+```
 
