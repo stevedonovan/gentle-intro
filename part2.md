@@ -1037,8 +1037,8 @@ This is a common pattern and it gets irritating. Fortunately, it's easy to
 add new 'consumers' of iterators. These are those methods that end the chain and
 'pull' all the values of the iterator, like `count` - or `collect`.
 
-`ToVec` has an associated type, just like an `Iterator`. It will be the type
-contained in the returned vector.
+We will define a new trait `ToVec` which has an associated type, just like an `Iterator`.
+It will be the type contained in the returned vector.
 
 ```rust
 trait ToVec {
@@ -1053,7 +1053,7 @@ have a size. (Traits, being abstract, have no size.) The actual iterator type `I
 must implement `Iterator` with its associated type `Item` set to `T`, the element
 type. There is only one free type parameter `T` since `I` is defined in terms of `T`.
 
-Read it like this: This implementation of `ToVec` has type parameters `T` and `I`. `T` must implement `Size` to
+Alternatively: This implementation of `ToVec` has type parameters `T` and `I`. `T` must implement `Size` to
 make `Vec` happy. `I` is any concrete type that implements an iterator for values of
 the type `T`.
 
@@ -1210,13 +1210,13 @@ fn main() {
 }
 ```
 They are initialized with an integer value, and can be converted into that integer
-with a type cast. Essentially a convenient way to create a set of constants.
+with a type cast. It's essentially a convenient way to create a set of constants.
 
 Like with C enums, you only need to give the first name a value, and thereafter the
 value goes up by one each time.
 
-('name' is too vague, like saying 'thingy' all the time. The proper term here
-is _variant_.)
+By the way, 'name' is too vague, like saying 'thingy' all the time. The proper term here
+is _variant_.
 
 These enums _do_ have a natural ordering, but you have to ask nicely.
 After placing `#[derive(PartialEq,PartialOrd)]` in front of `enum Speed`, then it's indeed
@@ -1225,8 +1225,7 @@ true that `Speed::Fast > Speed::Slow`.
 ## Enums in their Full Glory
 
 Rust enums in their full form are like C unions on steroids, like a Ferrari compared
-to a Fiat Uno. Consider the problem of storing different values in a type-safe way
-(often called 'Variants', somewhat confusingly.)
+to a Fiat Uno. Consider the problem of storing different values in a type-safe way.
 
 ```rust
 // enum3.rs
@@ -1284,7 +1283,7 @@ you _extract_ the string contained in the original value. It did not complain ab
 because it's happy to copy `f64`, but `String` does not implement `Copy`.
 
 I mentioned earlier that `match` is picky about _exact_ types
- - here we follow the hint and things will work; now we are just borrowing a reference
+- here we follow the hint and things will work; now we are just borrowing a reference
 to that contained string.
 
 ```rust
@@ -1513,7 +1512,7 @@ We get an error if we call `f` on different types - Rust has already decided tha
 
 ```
 
-So, the first call fixes the type of the argument `x`. It's equivalent to this:
+So, the first call fixes the type of the argument `x`. It's equivalent to this function:
 
 ```rust
     fn f (x: i32) -> i32 {
@@ -1521,7 +1520,7 @@ So, the first call fixes the type of the argument `x`. It's equivalent to this:
     }
 ```
 
-But there's a big difference, _apart_ from the need for explicit typing.
+But there's a big difference between functions and closures, _apart_ from the need for explicit typing.
 Here we evaluate a linear function:
 
 ```rust
@@ -1540,9 +1539,9 @@ in the enclosing scope.
 Now, what's the type of `lin`? Only `rustc` knows. Exactly the same situation applies
 to C++ lambdas, and for exactly the same version. Under the hood, a closure is a _struct_
 that implements the call operator. All closures are unique types
- - but they have traits in common.
+- but they have traits in common.
 
-So even though we don't know the exact type, we know the generic constraints:
+So even though we don't know the exact type, we know the generic constraint:
 
 ```rust
 fn apply<F>(x: f64, f: F) -> f64
@@ -1583,7 +1582,7 @@ Thinking of closures as structs is useful because they are _values_ and it's
 important to know what happens when values move.  Here's a closure that refers to a
 string.
 
-```rustc
+```rust
     fn call<F>(ch: char, f: F)
     where F: Fn(char)->bool {
         let res = f(ch);
