@@ -1690,3 +1690,65 @@ a condition:
     }
 ```
 
+## The Three Kinds of Iterators
+
+The three kinds correspond (again) to the three basic argument types. Assume we
+have a vector of `String` values. Here are the iterator types explicitly, and
+then _implicitly_, together with the actual type returned by the iterator.
+
+```rust
+for s in vec.iter() {...} // &String
+for s in vec.iter_mut() {...} // &mut String
+for s in vec.into_iter() {...} // String
+
+// implicit!
+for s in &vec {...} // &String
+for s in &mut vec {...} // &mut String
+for s in vec {...} // String
+```
+Personally I prefer being explicit, but it's important to understand both forms,
+and their implications.
+
+`into_iter` _consumes_ the vector and extracts its strings,
+and so afterwards the vector is no longer available - it has been moved. It's
+a definite gotcha for Pythonistas used to saying `for s in vec`!
+
+ So the
+implicit form `for s in &vec` is usually the one you want, just as `&T` is a good
+default in passing arguments to functions.
+
+It's important to understand how the three kinds works because Rust relies heavily
+on type deduction - you won't often see explicit types in closure arguments. And this
+is a Good Thing, because it would be noisy if all those types were explicitly
+_typed out_. However, the price of this compact code is that you need to know
+what the implicit types actually are!
+
+`map` takes whatever value the iterator returns and converts it into something else,
+but `filter` takes a _reference_ to that value. In this case, we're using `iter` so
+the iterator return type is `&String`. Note that `filter` receives a reference to this type.
+
+```rust
+for n in vec.iter().map(|x: &String| x.len()) {...} // n is usize
+for s in vec.iter().filter(|x: &&String| x.len() > 2) {...}
+```
+
+When calling methods, Rust will derefence automatically, so the problem isn't obvious.
+But `|x: &&String| x == "one"|` will _not_ work, because operators are more strict
+about type matching. `rustc` will complain that there is no such operator that
+compares `&&String` and `&str`. So you need an explicit deference to make that `&&String`
+into a `&String` which _does_ match.
+
+```rust
+for s in vec.iter().filter(|x: &&String| *x == "one") {...}
+```
+
+If you leave out the explicit type, you can modify the argument so that the type of `s`
+is now `&String`:
+
+```rust
+for s in vec.iter().filter(|&x| x == "one")
+```
+
+And that's usually how you will see it written.
+
+
