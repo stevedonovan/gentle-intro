@@ -247,6 +247,135 @@ just that when there's a stable release every 6 weeks it becomes inconvenient to
 everything. If you have a stable version that Works For You, then cool. As stable versions of Rust
 get increasingly delivered by the OS package manager, dynamic linking will become more popular.
 
+## Cargo
 
+The Rust standard library is not very large, compared to Java or Python.
+But it is straightforward to access community-provided libraries in [crates.io](https://crates.io)
+using __Cargo__.  Cargo will look up the correct version and download the source for you, and
+ensures that any other needed crates are downloaded as well.
+
+Let's create a simple program which needs to read JSON. This data format is very widely used,
+but is too specialized for inclusion in the standard library. So we initialize a Cargo project,
+using '--bin' because the default is to create a library project.
+
+```
+test$ cargo init --bin test-json
+     Created binary (application) project
+test$ cd test-json
+test$ cat Cargo.toml
+[package]
+name = "test-json"
+version = "0.1.0"
+authors = ["Your Name <you@example.org>"]
+
+[dependencies]
+```
+To make the project depend on the [JSON crate](http://json.rs/doc/json/), just edit the
+'Cargo.toml' file and add the line 'json="*"' after '[dependencies]'.
+Then do a first build:
+
+```
+test-json$ cargo build
+    Updating registry `https://github.com/rust-lang/crates.io-index`
+ Downloading json v0.11.4
+   Compiling json v0.11.4
+   Compiling test-json v0.1.0 (file:///home/steve/c/rust/test/test-json)
+    Finished debug [unoptimized + debuginfo] target(s) in 1.75 secs
+```
+The main file of this project has already been created - it's 'main.rs' in the 'src'
+directory. It starts out just as a 'hello world' app, so let's edit it like so; note the
+very useful 'raw' string literal - otherwise we would need to escape those double quotes
+and end up being ugly:
+
+```rust
+// test-json/src/main.rs
+extern crate json;
+
+fn main() {
+    let doc = json::parse(r#"
+    {
+        "code": 200,
+        "success": true,
+        "payload": {
+            "features": [
+                "awesome",
+                "easyAPI",
+                "lowLearningCurve"
+            ]
+        }
+    }
+    "#).expect("parse failed");
+    
+    println!("debug {:?}",doc);
+    println!("display {}",doc);
+}
+```
+
+You can now build and run this project:
+
+```
+test-json$ cargo run
+   Compiling test-json v0.1.0 (file:///home/steve/c/rust/test/test-json)
+    Finished debug [unoptimized + debuginfo] target(s) in 0.21 secs
+     Running `target/debug/test-json`
+debug Object(Object { store: [("code", Number(Number { category: 1, exponent: 0, mantissa: 200 }),
+ 0, 1), ("success", Boolean(true), 0, 2), ("payload", Object(Object { store: [("features",
+ Array([Short("awesome"), Short("easyAPI"), Short("lowLearningCurve")]), 0, 0)] }), 0, 0)] })
+display {"code":200,"success":true,"payload":{"features":["awesome","easyAPI","lowLearningCurve"]}}
+```
+The debug output shows some internal details of the JSON document, but a 
+plain '{}', using the `Display` trait, regenerates JSON from the parsed document.
+
+Let's explore the JSON API.
+It would not be useful if we could not extract values. The `as_TYPE` methods
+return `Option<TYPE>` since we cannot be sure that the field exists or is of the correct type.
+(see the [docs for JsonValue](http://json.rs/doc/json/enum.JsonValue.html))
+
+```rust
+    let code = doc["code"].as_u32().unwrap_or(0);
+    let success = doc["success"].as_bool().unwrap_or(false);
+
+    assert_eq!(code, 200);
+    assert_eq!(success, true);
+    
+    let features = &doc["payload"]["features"];
+    for v in features.members() {
+        println!("{}",v.as_str().unwrap()); // MIGHT explode
+    }    
+    // awesome
+    // easyAPI
+    // lowLearningCurve
+```
+`features` here is a reference to `JsonValue` - it has to be a reference because otherwise
+we would be trying to move a _value_ out of the JSON document.  Here we know it's an array,
+so `members()` will return a non-empty iterator over `&JsonValue`.
+
+What if the 'payload' object didn't have a 'features' key? Then `features` would be set to `Null`.
+There will be no explosion. This convenience expresses the free-form, anything-goes nature of JSON
+very well. It is up to you to examine the structure of any document you receive and create your own
+error if the structure does not match.
+
+You can modify these structures. If we had `let mut doc` then this would do what you expect:
+
+```rust
+    let features = &mut doc["payload"]["features"];
+    features.push("cargo!").expect("couldn't push");
+```
+The `push` might fail, hence it returns `Result<()>`: 
+here we WILL get an explosion if it isn't an array.
+
+Cargo is considered to be one of the great strengths of the Rust ecosystem, because it does
+a lot of work for us. Otherwise we would have had to download this library from Github,
+build it as a static library crate, and link it against the program. It's painful to do this for
+C++ projects, and would be nearly as painful for Rust projects if Cargo did not exist.
+C++ is somewhat unique in its painfullness here, so we can better compare this with
+other languages' package managers. npm (for JavaScript) and pip (for Python) manage dependencies
+and downloads for you, but the distribution story is harder, since the user of your program
+needs NodeJS or Python installed. 
+`test-json` is statically linked against the JSON crate, so again it can be handed
+out to your chums without external dependencies.
+
+(To get a release build, use `cargo build --release`;
+the executable will be in `target/release` - normal debug builds go into `target/debug`)
 
 
