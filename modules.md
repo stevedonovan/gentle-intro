@@ -2,6 +2,7 @@
 
 As programs get larger, it's necessary to spread them over more than one file
 and put functions and types in different _namespaces_.
+The Rust solution for both of these is _modules_.
 
 C does the first, and not
 the second, so you end up with awful names like `primitive_display_set_width` and
@@ -11,10 +12,8 @@ You can even say `use primitive::display::set_width` and then just say `set_widt
 it's not a good idea to get carried away with this. `rustc` may not be confused, but _you_ 
 may get confused later.
 
-The Rust solution is _modules_.
-
 A new keyword `mod` is used to define a module as a block 
-where Rust types or functions can be written
+where Rust types or functions can be written:
 
 ```rust
 mod foo {
@@ -30,17 +29,17 @@ fn main() {
 }
 ```
 
-But not quite right - we get `struct Foo is private`. To solve this, we need the `pub` keyword
-to export `Foo`. The error then changes to `field s of struct foo::Foo is private', so `pub`
-again to export `Foo::s`.
+But it's still not quite right - we get 'struct Foo is private'. To solve this, we need the `pub` keyword
+to export `Foo`. The error then changes to 'field s of struct foo::Foo is private', so put `pub`
+before the field `s` to export `Foo::s`. Then things will work.
 
 ```rust
     pub struct Foo {
         pub s: &'static str
     }
 ```
-Needing an explicit `pub` means that you must _choose_ what items to make public from a module,
-often called its _interface_.
+Needing an explicit `pub` means that you must _choose_ what items to make public from a module.
+The set of functions and types exported from a module is called its _interface_.
 
 It is usually better to hide the insides of a struct, and only allow access through methods:
 
@@ -66,13 +65,14 @@ fn main() {
 
 Why is hiding the implementation a good thing?  Because it means you may change it later 
 without breaking the interface, without consumers of a module getting too dependent on its details.
-The great enemy of large programs is a tendency for code to get too entangled, so that understanding
+The great enemy of large programs is a tendency for code to get entangled, so that understanding
 a piece of code is impossible in isolation.
+In a perfect world a module does one thing, and does it well.
 
 When not to hide? As Stroustrup says, when the interface _is_ the implementation, like
 `struct Point{x: f32, y: f32}`.
 
-_Within a module_, all items are visible to all other items. It's a cozy place where
+_Within_ a module, all items are visible to all other items. It's a cozy place where
 everyone can be friends and know intimate details about each other.  
 
 Everyone gets to a point where they want to break a program up into separate files,
@@ -104,10 +104,11 @@ mod foo;
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}",f);    
+    println!("{:?}",f);
 }
 ```
-`rustc` does this automatically - `rustc mod3.rs` will cause `foo.rs` to be compiled as well.
+Now `rustc mod3.rs` will cause `foo.rs` to be compiled as well. There is no need to fool around
+with makefiles!
 
 The compiler will also look at `MODNAME/mod.rs`, so this will work
 if I create a directory `boo` containing a file `mod.rs`:
@@ -128,8 +129,7 @@ fn main() {
     println!("{:?} {}",f,res);    
 }
 ```
-
-Let's keep going. Update `boo/mod.rs` - note this module is explicitly exported!
+Let's keep going. Update `boo/mod.rs` - note this module is explicitly exported as a submodule!
 
 ```rust
 pub fn answer()->u32 {
@@ -148,7 +148,7 @@ and then we have the question corresponding to the answer:
 let q = boo::bar::question();
 ```
 
-Now that module block can be pulled out as `boo/bar.rs` and so on.
+That module block can be pulled out as `boo/bar.rs` and so on.
 
 In summary, modules are about organization and visibility,
 and this may or may not involve separate files.
@@ -234,7 +234,7 @@ src$ ldd mod4
 	/lib64/ld-linux-x86-64.so.2 (0x00007f3cd4d72000)
 ```
 That 'not found' is because `rustup` doesn't install the dynamic libraries globally. We
-can hack our way to happiness, at least on Linux (yes, I know the best solution is a symlink.)
+can hack our way to happiness, at least on Unix (yes, I know the best solution is a symlink.)
 
 ```
 src$ export LD_LIBRARY_PATH=~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib
