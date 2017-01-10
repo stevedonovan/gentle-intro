@@ -283,8 +283,8 @@ test-json$ cargo build
     Finished debug [unoptimized + debuginfo] target(s) in 1.75 secs
 ```
 The main file of this project has already been created - it's 'main.rs' in the 'src'
-directory. It starts out just as a 'hello world' app, so let's edit it like so; note the
-very useful 'raw' string literal - otherwise we would need to escape those double quotes
+directory. It starts out just as a 'hello world' app, so let's edit it to be a proper test program.
+note the very useful 'raw' string literal - otherwise we would need to escape those double quotes
 and end up being ugly:
 
 ```rust
@@ -368,14 +368,10 @@ Cargo is considered to be one of the great strengths of the Rust ecosystem, beca
 a lot of work for us. Otherwise we would have had to download this library from Github,
 build it as a static library crate, and link it against the program. It's painful to do this for
 C++ projects, and would be nearly as painful for Rust projects if Cargo did not exist.
-C++ is somewhat unique in its painfullness here, so we can better compare this with
+C++ is somewhat unique in its painfullness here, so we should compare this with
 other languages' package managers. npm (for JavaScript) and pip (for Python) manage dependencies
 and downloads for you, but the distribution story is harder, since the user of your program
 needs NodeJS or Python installed. 
 `test-json` is statically linked against the JSON crate, so again it can be handed
-out to your chums without external dependencies.
-
-(To get a release build, use `cargo build --release`;
-the executable will be in `target/release` - normal debug builds go into `target/debug`)
-
+out to your buddies without external dependencies.
 
