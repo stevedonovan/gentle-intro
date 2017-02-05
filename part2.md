@@ -42,9 +42,9 @@ the copy will need its own allocated block.
 
 ```
     | addr | ---------> Call me Ishmael.....
-    | size |                    | 
-    | cap  |                    | 
-                                | 
+    | size |                    |
+    | cap  |                    |
+                                |
     | addr | -------------------|
     | size |
 
@@ -184,10 +184,10 @@ fn add_mul(x: f64, y: f64) -> (f64,f64) {
 
 fn main() {
     let t = add_mul(2.0,10.0);
-    
+
     // can debug print
     println!("t {:?}",t);
-    
+
     // can 'index' the values
     println!("add {} mul {}",t.0,t.1);
 
@@ -274,7 +274,7 @@ struct Person {
 }
 
 impl Person {
-    
+
     fn new(first: &str, name: &str) -> Person {
         Person {
             first_name: first.to_string(),
@@ -301,7 +301,7 @@ impl Person {
 
     fn full_name(&self) -> String {
         format!("{} {}",self.first_name, self.last_name)
-    }    
+    }
 
 }
 ...
@@ -453,7 +453,7 @@ Lifetimes are conventionally called 'a','b',etc but you could just as well calle
 'me' here.
 
 Sometimes it seems like a good idea for a struct to contain a value _and_ a reference
-that borrows from that value. 
+that borrows from that value.
 It's basically impossible because structs must be _moveable_, and any move will
 invalidate the reference.  It isn't necessary to do this - for instance, if your
 struct has a string field, and needs to provide slices, then it could keep indices
@@ -626,17 +626,17 @@ fn main() {
 And the rather messy looking result is
 
 ```
-0 
-0.1 
-0.2 
-0.30000000000000004 
-0.4 
-0.5 
-0.6 
-0.7 
-0.7999999999999999 
-0.8999999999999999 
-0.9999999999999999 
+0
+0.1
+0.2
+0.30000000000000004
+0.4
+0.5
+0.6
+0.7
+0.7999999999999999
+0.8999999999999999
+0.9999999999999999
 ```
 This is because 0.1 is not precisely representable as a float, so a little formatting
 help is needed. Replace the `println!` with this
@@ -662,7 +662,7 @@ It will be the type contained in the returned vector.
 ```rust
 trait ToVec {
     type Item;
-    
+
     fn to_vec(self) -> Vec<Self::Item>;
 }
 ```
@@ -683,7 +683,7 @@ defined for vectors.
 impl <T,I> ToVec for I
 where T: Sized, I: Iterator<Item=T> {
     type Item = T;
-    
+
     fn to_vec(self) -> Vec<Self::Item> {
         FromIterator::from_iter(self)
     }
@@ -692,7 +692,7 @@ where T: Sized, I: Iterator<Item=T> {
     let v = range(0.0, 1.0, 0.1).to_vec();
 ```
 Et voilà! No more awkwardness! The implementation was a little scary, but familiarity
-breeds acceptance. 
+breeds acceptance.
 
 ## Simple Enums
 
@@ -917,7 +917,7 @@ fn dump(v: &Value) {
     ....
 
     dump(&s);
-    // string is 'hello' 
+    // string is 'hello'
 ```
 Before we move on, filled with the euphoria of a successful Rust compilation, let's
 pause a little. `rustc` is unusually good at generating errors that have enough
@@ -1031,7 +1031,7 @@ fn match_tuple(t: (i32,String)) {
         (1, ref s) if s == "hello" => format!("hello one!"),
         tt => format!("no match {:?}", tt)
      };
-    println!("{}", text);    
+    println!("{}", text);
 }
 ```
 
@@ -1063,10 +1063,10 @@ isn't necessary to have nested `if let` statements here.
 
 ```rust
     let ot = Some((2,"hello".to_string());
-    
+
     if let Some((_,ref s)) = ot {
         assert_eq!(s,"hello");
-    }    
+    }
     // we just borrowed the string, no 'destructive destructuring'
 ```
 
@@ -1096,7 +1096,7 @@ would be even more non-elegant:
     if let Some(n) = maybe_n {
         ...
     }
-```    
+```
 
 ## Closures
 
@@ -1145,8 +1145,8 @@ Here we evaluate a linear function:
 ```rust
     let m = 2.0;
     let c = 1.0;
-    
-    let lin = |x| m*x + c;    
+
+    let lin = |x| m*x + c;
 
     println!("res {} {}", lin(1.0), lin(2.0));
     // res 3 5
@@ -1207,7 +1207,7 @@ error[E0382]: use of moved value: `lin`
    |
    = note: move occurs because `lin` has type
     `[closure@closure2.rs:12:15: 12:26 m:&f64, c:&f64]`,
-     which does not implement the `Copy` trait    
+     which does not implement the `Copy` trait
 
 ```
 
@@ -1275,7 +1275,7 @@ Here's a first try:
         let res = f(1.0);
         println!("res {}",res);
     }
-```    
+```
 
 We get a very definite error on the second push:
 
@@ -1430,7 +1430,7 @@ protection.)
         struct Node *left;
         struct Node *right;
     };
-```    
+```
 
 You can not do this by _directly_ including `Node` fields, because then the size of
 `Node` depends on the size of `Node`... it just doesn't compute. So we use pointers
@@ -1515,7 +1515,7 @@ the tree are dropped, they drop _their_ fields and so on. `Box::new` may be the
 closest you will get to a `new` keyword, but we have no need for `delete` or `free`.
 
 We must know work out what use such a tree is. Note that strings can be ordered:
-'bar' < 'foo', 'abba' > 'aardvark'; so-called 'alphabetical order'. 
+'bar' < 'foo', 'abba' > 'aardvark'; so-called 'alphabetical order'.
 
  Here is a method which inserts nodes in _lexical order_ of the strings:
 
@@ -1530,13 +1530,13 @@ We must know work out what use such a tree is. Note that strings can be ordered:
             match self.right {
             Some(ref mut n) => n.insert(data),
             None => self.set_right(Self::new(data)),
-            }            
+            }
         }
     }
 
     ...
     fn main() {
-        let mut root = Node::new("root");    
+        let mut root = Node::new("root");
         root.insert("one");
         root.insert("two");
         root.insert("four");
@@ -1723,7 +1723,7 @@ you will know exactly what kind of values you can safely feed it.
 These functions are called _monomorphic_, in constrast to _polymorphic_. The body of
 the function is compiled separately for each unique type.  With polymorphic functions,
 the same machine code works with each matching type, dynamically _dispatching_
-the correct method. 
+the correct method.
 
  Monomorphic produces faster code,
 specialized for the particular type, and can often be _inlined_.  So when `sqr(x)` is
@@ -1786,14 +1786,14 @@ impl <T: PartialOrd> Node<T> {
             match self.right {
             Some(ref mut n) => n.insert(data),
             None => self.set_right(Self::new(data)),
-            }            
+            }
         }
     }
 }
 
 
 fn main() {
-    let mut root = Node::new("root".to_string());    
+    let mut root = Node::new("root".to_string());
     root.insert("one".to_string());
     root.insert("two".to_string());
     root.insert("four".to_string());

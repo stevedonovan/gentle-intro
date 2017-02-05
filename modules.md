@@ -9,10 +9,10 @@ the second, so you end up with awful names like `primitive_display_set_width` an
 so forth. In Rust the full name would look like `primitive::display::set_width`,
 and after saying `use primitive::display` you can then refer to it as `display::set_width`.
 You can even say `use primitive::display::set_width` and then just say `set_width`, but
-it's not a good idea to get carried away with this. `rustc` will not be confused, but _you_ 
+it's not a good idea to get carried away with this. `rustc` will not be confused, but _you_
 may get confused later.
 
-A new keyword `mod` is used to define a module as a block 
+A new keyword `mod` is used to define a module as a block
 where Rust types or functions can be written:
 
 ```rust
@@ -20,12 +20,12 @@ mod foo {
     #[derive(Debug)]
     struct Foo {
         s: &'static str
-    }  
+    }
 }
 
 fn main() {
     let f = foo::Foo{s: "hello"};
-    println!("{:?}",f);    
+    println!("{:?}",f);
 }
 ```
 
@@ -49,7 +49,7 @@ mod foo {
     pub struct Foo {
         s: &'static str
     }
-    
+
     impl Foo {
         pub fn new(s: &'static str) -> Foo {
             Foo{s: s}
@@ -59,11 +59,11 @@ mod foo {
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}",f);    
+    println!("{:?}",f);
 }
 ```
 
-Why is hiding the implementation a good thing?  Because it means you may change it later 
+Why is hiding the implementation a good thing?  Because it means you may change it later
 without breaking the interface, without consumers of a module getting too dependent on its details.
 The great enemy of large-scale programing is a tendency for code to get entangled, so that understanding
 a piece of code is impossible in isolation.
@@ -74,7 +74,7 @@ When not to hide? As Stroustrup says, when the interface _is_ the implementation
 `struct Point{x: f32, y: f32}`.
 
 _Within_ a module, all items are visible to all other items. It's a cozy place where
-everyone can be friends and know intimate details about each other.  
+everyone can be friends and know intimate details about each other.
 
 Everyone gets to a point where they want to break a program up into separate files,
 depending on taste. I start getting uncomfortable around 500 lines, but we all agree
@@ -130,7 +130,7 @@ mod boo;
 fn main() {
     let f = foo::Foo::new("hello");
     let res = boo::answer();
-    println!("{:?} {}",f,res);    
+    println!("{:?} {}",f,res);
 }
 ```
 
@@ -176,7 +176,7 @@ of module names. For example:
 
 ```
 An important point to note is there is no _separate compilation_ here. The main program and its
-module files will be recompiled each time. Larger programs will take a fair amount of time to build, 
+module files will be recompiled each time. Larger programs will take a fair amount of time to build,
 although `rustc` is getting better at incremental compilation.
 
 ## Crates
@@ -188,7 +188,7 @@ first build `foo.rs` as a Rust _static library_ crate:
 
 ```
 src$ rustc foo.rs --crate-type=lib
-src$ ls -l libfoo.rlib 
+src$ ls -l libfoo.rlib
 -rw-rw-r-- 1 steve steve 7888 Jan  5 13:35 libfoo.rlib
 ```
 We can now _link_ this into our main program:
@@ -206,7 +206,7 @@ extern crate foo;
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}",f);    
+    println!("{:?}",f);
 }
 ```
 Before people start chanting 'Cargo! Cargo!' let me justify this lower-level look at building Rust.
@@ -221,7 +221,7 @@ src$ ls -lh mod4
 -rwxrwxr-x 1 steve steve 3,4M Jan  5 13:39 mod4
 ```
 That's rather fat! There is a _lot_ of debug information in that executable. This is not a Bad Thing,
-if you want to use a debugger and actually want meaningful backtraces when your program panics. 
+if you want to use a debugger and actually want meaningful backtraces when your program panics.
 
 So let's strip that debug information and see:
 
@@ -231,7 +231,7 @@ src$ ls -lh mod4
 -rwxrwxr-x 1 steve steve 300K Jan  5 13:49 mod4
 ```
 Still feels a little large for something so simple, but this program links _statically_ against
-the Rust standard library. This is a Good Thing, since you can hand this executable to anyone 
+the Rust standard library. This is a Good Thing, since you can hand this executable to anyone
 with the right operating system - they will not need a 'Rust install`. (And `rustup` will even let
 you cross-compile for other operating systems and platforms as well.)
 
@@ -328,7 +328,7 @@ fn main() {
         }
     }
     "#).expect("parse failed");
-    
+
     println!("debug {:?}",doc);
     println!("display {}",doc);
 }
@@ -346,7 +346,7 @@ debug Object(Object { store: [("code", Number(Number { category: 1, exponent: 0,
  Array([Short("awesome"), Short("easyAPI"), Short("lowLearningCurve")]), 0, 0)] }), 0, 0)] })
 display {"code":200,"success":true,"payload":{"features":["awesome","easyAPI","lowLearningCurve"]}}
 ```
-The debug output shows some internal details of the JSON document, but a 
+The debug output shows some internal details of the JSON document, but a
 plain '{}', using the `Display` trait, regenerates JSON from the parsed document.
 
 Let's explore the JSON API.
@@ -360,11 +360,11 @@ return `Option<TYPE>` since we cannot be sure that the field exists or is of the
 
     assert_eq!(code, 200);
     assert_eq!(success, true);
-    
+
     let features = &doc["payload"]["features"];
     for v in features.members() {
         println!("{}",v.as_str().unwrap()); // MIGHT explode
-    }    
+    }
     // awesome
     // easyAPI
     // lowLearningCurve
@@ -384,7 +384,7 @@ You can modify these structures. If we had `let mut doc` then this would do what
     let features = &mut doc["payload"]["features"];
     features.push("cargo!").expect("couldn't push");
 ```
-The `push` might fail, hence it returns `Result<()>`: 
+The `push` might fail, hence it returns `Result<()>`:
 here we _will_ get an explosion if it isn't an array.
 
 Here's a truly beautiful use of macros to generate _JSON literals_:
@@ -398,7 +398,7 @@ Here's a truly beautiful use of macros to generate _JSON literals_:
     assert_eq!(
         data.dump(),
         r#"{"name":"John Doe","age":30,"numbers":[10,53,553]}"#
-    );    
+    );
 ```
 
 For this to work, you need to explicitly import macros from the JSON crate thus:
@@ -454,7 +454,7 @@ fn main() {
     } "#;
     let p: Person = serde_json::from_str(data).expect("deserialize error");
     println!("Please call {} at the number {}", p.name, p.phones[0]);
-    
+
     println!("{:#?}",p);
 }
 ```
@@ -495,7 +495,7 @@ C++ projects, and would be nearly as painful for Rust projects if Cargo did not 
 C++ is somewhat unique in its painfullness here, so we should compare this with
 other languages' package managers. npm (for JavaScript) and pip (for Python) manage dependencies
 and downloads for you, but the distribution story is harder, since the user of your program
-needs NodeJS or Python installed. 
+needs NodeJS or Python installed.
 But these programs are statically linked against their dependencies, so again it can be handed
 out to your buddies without external dependencies.
 
@@ -580,7 +580,7 @@ to see this.) The method you need here is `ymd_opt` which returns `LocalResult<D
 ```
 
 You can also directly parse date-times, either in standard UTC format or using custom [formats](https://lifthrasiir.github.io/rust-chrono/chrono/format/strftime/index.html#specifiers).
-These self-same formats allow you to print out dates in exactly the format you want. 
+These self-same formats allow you to print out dates in exactly the format you want.
 
 I specifically highlighted these two useful crates because they would be part of the standard
 library in most other languages. And, in fact, the embryonic form of these crates was

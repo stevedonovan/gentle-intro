@@ -40,7 +40,7 @@ fn read_all_lines(filename: &str) -> io::Result<()> {
 The `let line = line?` may look a bit strange. The `line` returned by the
 iterator is actually an `io::Result<String>` which we unwrap with `?`.
 Because things _can_ go wrong during this iteration - I/O errors, swallowing
-a chunk of bytes that aren't UTF-8, and so forth. 
+a chunk of bytes that aren't UTF-8, and so forth.
 
 `lines` being an iterator, it is straightforward to read a file into a vector
 of strings using `collect`, or print out the line with line numbers using the
@@ -141,8 +141,8 @@ fn read_all_lines(filename: &str) -> io::Result<()> {
     while let Some(line) = lines.next() {
         let line = line?;
         println!(stdout,"{}",line)?;
-    }    
-    
+    }
+
     Ok(())
 }
 ```
@@ -267,7 +267,7 @@ human languages are complicated. For instance 'noël' is _five_ Unicode code poi
 It's true that _most_ of the time
 with modern operating systems file names will be Unicode (UTF-8 on the Unix side, UTF-16
 for Windows), except when they're not. And Rust must handle that possibility
-rigorously. For instance, 
+rigorously. For instance,
 `Path` has a method `as_os_str` which returns a `&OsStr`, but the `to_str` method
 returns an `Option<&str>`. Not always possible!
 
@@ -457,7 +457,7 @@ fn main() {
         .arg("-V")
         .status()
         .expect("no rustc?");
-        
+
     println!("cool {} code {}",status.success(), status.code().unwrap());
 }
 // rustc 1.15.0-nightly (8f02c429a 2016-12-15)
@@ -503,7 +503,7 @@ fn main() {
     if output.status.success() {
         println!("ok!");
     }
-    println!("len stdout {} stderr {}",output.stdout.len(), output.stderr.len());        
+    println!("len stdout {} stderr {}",output.stdout.len(), output.stderr.len());
 }
 // ok!
 // len stdout 44 stderr 0

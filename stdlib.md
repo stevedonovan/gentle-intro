@@ -207,7 +207,7 @@ fn make_set(words: &str) -> HashSet<&str> {
 fn main() {
     let fruit = make_set("apple orange pear orange");
 
-    println!("{:?}",fruit);    
+    println!("{:?}",fruit);
 }
 // {"orange", "pear", "apple"}
 ```
@@ -238,7 +238,7 @@ trait ToSet<T> {
 
 impl <T,I> ToSet<T> for I
 where T: Eq + Hash, I: Iterator<Item=T> {
-    
+
     fn to_set(self) -> HashSet<T> {
        self.collect()
     }
@@ -250,7 +250,7 @@ let intersect = fruit.intersection(&colours).to_set();
 ```
 As with all Rust generics, you do need to constrain types - this can only be
 implemented for types that understand equality (`Eq`) and for which a 'hash function'
-exists (`Hash`). Remember that there is no _type_ called `Iterator`, so `I` defines 
+exists (`Hash`). Remember that there is no _type_ called `Iterator`, so `I` defines
 any type that _implements_ `Iterator`.
 
 This technique for implementing our own methods on standard library types may appear
@@ -303,7 +303,7 @@ fn main() {
     queue.push_back(10);
     queue.push_back(20);
     assert_eq! (queue.pop_front(),Some(10));
-    assert_eq! (queue.pop_front(),Some(20)); 
+    assert_eq! (queue.pop_front(),Some(20));
 }
 ```
 A common way of using queues is to fill them up and empty them in order of insertion
@@ -343,10 +343,10 @@ does making reading the documentation a little more challenging.
 
 Let's have a look at some other trait implementations in the docs for `VecDeque`:
 
-  - `PartialOrd` queues can be compared with '<', '>', '<=' and '=<'. (But only if  
+  - `PartialOrd` queues can be compared with '<', '>', '<=' and '=<'. (But only if
   the value type also satisfies `PartialOrd`)
   - `Eq` queues can be compared with '==' (same proviso)
-  - `Clone` queues can be cloned  (same proviso)  
+  - `Clone` queues can be cloned  (same proviso)
   - `From` queues can be constructed from vectors: `let q = VecDeque::from(v)`
   - `Hash` queues can be used as keys in a hash map (seriously)
   - `IntoIterator` queues can be iterated directly using `for`. Note the three
@@ -361,7 +361,7 @@ that `Vec` has, expressed by the `Deref` trait.
 
 It's often useful to have an interactive session with a program. Each line is read in and
 split into words; the command is looked up on the first word, and the rest of the words
-are passed as an argument to that command. 
+are passed as an argument to that command.
 
 A natural implementation is a map from command names to closures. It's tempting as
 first to make them `FnMut` - that is, they can modify any captured variables. But we will
@@ -434,7 +434,7 @@ Now for reading and running commands:
                 let line = buff.trim_left();
                 let res = self.process(line);
                 println!("{:?}",res);
-                
+
             }
             buff.clear();
         }
@@ -502,7 +502,7 @@ operate unless they're visible.
 And in action:
 
 ```
-Welcome to the Interactive Prompt! 
+Welcome to the Interactive Prompt!
 go 32
 got ["32"]
 Ok("32")
@@ -548,7 +548,7 @@ struct MyError {
 impl MyError {
     fn new(msg: &str) -> MyError {
         MyError{details: msg.to_string()}
-    }   
+    }
 }
 
 impl fmt::Display for MyError {
@@ -653,7 +653,7 @@ fn main() {
     assert_eq!(answer.get(), 42);
 
     answer.set(77);
-    
+
     assert_eq!(answer.get(), 77);
 }
 ```
@@ -688,7 +688,7 @@ fn main() {
     assert_eq!(greeting.borrow().len(), 5);
 
     *greeting.borrow_mut() = "hola".to_string();
-    
+
     assert_eq!(*greeting.borrow(), "hola");
 }
 ```
@@ -704,7 +704,7 @@ methods must follow the usual rules.
 ```rust
     let mut gr = greeting.borrow_mut(); // gr is a mutable borrow
     *gr = "hola".to_string();
-    
+
     assert_eq!(*greeting.borrow(), "hola"); // <== we blow up here!
 ....
 thread 'main' panicked at 'already mutably borrowed: BorrowError'
@@ -748,7 +748,7 @@ fn main() {
     let rs1 = Rc::new(s); // s moves to heap; ref count 1
     let rs2 = rs1.clone(); // ref count 2
 
-    println!("len {}, {}", rs1.len(), rs2.len());    
+    println!("len {}, {}", rs1.len(), rs2.len());
 } // both rs1 and rs2 drop, string dies.
 ```
 You may make as many references as you like to the original value - it's _dynamic borrowing_
@@ -804,7 +804,7 @@ use std::time;
 fn main() {
     thread::spawn(|| println!("hello"));
     thread::spawn(|| println!("dolly"));
-    
+
     println!("so fine");
     // wait a little bit
     thread::sleep(time::Duration::from_millis(100));
@@ -899,7 +899,7 @@ fn main() {
         });
         threads.push(t);
     }
-    
+
     for t in threads {
         t.join().expect("thread failed");
     }
@@ -942,7 +942,7 @@ fn main() {
             tx.send(response).unwrap();
         });
     }
-    
+
     for _ in 0..nthreads {
         println!("got {:?}", rx.recv());
     }
@@ -958,7 +958,7 @@ There's no need to join here since the threads send their response just before t
 end execution, but obviously this can happen at any time. `recv` will block, and will
 return an error if the sender channel is disconnected. `recv_timeout` will only block
 for a given time period, and may return a timeout error as well.
- 
+
 `send` never blocks, which is useful because threads can push out data without waiting for the receiver to process.
 In addition, the channel is buffered so multiple `send` operations can take place,
 which will be received in order.
@@ -991,7 +991,7 @@ fn main() {
         });
         threads.push(t);
     }
-    
+
     for t in threads {
         t.join().expect("thread failed");
     }
@@ -1048,7 +1048,7 @@ fn main() {
         });
         threads.push(t);
     }
-    
+
     for t in threads {
         t.join().unwrap();
     }
@@ -1096,7 +1096,7 @@ fn main() {
 
     let ar = answer.lock().unwrap();
     assert_eq!(*ar, 55);
-    
+
 }
 ```
 This isn't so straightforward as using `RefCell` because asking for the lock on
