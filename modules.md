@@ -9,7 +9,7 @@ the second, so you end up with awful names like `primitive_display_set_width` an
 so forth. In Rust the full name would look like `primitive::display::set_width`,
 and after saying `use primitive::display` you can then refer to it as `display::set_width`.
 You can even say `use primitive::display::set_width` and then just say `set_width`, but
-it's not a good idea to get carried away with this. `rustc` may not be confused, but _you_ 
+it's not a good idea to get carried away with this. `rustc` will not be confused, but _you_ 
 may get confused later.
 
 A new keyword `mod` is used to define a module as a block 
@@ -65,9 +65,10 @@ fn main() {
 
 Why is hiding the implementation a good thing?  Because it means you may change it later 
 without breaking the interface, without consumers of a module getting too dependent on its details.
-The great enemy of large programs is a tendency for code to get entangled, so that understanding
+The great enemy of large-scale programing is a tendency for code to get entangled, so that understanding
 a piece of code is impossible in isolation.
-In a perfect world a module does one thing, and does it well.
+
+In a perfect world a module does one thing, does it well, and keeps its own secrets.
 
 When not to hide? As Stroustrup says, when the interface _is_ the implementation, like
 `struct Point{x: f32, y: f32}`.
@@ -118,7 +119,10 @@ if I create a directory `boo` containing a file `mod.rs`:
 pub fn answer()->u32 {
     42
 }
+```
+And now the main program can use both modules as separate files:
 
+```
 // mod3.rs
 mod foo;
 mod boo;
@@ -129,7 +133,9 @@ fn main() {
     println!("{:?} {}",f,res);    
 }
 ```
-Let's keep going. Update `boo/mod.rs` - note this module is explicitly exported as a submodule!
+
+Why two ways to do the same thing? Because `boo/mod.rs` can refer to other modules defined in `boo`,
+Update `boo/mod.rs` and add a new module - note this is explicitly exported as a submodule!
 
 ```rust
 pub fn answer()->u32 {
@@ -157,9 +163,16 @@ Please note that `use` has nothing to do with importing, and simply specifies vi
 of module names. For example:
 
 ```rust
-use boo::bar;
-...
-let q = bar::question();
+{
+    use boo::bar;
+    let q = bar::question();
+    ...
+}
+{
+    use boo::bar::question();
+    let q = question();
+    ...
+}
 
 ```
 An important point to note is there is no _separate compilation_ here. The main program and its
@@ -198,7 +211,8 @@ fn main() {
 ```
 Before people start chanting 'Cargo! Cargo!' let me justify this lower-level look at building Rust.
 I'm a great believer in 'Know Thy Toolchain', and this will reduce the amount of new magic you need
-to learn when we look at managing projects with Cargo.
+to learn when we look at managing projects with Cargo. Modules are basic language features and can be
+used outside Cargo projects.
 
 It's time to understand why Rust binaries are so large:
 
@@ -249,7 +263,9 @@ get increasingly delivered by the OS package manager, dynamic linking will becom
 
 ## Cargo
 
-The Rust standard library is not very large, compared to Java or Python.
+The Rust standard library is not very large, compared to Java or Python; although much more fully
+featured than C or C++, which lean heavily on operating system provided libraries.
+
 But it is straightforward to access community-provided libraries in [crates.io](https://crates.io)
 using __Cargo__.  Cargo will look up the correct version and download the source for you, and
 ensures that any other needed crates are downloaded as well.
@@ -270,9 +286,15 @@ authors = ["Your Name <you@example.org>"]
 
 [dependencies]
 ```
-To make the project depend on the [JSON crate](http://json.rs/doc/json/), just edit the
-'Cargo.toml' file and add the line 'json="*"' after '[dependencies]'.
-Then do a first build:
+To make the project depend on the [JSON crate](http://json.rs/doc/json/), edit the
+'Cargo.toml' file so:
+
+```
+[dependencies]
+json="*"
+```
+
+Then do a first build with Cargo:
 
 ```
 test-json$ cargo build
@@ -284,8 +306,9 @@ test-json$ cargo build
 ```
 The main file of this project has already been created - it's 'main.rs' in the 'src'
 directory. It starts out just as a 'hello world' app, so let's edit it to be a proper test program.
-note the very useful 'raw' string literal - otherwise we would need to escape those double quotes
-and end up being ugly:
+
+Mote the very useful 'raw' string literal - otherwise we would need to escape those double quotes
+and end up with ugliness:
 
 ```rust
 // test-json/src/main.rs
@@ -362,16 +385,209 @@ You can modify these structures. If we had `let mut doc` then this would do what
     features.push("cargo!").expect("couldn't push");
 ```
 The `push` might fail, hence it returns `Result<()>`: 
-here we WILL get an explosion if it isn't an array.
+here we _will_ get an explosion if it isn't an array.
+
+Here's a truly beautiful use of macros to generate _JSON literals_:
+
+```rust
+    let data = object!{
+        "name"    => "John Doe",
+        "age"     => 30,
+        "numbers" => array![10,53,553]
+    };
+    assert_eq!(
+        data.dump(),
+        r#"{"name":"John Doe","age":30,"numbers":[10,53,553]}"#
+    );    
+```
+
+For this to work, you need to explicitly import macros from the JSON crate thus:
+
+```rust
+#[macro_use]
+extern crate json;
+```
+
+There is a downside to using this crate, because of the mismatch between the amorphous, dynamically-typed
+nature of JSON and the structured, static nature of Rust. (The readme explicitly speaks of 'friction')
+So if you _did_ want to map JSON to Rust data structures, you would end up doing a lot of checking,
+because you can not assume that the received structure matches your structs! For that, a better
+solution is [serde-json](https://github.com/serde-rs/json) where you _serialize_ Rust data structures
+into JSON and _deserialize_ JSON into Rust.
+
+For this, create a another Cargo binary project with `cargo new --bin test-serde-json`, go into
+the `test-serde-json` directory and edit `Cargo.toml`. Edit it like so:
+
+```
+[dependencies]
+serde="0.9"
+serde_derive="0.9"
+serde_json="0.9"
+```
+
+And edit `src/main.rs` to be this:
+
+```rust
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Person {
+    name: String,
+    age: u8,
+    address: Address,
+    phones: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Address {
+    street: String,
+    city: String,
+}
+
+fn main() {
+    let data = r#" {
+     "name": "John Doe", "age": 43,
+     "address": {"street": "main", "city":"Downtown"},
+     "phones":["27726550023"]
+    } "#;
+    let p: Person = serde_json::from_str(data).expect("deserialize error");
+    println!("Please call {} at the number {}", p.name, p.phones[0]);
+    
+    println!("{:#?}",p);
+}
+```
+
+You have seen the `derive` attribute before, but the `serde_derive` crate defines _custom derives_
+for the special `Serialize` and `Deserialize` traits. And the result shows the generated Rust struct:
+
+```
+Please call John Doe at the number 27726550023
+Person {
+    name: "John Doe",
+    age: 43,
+    address: Address {
+        street: "main",
+        city: "Downtown"
+    },
+    phones: [
+        "27726550023"
+    ]
+}
+```
+
+Now, if you did this using the `json` crate, you would need a few hundred lines of custom conversion
+code, mostly error handling. Tedious, easy to mess up, and not where you want to put effort anyway.
+
+This is clearly the best solution if you are processing well-structured JSON from outside sources (it's
+possible to remap field names if needed) and provides a robust way for Rust programs to share data
+with other Rust programs (or anything that can write jSON) over the network.
+
+Serialization is an important technique and similar solutions exist for Java and Go - but with a big
+difference. In those languages the structure of the data is found at _run-time_ using _reflection_, but
+in this case the serialization code is generated at _compile-time_ - altogether more efficient.
 
 Cargo is considered to be one of the great strengths of the Rust ecosystem, because it does
-a lot of work for us. Otherwise we would have had to download this library from Github,
-build it as a static library crate, and link it against the program. It's painful to do this for
+a lot of work for us. Otherwise we would have had to download these libraries from Github,
+build as static library crates, and link them against the program. It's painful to do this for
 C++ projects, and would be nearly as painful for Rust projects if Cargo did not exist.
 C++ is somewhat unique in its painfullness here, so we should compare this with
 other languages' package managers. npm (for JavaScript) and pip (for Python) manage dependencies
 and downloads for you, but the distribution story is harder, since the user of your program
 needs NodeJS or Python installed. 
-`test-json` is statically linked against the JSON crate, so again it can be handed
+But these programs are statically linked against their dependencies, so again it can be handed
 out to your buddies without external dependencies.
+
+## More Gems
+
+When processing anything except simple text, regular expressions make your life much easier.
+These are commonly available for most languages and I'll here assume a basic familiarity with
+regex notation.  To use the [regex](https://github.com/rust-lang/regex) crate, put 'regex = "*"'
+after "[dependencies]" in your Cargo.toml.
+
+We'll use 'raw strings' again so that the backslashes don't have to be escaped. In English, this
+regular expression is "match exactly two digits, the character ':', and then any number of digits.
+Capture both sets of digits":
+
+```rust
+extern crate regex;
+use regex::Regex;
+
+let re = Regex::new(r"(\d{2}):(\d+)").unwrap();
+println!("{:?}", re.captures("  10:230"));
+println!("{:?}", re.captures("[22:2]"));
+println!("{:?}", re.captures("10:x23"));
+// Some(Captures({0: Some("10:230"), 1: Some("10"), 2: Some("230")}))
+// Some(Captures({0: Some("22:2"), 1: Some("22"), 2: Some("2")}))
+// None
+```
+
+The successful output actually has three _captures_ - the whole match, and the two sets of digits.
+These regular expressions are not _anchored_ by default, so __regex__ will hunt for the first
+occurring match, skipping anything that doesn't match.  (If you left out the '()' it would just
+give us the whole match.)
+
+It's possible to _name_ those captures, and spread the regular expression over several lines,
+even including comments!  Compiling the regex might fail (the first _expect_) or the match
+might fail (the second _expect_). Here we can use the result as an associative array and look
+up captures by name.
+
+```rust
+let re = Regex::new(r"(?x)
+(?P<year>\d{4})  # the year
+-
+(?P<month>\d{2}) # the month
+-
+(?P<day>\d{2})   # the day
+").expect("bad regex");
+let caps = re.captures("2010-03-14").expect("match failed");
+
+assert_eq!("2010", &caps["year"]);
+assert_eq!("03", &caps["month"]);
+assert_eq!("14", &caps["day"]);
+```
+
+Regular expressions can break up strings, but won't check whether they make _sense_. That is,
+you can specify and match the _syntax_ of ISO-style dates, but _semantically_ they may be nonsense,
+like "2014-24-52".
+
+For this, you need dedicated date-time processing, which is provided by [chrono](https://github.com/lifthrasiir/rust-chrono).
+You need to decide on a time zone when doing dates:
+
+```rust
+extern crate chrono;
+use chrono::*;
+
+fn main() {
+    let date = Local.ymd(2010,3,14);
+    println!("date was {}", date);
+}
+// date was 2010-03-14+02:00
+```
+
+However, this isn't recommended because feeding it bad dates will cause a panic! (try the bogus date
+to see this.) The method you need here is `ymd_opt` which returns `LocalResult<Date>`
+
+```rust
+    let date = Local.ymd_opt(2010,3,14);
+    println!("date was {:?}", date);
+    // date was Single(2010-03-14+02:00)
+
+    let date = Local.ymd_opt(2014,24,52);
+    println!("date was {:?}", date);
+    // date was None
+```
+
+You can also directly parse date-times, either in standard UTC format or using custom [formats](https://lifthrasiir.github.io/rust-chrono/chrono/format/strftime/index.html#specifiers).
+These self-same formats allow you to print out dates in exactly the format you want. 
+
+I specifically highlighted these two useful crates because they would be part of the standard
+library in most other languages. And, in fact, the embryonic form of these crates was
+once part of the Rust stdlib, but were cut loose. This was a deliberate decision: the Rust team takes
+stdlib stability very seriously so features only arrive in stable once they have gone through
+incubation in unstable nightly versions, and only then beta and stable.  For libraries that need
+experimentation and refinement, it's much better that they remain independent and get tracked
+with Cargo. For all practical purposes, these two crates _are_ standard - they are not going away and
+may be folded back into the stdlib at some point.
 
