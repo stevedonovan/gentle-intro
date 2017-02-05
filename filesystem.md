@@ -1,7 +1,7 @@
 ## Another look at Reading Files
 
 At the end of Part 1, I showed how to read a whole file into a string. Naturally
-this isn't always such a good idea, so here is reading a file line-by-line.
+this isn't always such a good idea, so here is how to read a file line-by-line.
 
 `fs::File` implements `io::Read`, which is the trait for anything readable.
 This trait defines a `read` method which will fill an array slice of `u8` with bytes -
@@ -38,7 +38,7 @@ fn read_all_lines(filename: &str) -> io::Result<()> {
 ```
 
 The `let line = line?` may look a bit strange. The `line` returned by the
-iterator is actually an `io::Result<String>` which we safely unwrap with `?`.
+iterator is actually an `io::Result<String>` which we unwrap with `?`.
 Because things _can_ go wrong during this iteration - I/O errors, swallowing
 a chunk of bytes that aren't UTF-8, and so forth. 
 
@@ -72,8 +72,10 @@ borrowed from `buf`, and this borrow must finish before we modify `buf`.  Again,
 Rust is trying to stop us doing something stupid, which is to access `line` _after_
 we've cleared the buffer.
 
-This isn't very pretty. I cannot give you a proper iterator that returns references, but
-I can give you something that _looks_ like an iterator. First define a generic struct;
+This isn't very pretty. I cannot give you a proper iterator that returns references
+to a buffer, but I can give you something that _looks_ like an iterator.
+
+First define a generic struct;
 the type parameter `R` is 'any type that implements Read'. It contains the reader
 and the buffer which we are going to borrow from.
 
@@ -156,7 +158,7 @@ string slice:
 
 It's tempting, but you are throwing away a possible error here; this loop will
 silently stop whenever an error occurs. In particular, it will stop at the first place
-where Rust can't convert a line to UTF-8.  Ok for 'casual' code, bad for production code!
+where Rust can't convert a line to UTF-8.  Fine for 'casual' code, bad for production code!
 
 ## Writing To Files
 
@@ -364,7 +366,7 @@ The length of the file (in bytes) and modified time are straightforward to inter
 
 `permissions` is an interesting one. Rust strives to be cross-platform, and so it's
 a case of the 'lowest common denominator'. In general, all you can query is whether
-the file is read-only - the 'permissions' concept is particular to Unix and encodes
+the file is read-only - the 'permissions' concept is extended in Unix and encodes
 read/write/executable for user/group/others.
 
 But, if you are not interested in Windows, then bringing in a platform-specific trait will give
@@ -380,9 +382,9 @@ println!("perm {:o}",data.permissions().mode());
 (Note '{:o}' for printing out in _octal_)
 
 (Whether a file is executable on Windows is determined by its extension. The executable
-extensions are found in the `PATHEXT` environment variable - 'exe','.bat' and so forth).
+extensions are found in the `PATHEXT` environment variable - '.exe','.bat' and so forth).
 
-`std::fs` contains a number of very useful functions for working with files, such as copying or
+`std::fs` contains a number of useful functions for working with files, such as copying or
 moving files, making symbolic links and creating directories.
 
 To find the contents of a directory, `std::fs::read_dir` provides an iterator.
@@ -423,7 +425,7 @@ code to be as efficient as possible.
 
 You can be forgiven for feeling 'error fatigue' at this point. But please note that
 the _errors always existed_ - it's not that Rust is inventing new ones. It's just
-trying its darndest to make it impossible for you to ignore them.  Any call to an
+trying its darnedest to make it hard for you to ignore them.  Any call to an
 operating system may fail, but C makes getting errors awkward. You check the return
 code, and if it's not zero you then have to inspect `errno`
 to find out what the actual error was.
@@ -438,8 +440,151 @@ of error checking and early-returns from functions.
 Rust uses `Result` because it's either-or: you cannot get a result _and_ an error.
 And the question-mark operator makes handling errors much cleaner.
 
+## Processes
 
+A fundamental need is for programs to run programs, or to _launch processes_.
+Your program can _spawn_ as many child processes it likes, and as the name
+suggests they have a special relationship with their parent.
 
+To run a program is straightforward using the `Command` struct, which _builds_ up
+arguments to pass to the program:
 
+```rust
+use std::process::Command;
 
+fn main() {
+    let status = Command::new("rustc")
+        .arg("-V")
+        .status()
+        .expect("no rustc?");
+        
+    println!("cool {} code {}",status.success(), status.code().unwrap());
+}
+// rustc 1.15.0-nightly (8f02c429a 2016-12-15)
+// cool true code 0
+```
+So `new` receives the name of the program (it will be looked up on `PATH` if not
+an absolute filename), `arg` adds a new argument, and `status` causes it to be run.
+This returns a `Result`, which is `Ok` if the program actually run, containing an
+`ExitStatus`. In this case, the program succeeded, and returned an exit code 0. (The
+`unwrap` is because we can't always get the code if the program was killed by
+a signal).
+
+If we change the `-V` to `-v` (an easy mistake) then `rustc` fails:
+
+```
+error: no input filename given
+
+cool false code 101
+```
+
+So there are three possibilities:
+
+  - program didn't exist, was bad, or we were not allowed to run it
+  - program ran, but was not successful - non-zero exit code
+  - program ran, with zero exit code. Success!
+
+By default, we get the program's output, since its standard output and standard error is
+still going to the terminal.
+
+Often we are very interested in capturing that output, so there's the `output`
+method.
+
+```rust
+// process2.rs
+use std::process::Command;
+
+fn main() {
+    let output = Command::new("rustc")
+        .arg("-V")
+        .output()
+        .expect("no rustc?");
+
+    if output.status.success() {
+        println!("ok!");
+    }
+    println!("len stdout {} stderr {}",output.stdout.len(), output.stderr.len());        
+}
+// ok!
+// len stdout 44 stderr 0
+```
+
+As with `status` our program blocks until the child process is finished, and we get
+back three things - the status (as before), the contents of stdout and the contents
+of stderr.
+
+The captured output is simply `Vec<u8>` - just bytes.  Recall we have no guarantee
+that data we receive from the operating system is a properly encoded UTF-8 string. In
+fact, we have no guarantee that it _even_ is a string - programs may return arbitrary
+binary data.
+
+If we are pretty sure the output is UTF-8, then `String::from_utf8` will convert those
+vectors or bytes - it returns a `Result` because this conversion may not succeed.
+A more sloppy function is `String::from_utf8_lossy` which will make a good attempt at
+conversion and insert the invalid Unicode mark � where it failed.
+
+Here is a useful function which runs a program using the shell. This uses the usual
+shell mechanism for joining stderr to stdout:
+
+```rust
+fn shell(cmd: &str) -> (String,bool) {
+    let cmd = format!("{} 2>&1",cmd);
+    let output = Command::new("/bin/sh")
+        .arg("-c")
+        .arg(&cmd)
+        .output()
+        .expect("no shell?");
+    (
+        String::from_utf8_lossy(&output.stdout).trim_right().to_string(),
+        output.status.success()
+    )
+}
+
+fn shell_success(cmd: &str) -> Option<String> {
+    let (output,success) = shell(cmd);
+    if success {Some(output)} else {None}
+}
+```
+
+I'm trimming any whitespace from the right so that if you said `shell("which rustc")`
+you will get the path without any extra linefeed.
+
+You can control the execution of a program by specifying the directory it will run
+in using the `current_dir` method and the environment variables it sees using `env`.
+
+Up to now, our program simply waits for the child process to finish. If you use
+the `spawn` method then we return immediately, and must explicitly wait for it to
+finish - or go off and do something else in the meantime!  This example also
+shows how to suppress both standard out and standard error:
+
+```rust
+// process5.rs
+use std::process::{Command,Stdio};
+
+fn main() {
+    let mut child = Command::new("rustc")
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .expect("no rustc?");
+
+    let res = child.wait();
+    println!("res {:?}", res);
+}
+```
+
+By default, the child 'inherits' the standard input and output of the parent. In this case,
+we redirect the child's output handles into 'nowhere'. It's equivalent to saying
+`> /dev/null 2> /dev/null` in the Unix shell.
+
+Now, it's possible to do these things using the shell in Rust, although not in a portable way.
+But this way you get full programmatic control of process creation.
+
+For example, if we just had `.stdout(Stdio::piped())` then the child's standard output
+is redirected to a pipe. If we then use `wait_with_output` instead of `wait` then
+it returns a `Result<Output>` and the child's output is captured into the `stdout`
+field of that `Output` just as before. Alternatively, the _child_'s `stdout` field is readable and
+you can manually read the child's output in the usual way.
+
+The `Child` struct also gives you an explicit `kill` method.
 
