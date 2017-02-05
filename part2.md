@@ -1153,7 +1153,24 @@ Here we evaluate a linear function:
 ```
 
 You cannot do this with the explicit `fn` form - it does not know about variables
-in the enclosing scope.
+in the enclosing scope. The closure has _borrowed_ `m` and `c` from its context.
+
+The usual Rules of Borrowing apply. This works fine - our little closure is borrowing
+`answer` mutably.
+
+```rust
+let mut answer = 42;
+
+let set = |v| answer = v;
+
+//let get = || answer;
+
+set(58);
+assert_eq! (answer, 58);
+```
+
+But uncomment `get` and you get a borrowing error:
+"cannot borrow `answer` as immutable because it is also borrowed as mutable"
 
 Now, what's the type of `lin`? Only `rustc` knows. Exactly the same situation applies
 to C++ lambdas, and for exactly the same version. Under the hood, a closure is a _struct_
@@ -1213,9 +1230,6 @@ string.
     call('d',|c| s.find(c).is_some());
 
 ```
-
-The closure is _borrowing_ `s`.  (It is impossible to sneakily copy `String` values.)
-This is the default behaviour for closures.
 
 Thinking of calling a closure as a _method call_ makes it easy to understand the
 three kinds of function traits - they are the three kinds of methods:
@@ -1278,7 +1292,37 @@ vector to have the _boxed trait type_ before things just work:
     let mut v: Vec<Box<Fn(f64)->f64>> = Vec::new();
 ```
 
-You can use these boxed closures to implement callbacks and so forth.
+You can use these boxed closures to implement callbacks and so forth. If you want to keep
+these boxed closures in a struct, then you will need a lifetime annotation, because
+_closures borrow variables_ and so their lifetime is tied to the lifetime of those
+variables.
+
+Sometimes you don't want a closure to borrow those variables, but instead _move_ them.
+
+```rust
+    let name = "dolly".to_string();
+    let age = 42;
+
+    let c = move || {
+        println!("name {} age {}",name,age);
+    };
+
+    c();
+
+    println!("name {}",name);
+```
+
+And the error at the last `println` is: "use of moved value: `name`". So one solution
+here - if we _did_ want to keep `name` alive - is to move a cloned copy into the closure:
+
+```rust
+    let cname = name.to_string();
+    let c = move || {
+        println!("name {} age {}",cname,age);
+    }
+```
+Why are moved closures needed? Because we might need to call them at a point where
+the original context no longer exists. A classic case is when creating a _thread_.
 
 A major use of closures is within iterator methods. Recall the `range` iterator we
 defined to go over a range of floating-point numbers. It's straightforward to operate
