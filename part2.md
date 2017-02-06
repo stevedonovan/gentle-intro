@@ -42,9 +42,9 @@ the copy will need its own allocated block.
 
 ```
     | addr | ---------> Call me Ishmael.....
-    | size |                    | 
-    | cap  |                    | 
-                                | 
+    | size |                    |
+    | cap  |                    |
+                                |
     | addr | -------------------|
     | size |
 
@@ -184,10 +184,10 @@ fn add_mul(x: f64, y: f64) -> (f64,f64) {
 
 fn main() {
     let t = add_mul(2.0,10.0);
-    
+
     // can debug print
     println!("t {:?}",t);
-    
+
     // can 'index' the values
     println!("add {} mul {}",t.0,t.1);
 
@@ -274,7 +274,7 @@ struct Person {
 }
 
 impl Person {
-    
+
     fn new(first: &str, name: &str) -> Person {
         Person {
             first_name: first.to_string(),
@@ -301,7 +301,7 @@ impl Person {
 
     fn full_name(&self) -> String {
         format!("{} {}",self.first_name, self.last_name)
-    }    
+    }
 
 }
 ...
@@ -361,189 +361,105 @@ helpful. It's good practice to do this for your structs, so they can be
 printed out (or written as a string using `format!`).  (Doing so _by default_ would be
 very un-Rustlike.)
 
-## Structs with Dynamic Data
+## Lifetimes Start to Bite
 
-A most powerful technique is _a struct that contain references to itself_.
-
-Here is the basic building block of a _binary tree_, expressed in C (everyone's
-favourite old relative with a frightening fondness for using power tools without
-protection.)
+Usually structs contain values, but often they also need to contain references.
+Say we want to put a string slice, not a string value, in a struct.
 
 ```rust
-    struct Node {
-        const char *payload;
-        struct Node *left;
-        struct Node *right;
-    };
-```    
-
-You can not do this by _directly_ including `Node` fields, because then the size of
-`Node` depends on the size of `Node`... it just doesn't compute. So we use pointers
-to `Node` structs, since the size of a pointer is always known.
-
-If `left` isn't `NULL`, the `Node` will have a left pointing to another node, and so
-moreorless indefinitely.
-
-Rust does not do `NULL` (at least not _safely_) so it's clearly a job for `Option`.
-But you cannot just put a `Node` in that `Option`, because we don't know the size
-of `Node` (and so forth.)  This is what `Box` is for. The `Box` struct is fed a
-value, allocates enough memory for it on the heap, and moves that value to the heap.
-A `Box` always has the same size (it's basically a smart pointer.) so we're good to go.
-
-So here's the Rust equivalent, using `type` to create an alias:
-
-```rust
-type NodeBox = Option<Box<Node>>;
+// life1.rs
 
 #[derive(Debug)]
-struct Node {
-    payload: String,
-    left: NodeBox,
-    right: NodeBox
+struct A {
+    s: &str
 }
-```
-(Rust is forgiving in this way - no need for forward declarations.)
-
-And a first test program:
-
-```rust
-impl Node {
-    fn new(s: &str) -> Node {
-        Node{payload: s.to_string(), left: None, right: None}
-    }
-
-    fn boxer(node: Node) -> NodeBox {
-        Some(Box::new(node))
-    }
-
-    fn set_left(&mut self, node: Node) {
-        self.left = Self::boxer(node);
-    }
-
-    fn set_right(&mut self, node: Node) {
-        self.right = Self::boxer(node);
-    }
-
-}
-
 
 fn main() {
-    let mut root = Node::new("root");
-    root.set_left(Node::new("left"));
-    root.set_right(Node::new("right"));
+    let a = A { s: "hello dammit" };
 
-    println!("arr {:#?}",root);
+    println!("{:?}",a);
 }
 ```
-The output is surprisingly pretty, thanks to "{:#?}" ('#' means 'extended'.)
 
 ```
-root Node {
-    payload: "root",
-    left: Some(
-        Node {
-            payload: "left",
-            left: None,
-            right: None
-        }
-    ),
-    right: Some(
-        Node {
-            payload: "right",
-            left: None,
-            right: None
-        }
-    )
-}
+error[E0106]: missing lifetime specifier
+ --> life1.rs:5:8
+  |
+5 |     s: &str
+  |        ^ expected lifetime parameter
 ```
-Now, what happens when `root` is dropped? All fields are dropped; if the 'branches' of
-the tree are dropped, they drop _their_ fields and so on. `Box::new` may be the
-closest you will get to a `new` keyword, but we have no need for `delete` or `free`.
+To understand the complaint, you have to see the problem from the point of view of Rust.
+It will not allow a reference to be stored without knowing its lifetime. Because all
+references are borrowed from some value, and values have lifetimes. The lifetime of
+a reference cannot be longer than the lifetime of that value.
+Rust cannot allow
+a situation where that reference could suddenly become invalid.
 
-We must know work out what use such a tree is. Here is a method which inserts nodes
-in _lexical order_ of the strings:
+Now, there are basically two kinds of string slices; those that refer to _string literals_
+like "hello" and those that borrow from `String` values. String literals exist for the duration
+of the whole program, which is called the 'static' lifetime.
+
+So this works - we assure Rust that the string slice always refers to such static strings:
 
 ```rust
-    fn insert(&mut self, data: &str) {
-        if data < &self.payload {
-            match self.left {
-            Some(ref mut n) => n.insert(data),
-            None => self.set_left(Self::new(data)),
-            }
-        } else {
-            match self.right {
-            Some(ref mut n) => n.insert(data),
-            None => self.set_right(Self::new(data)),
-            }            
-        }
-    }
+// life2.rs
 
-    ...
-    fn main() {
-        let mut root = Node::new("root");    
-        root.insert("one");
-        root.insert("two");
-        root.insert("four");
-
-        println!("root {:#?}",root);
-    }
-```
-And here's the tree:
-
-```
-root Node {
-    payload: "root",
-    left: Some(
-        Node {
-            payload: "one",
-            left: Some(
-                Node {
-                    payload: "four",
-                    left: None,
-                    right: None
-                }
-            ),
-            right: None
-        }
-    ),
-    right: Some(
-        Node {
-            payload: "two",
-            left: None,
-            right: None
-        }
-    )
+#[derive(Debug)]
+struct A {
+    s: &'static str
 }
-```
-The strings that are 'less' than other strings get put down the left side, otherwise
-the right side.
 
-Time for a visit. This is _in-order traversal_ - we visit the left, do something on
-the node, and then visit the right.
+fn main() {
+    let a = A { s: "hello dammit" };
+
+    println!("{:?}",a);
+}
+// A { s: "hello dammit" }
+```
+It is not the most _pretty_ notation, but sometimes ugliness is the necessary
+price of being precise.
+
+This can also be used to specify a string slice that is returned from a function:
 
 ```rust
-    fn visit(&self) {
-        if let Some(ref left) = self.left {
-            left.visit();
-        }
-        println!("'{}'",self.payload);
-        if let Some(ref right) = self.right {
-            right.visit();
-        }
+fn how(i: u32) -> &'static str {
+    match i {
+    0: 'none',
+    1: 'one',
+    _: 'many'
     }
-    ...
-    ...
-    root.visit();
-    // 'four'
-    // 'one'
-    // 'root'
-    // 'two'
+}
 ```
-So we're visiting the strings in order! Please note the reappearance of `ref` - `if let`
-uses exactly the same rules as `match`.
+That works for the special case of static strings, but this is very restrictive. However
+we can specify that the lifetime of the reference is _as least as long_ as that of
+the struct itself.
 
-`Box` is a _smart_ pointer; note that no 'unboxing' was needed to call
-`Node` methods on it!
+```rust
+// life3.rs
+
+#[derive(Debug)]
+struct A <'a> {
+    s: &'a str
+}
+
+fn main() {
+    let string = "I'm a little string".to_string();
+    let a = A { s: &string };
+
+    println!("{:?}",a);
+}
+```
+Lifetimes are conventionally called 'a','b',etc but you could just as well called it
+'me' here.
+
+Sometimes it seems like a good idea for a struct to contain a value _and_ a reference
+that borrows from that value.
+It's basically impossible because structs must be _moveable_, and any move will
+invalidate the reference.  It isn't necessary to do this - for instance, if your
+struct has a string field, and needs to provide slices, then it could keep indices
+and have a method to generate the actual slices.
+
+
 
 ## Traits
 
@@ -642,303 +558,6 @@ And _that_ is how you can put objects of different types in the same vector. If
 you come from a Java background, you can think of `Show` as an interface; the
 nearest C++ equivalent is "abstract base class".
 
-## Generic Functions
-
-The operation of squaring a number is _generic_ in that `x*x` will work for integers,
-floats and generally for anything that knows about the multiplication operator `*`.
-
-This Just Happens in dynamic languages because the arguments carry their type, and the
-runtime will then call the appropriate multiply operator - or fail miserably.
-(Which is always the painful thing about dynamic languages.)
-
-The Rust solution is a _generic function_, which has _type parameters_.
-
-```rust
-// gen1.rs
-
-fn sqr<T> (x: T) -> T {
-    x*x
-}
-
-fn main() {
-    let res = sqr(10.0);
-    println!("res {}",res);
-}
-```
-However, Rust is not C++ - it's not going to let you do this without knowing _something_
-about `T`:
-
-```
-error[E0369]: binary operation `*` cannot be applied to type `T`
- --> gen1.rs:4:5
-  |
-4 |     x*x
-  |     ^
-  |
-note: an implementation of `std::ops::Mul` might be missing for `T`
- --> gen1.rs:4:5
-  |
-4 |     x*x
-  |     ^
-```
-Following the advice of the compiler, let's _constrain_ that type parameter using
-that trait, which is used to implement the multiplication operator `*`:
-(`T: Mul` means 'any type T that implements Mul')
-
-```rust
-use std::ops::Mul;
-
-fn sqr<T: Mul> (x: T) -> T {
-    x*x
-}
-```
-
-Which still doesn't work:
-
-```
-rror[E0308]: mismatched types
- --> gen2.rs:6:5
-  |
-6 |     x*x
-  |     ^^^ expected type parameter, found associated type
-  |
-  = note: expected type `T`
-  = note:    found type `<T as std::ops::Mul>::Output`
-```
-What `rustc` is saying that the type of `x*x` is `T::Output`, not `T`. There's actually
-no reason that the type of `x*x` is the same as the type of `x`, e.g. the dot product
-of two vectors is a scalar.
-
-```rust
-fn sqr<T: Mul> (x: T) -> T::Output {
-    x*x
-}
-```
-
-and now the error is:
-
-```
-error[E0382]: use of moved value: `x`
- --> gen2.rs:6:7
-  |
-6 |     x*x
-  |     - ^ value used here after move
-  |     |
-  |     value moved here
-  |
-  = note: move occurs because `x` has type `T`, which does not implement the `Copy` trait
-```
-
-So, we need to constrain the type even further!
-
-```rust
-fn sqr<T: Mul + Copy> (x: T) -> T::Output {
-    x*x
-}
-```
-And that (finally) works. Calmly listening to the compiler will often get you closer
-to the magic point when ... things compile cleanly.
-
-It _is_ a bit simpler in C++:
-
-```cpp
-template <typename T>
-T sqr(x: T) {
-    return x*x;
-}
-```
-but (to be honest) C++ is adopting cowboy tactics here. C++ template errors are famously
-bad, because all the compiler knows (ultimately) is that some operator or method is
-not defined. The C++ committee knows this is a problem and so they are working
-toward [concepts](https://en.wikipedia.org/wiki/Concepts_(C%2B%2B)), which are pretty
-much like trait-constrained type parameters in Rust.
-
-Rust generic functions may look a bit overwhelming at first, but being explicit means
-you will know exactly what kind of values you can safely feed it.
-
-These functions are called _monomorphic_, in constrast to _polymorphic_. The body of
-the function is compiled separately for each unique type.  With polymorphic functions,
-the same machine code works with each matching type, dynamically _dispatching_
-the correct method. 
-
- Monomorphic produces faster code,
-specialized for the particular type, and can often be _inlined_.  So when `sqr(x)` is
-seen, it's effectively replaced with `x*x`.  The downside is that large generic
-functions produce a lot of code, for each type used, which can result in _code bloat_.
-As always, there are trade-offs; an experienced person learns to make the right choice
-for the job.
-
-## Generic Structs
-
-Consider the example of a binary tree. It would be _seriously irritating_ to
-have to rewrite it for all possible kinds of payload. Before C++ templates, people
-would do truly awful things with the C preprocessor to write 'generic' classes.
-
-So here's our generic `Node` with its _type parameter_ `T`. It's fairly similar to
-a C++ template struct.
-
-```rust
-type NodeBox<T> = Option<Box<Node<T>>>;
-
-#[derive(Debug)]
-struct Node<T> {
-    payload: T,
-    left: NodeBox<T>,
-    right: NodeBox<T>
-}
-```
-
-The implementation shows the difference between the languages. The fundamental operation
-on the payload is comparison, so T must be comparable with `<`, i.e. implements `PartialOrd`.
-The type parameter must be declared in the `impl` block with its constraints:
-
-
-```rust
-impl <T: PartialOrd> Node<T> {
-    fn new(s: T) -> Node<T> {
-        Node{payload: s, left: None, right: None}
-    }
-
-    fn boxer(node: Node<T>) -> NodeBox<T> {
-        Some(Box::new(node))
-    }
-
-    fn set_left(&mut self, node: Node<T>) {
-        self.left = Self::boxer(node);
-    }
-
-    fn set_right(&mut self, node: Node<T>) {
-        self.right = Self::boxer(node);
-    }
-
-    fn insert(&mut self, data: T) {
-        if data < self.payload {
-            match self.left {
-            Some(ref mut n) => n.insert(data),
-            None => self.set_left(Self::new(data)),
-            }
-        } else {
-            match self.right {
-            Some(ref mut n) => n.insert(data),
-            None => self.set_right(Self::new(data)),
-            }            
-        }
-    }
-}
-
-
-fn main() {
-    let mut root = Node::new("root".to_string());    
-    root.insert("one".to_string());
-    root.insert("two".to_string());
-    root.insert("four".to_string());
-
-    println!("root {:#?}",root);
-}
-```
-
-So generic structs need their type parameter(s) specified
-in angle brackets, like C++. Unlike C++, Rust is usually smart enough to work out
-that type parameter from context. But you do need to constrain that type appropriately!
-
-## Lifetimes Start to Bite
-
-Usually structs contain values, but often they also need to contain references.
-Say we want to put a string slice, not a string value, in a struct.
-
-```rust
-// life1.rs
-
-#[derive(Debug)]
-struct A {
-    s: &str
-}
-
-fn main() {
-    let a = A { s: "hello dammit" };
-
-    println!("{:?}",a);
-}
-```
-
-```
-error[E0106]: missing lifetime specifier
- --> life1.rs:5:8
-  |
-5 |     s: &str
-  |        ^ expected lifetime parameter
-```
-To understand the complaint, you have to see the problem from the point of view of Rust.
-It will not allow a reference to be stored without knowing its lifetime. Because all
-references are borrowed from some value, and values have lifetimes. The lifetime of
-a reference cannot be longer than the lifetime of that value.
-Rust cannot allow
-a situation where that reference could suddenly become invalid.
-
-Now, there are basically two kinds of string slices; those that refer to _string literals_
-like "hello" and those that borrow from `String` values. String literals exist for the duration
-of the whole program, which is called the 'static' lifetime.
-
-So this works - we assure Rust that the string slice always refers to such static strings:
-
-```rust
-// life2.rs
-
-#[derive(Debug)]
-struct A {
-    s: &'static str
-}
-
-fn main() {
-    let a = A { s: "hello dammit" };
-
-    println!("{:?}",a);
-}
-// A { s: "hello dammit" }
-```
-It is not the most _pretty_ notation, but sometimes ugliness is the necessary
-price of being precise.
-
-This can also be used to specify a string slice that is returned from a function:
-
-```rust
-fn how(i: u32) -> &'static str {
-    match i {
-    0: 'none',
-    1: 'one',
-    _: 'many'
-    }
-}
-```
-That works for the special case of static strings, but this is very restrictive. However
-we can specify that the lifetime of the reference is _as least as long_ as that of
-the struct itself.
-
-```rust
-// life3.rs
-
-#[derive(Debug)]
-struct A <'a> {
-    s: &'a str
-}
-
-fn main() {
-    let string = "I'm a little string".to_string();
-    let a = A { s: &string };
-
-    println!("{:?}",a);
-}
-```
-Lifetimes are conventionally called 'a','b',etc but you could just as well called it
-'me' here.
-
-Sometimes it seems like a good idea for a struct to contain a value _and_ a reference
-that borrows from that value. 
-It's basically impossible because structs must be _moveable_, and any move will
-invalidate the reference.  It isn't necessary to do this - for instance, if your
-struct has a string field, and needs to provide slices, then it could keep indices
-and have a method to generate the actual slices.
-
 ## Example: iterator over floating-point range
 
 We have met ranges before (`0..n`) but they don't work for floating-point values. (You
@@ -1007,17 +626,17 @@ fn main() {
 And the rather messy looking result is
 
 ```
-0 
-0.1 
-0.2 
-0.30000000000000004 
-0.4 
-0.5 
-0.6 
-0.7 
-0.7999999999999999 
-0.8999999999999999 
-0.9999999999999999 
+0
+0.1
+0.2
+0.30000000000000004
+0.4
+0.5
+0.6
+0.7
+0.7999999999999999
+0.8999999999999999
+0.9999999999999999
 ```
 This is because 0.1 is not precisely representable as a float, so a little formatting
 help is needed. Replace the `println!` with this
@@ -1043,7 +662,7 @@ It will be the type contained in the returned vector.
 ```rust
 trait ToVec {
     type Item;
-    
+
     fn to_vec(self) -> Vec<Self::Item>;
 }
 ```
@@ -1064,7 +683,7 @@ defined for vectors.
 impl <T,I> ToVec for I
 where T: Sized, I: Iterator<Item=T> {
     type Item = T;
-    
+
     fn to_vec(self) -> Vec<Self::Item> {
         FromIterator::from_iter(self)
     }
@@ -1073,7 +692,7 @@ where T: Sized, I: Iterator<Item=T> {
     let v = range(0.0, 1.0, 0.1).to_vec();
 ```
 Et voilà! No more awkwardness! The implementation was a little scary, but familiarity
-breeds acceptance. 
+breeds acceptance.
 
 ## Simple Enums
 
@@ -1298,7 +917,7 @@ fn dump(v: &Value) {
     ....
 
     dump(&s);
-    // string is 'hello' 
+    // string is 'hello'
 ```
 Before we move on, filled with the euphoria of a successful Rust compilation, let's
 pause a little. `rustc` is unusually good at generating errors that have enough
@@ -1412,7 +1031,7 @@ fn match_tuple(t: (i32,String)) {
         (1, ref s) if s == "hello" => format!("hello one!"),
         tt => format!("no match {:?}", tt)
      };
-    println!("{}", text);    
+    println!("{}", text);
 }
 ```
 
@@ -1444,10 +1063,10 @@ isn't necessary to have nested `if let` statements here.
 
 ```rust
     let ot = Some((2,"hello".to_string());
-    
+
     if let Some((_,ref s)) = ot {
         assert_eq!(s,"hello");
-    }    
+    }
     // we just borrowed the string, no 'destructive destructuring'
 ```
 
@@ -1477,7 +1096,7 @@ would be even more non-elegant:
     if let Some(n) = maybe_n {
         ...
     }
-```    
+```
 
 ## Closures
 
@@ -1526,15 +1145,32 @@ Here we evaluate a linear function:
 ```rust
     let m = 2.0;
     let c = 1.0;
-    
-    let lin = |x| m*x + c;    
+
+    let lin = |x| m*x + c;
 
     println!("res {} {}", lin(1.0), lin(2.0));
     // res 3 5
 ```
 
 You cannot do this with the explicit `fn` form - it does not know about variables
-in the enclosing scope.
+in the enclosing scope. The closure has _borrowed_ `m` and `c` from its context.
+
+The usual Rules of Borrowing apply. This works fine - our little closure is borrowing
+`answer` mutably.
+
+```rust
+let mut answer = 42;
+
+let set = |v| answer = v;
+
+//let get = || answer;
+
+set(58);
+assert_eq! (answer, 58);
+```
+
+But uncomment `get` and you get a borrowing error:
+"cannot borrow `answer` as immutable because it is also borrowed as mutable"
 
 Now, what's the type of `lin`? Only `rustc` knows. Exactly the same situation applies
 to C++ lambdas, and for exactly the same version. Under the hood, a closure is a _struct_
@@ -1571,7 +1207,7 @@ error[E0382]: use of moved value: `lin`
    |
    = note: move occurs because `lin` has type
     `[closure@closure2.rs:12:15: 12:26 m:&f64, c:&f64]`,
-     which does not implement the `Copy` trait    
+     which does not implement the `Copy` trait
 
 ```
 
@@ -1594,9 +1230,6 @@ string.
     call('d',|c| s.find(c).is_some());
 
 ```
-
-The closure is _borrowing_ `s`.  (It is impossible to sneakily copy `String` values.)
-This is the default behaviour for closures.
 
 Thinking of calling a closure as a _method call_ makes it easy to understand the
 three kinds of function traits - they are the three kinds of methods:
@@ -1627,7 +1260,9 @@ allocated closure.
 
 You can of course explicitly create a dynamically allocated closure in Rust using `Box::new`.
 This solves the problem of keeping a collection of different closures that implement the
-same trait.
+same trait.  The `Box` struct is fed a
+value, allocates enough memory for it on the heap, and moves that value to the heap.
+A `Box` always has the same size (it's basically a smart pointer.) so we're good to go.
 
 Here's a first try:
 
@@ -1640,7 +1275,7 @@ Here's a first try:
         let res = f(1.0);
         println!("res {}",res);
     }
-```    
+```
 
 We get a very definite error on the second push:
 
@@ -1657,7 +1292,37 @@ vector to have the _boxed trait type_ before things just work:
     let mut v: Vec<Box<Fn(f64)->f64>> = Vec::new();
 ```
 
-You can use these boxed closures to implement callbacks and so forth.
+You can use these boxed closures to implement callbacks and so forth. If you want to keep
+these boxed closures in a struct, then you will need a lifetime annotation, because
+_closures borrow variables_ and so their lifetime is tied to the lifetime of those
+variables.
+
+Sometimes you don't want a closure to borrow those variables, but instead _move_ them.
+
+```rust
+    let name = "dolly".to_string();
+    let age = 42;
+
+    let c = move || {
+        println!("name {} age {}",name,age);
+    };
+
+    c();
+
+    println!("name {}",name);
+```
+
+And the error at the last `println` is: "use of moved value: `name`". So one solution
+here - if we _did_ want to keep `name` alive - is to move a cloned copy into the closure:
+
+```rust
+    let cname = name.to_string();
+    let c = move || {
+        println!("name {} age {}",cname,age);
+    }
+```
+Why are moved closures needed? Because we might need to call them at a point where
+the original context no longer exists. A classic case is when creating a _thread_.
 
 A major use of closures is within iterator methods. Recall the `range` iterator we
 defined to go over a range of floating-point numbers. It's straightforward to operate
@@ -1690,3 +1355,453 @@ a condition:
     }
 ```
 
+## The Three Kinds of Iterators
+
+The three kinds correspond (again) to the three basic argument types. Assume we
+have a vector of `String` values. Here are the iterator types explicitly, and
+then _implicitly_, together with the actual type returned by the iterator.
+
+```rust
+for s in vec.iter() {...} // &String
+for s in vec.iter_mut() {...} // &mut String
+for s in vec.into_iter() {...} // String
+
+// implicit!
+for s in &vec {...} // &String
+for s in &mut vec {...} // &mut String
+for s in vec {...} // String
+```
+Personally I prefer being explicit, but it's important to understand both forms,
+and their implications.
+
+`into_iter` _consumes_ the vector and extracts its strings,
+and so afterwards the vector is no longer available - it has been moved. It's
+a definite gotcha for Pythonistas used to saying `for s in vec`!
+
+ So the
+implicit form `for s in &vec` is usually the one you want, just as `&T` is a good
+default in passing arguments to functions.
+
+It's important to understand how the three kinds works because Rust relies heavily
+on type deduction - you won't often see explicit types in closure arguments. And this
+is a Good Thing, because it would be noisy if all those types were explicitly
+_typed out_. However, the price of this compact code is that you need to know
+what the implicit types actually are!
+
+`map` takes whatever value the iterator returns and converts it into something else,
+but `filter` takes a _reference_ to that value. In this case, we're using `iter` so
+the iterator return type is `&String`. Note that `filter` receives a reference to this type.
+
+```rust
+for n in vec.iter().map(|x: &String| x.len()) {...} // n is usize
+for s in vec.iter().filter(|x: &&String| x.len() > 2) {...}
+```
+
+When calling methods, Rust will derefence automatically, so the problem isn't obvious.
+But `|x: &&String| x == "one"|` will _not_ work, because operators are more strict
+about type matching. `rustc` will complain that there is no such operator that
+compares `&&String` and `&str`. So you need an explicit deference to make that `&&String`
+into a `&String` which _does_ match.
+
+```rust
+for s in vec.iter().filter(|x: &&String| *x == "one") {...}
+```
+
+If you leave out the explicit type, you can modify the argument so that the type of `s`
+is now `&String`:
+
+```rust
+for s in vec.iter().filter(|&x| x == "one")
+```
+
+And that's usually how you will see it written.
+
+## Structs with Dynamic Data
+
+A most powerful technique is _a struct that contain references to itself_.
+
+Here is the basic building block of a _binary tree_, expressed in C (everyone's
+favourite old relative with a frightening fondness for using power tools without
+protection.)
+
+```rust
+    struct Node {
+        const char *payload;
+        struct Node *left;
+        struct Node *right;
+    };
+```
+
+You can not do this by _directly_ including `Node` fields, because then the size of
+`Node` depends on the size of `Node`... it just doesn't compute. So we use pointers
+to `Node` structs, since the size of a pointer is always known.
+
+If `left` isn't `NULL`, the `Node` will have a left pointing to another node, and so
+moreorless indefinitely.
+
+Rust does not do `NULL` (at least not _safely_) so it's clearly a job for `Option`.
+But you cannot just put a `Node` in that `Option`, because we don't know the size
+of `Node` (and so forth.)  This is a job for `Box`, since it contains a allocated
+pointer to the data, and always has a fixed size.
+
+So here's the Rust equivalent, using `type` to create an alias:
+
+```rust
+type NodeBox = Option<Box<Node>>;
+
+#[derive(Debug)]
+struct Node {
+    payload: String,
+    left: NodeBox,
+    right: NodeBox
+}
+```
+(Rust is forgiving in this way - no need for forward declarations.)
+
+And a first test program:
+
+```rust
+impl Node {
+    fn new(s: &str) -> Node {
+        Node{payload: s.to_string(), left: None, right: None}
+    }
+
+    fn boxer(node: Node) -> NodeBox {
+        Some(Box::new(node))
+    }
+
+    fn set_left(&mut self, node: Node) {
+        self.left = Self::boxer(node);
+    }
+
+    fn set_right(&mut self, node: Node) {
+        self.right = Self::boxer(node);
+    }
+
+}
+
+
+fn main() {
+    let mut root = Node::new("root");
+    root.set_left(Node::new("left"));
+    root.set_right(Node::new("right"));
+
+    println!("arr {:#?}",root);
+}
+```
+The output is surprisingly pretty, thanks to "{:#?}" ('#' means 'extended'.)
+
+```
+root Node {
+    payload: "root",
+    left: Some(
+        Node {
+            payload: "left",
+            left: None,
+            right: None
+        }
+    ),
+    right: Some(
+        Node {
+            payload: "right",
+            left: None,
+            right: None
+        }
+    )
+}
+```
+Now, what happens when `root` is dropped? All fields are dropped; if the 'branches' of
+the tree are dropped, they drop _their_ fields and so on. `Box::new` may be the
+closest you will get to a `new` keyword, but we have no need for `delete` or `free`.
+
+We must know work out what use such a tree is. Note that strings can be ordered:
+'bar' < 'foo', 'abba' > 'aardvark'; so-called 'alphabetical order'.
+
+ Here is a method which inserts nodes in _lexical order_ of the strings:
+
+```rust
+    fn insert(&mut self, data: &str) {
+        if data < &self.payload {
+            match self.left {
+            Some(ref mut n) => n.insert(data),
+            None => self.set_left(Self::new(data)),
+            }
+        } else {
+            match self.right {
+            Some(ref mut n) => n.insert(data),
+            None => self.set_right(Self::new(data)),
+            }
+        }
+    }
+
+    ...
+    fn main() {
+        let mut root = Node::new("root");
+        root.insert("one");
+        root.insert("two");
+        root.insert("four");
+
+        println!("root {:#?}",root);
+    }
+```
+
+Note the `match` - we're pulling out a mutable reference to the box, if the `Option`
+is `Some`, and applying the `insert` method. Otherwise, we need to create a new `Node`
+for the left side and so forth.
+
+And here's the output tree:
+
+```
+root Node {
+    payload: "root",
+    left: Some(
+        Node {
+            payload: "one",
+            left: Some(
+                Node {
+                    payload: "four",
+                    left: None,
+                    right: None
+                }
+            ),
+            right: None
+        }
+    ),
+    right: Some(
+        Node {
+            payload: "two",
+            left: None,
+            right: None
+        }
+    )
+}
+```
+The strings that are 'less' than other strings get put down the left side, otherwise
+the right side.
+
+Time for a visit. This is _in-order traversal_ - we visit the left, do something on
+the node, and then visit the right.
+
+```rust
+    fn visit(&self) {
+        if let Some(ref left) = self.left {
+            left.visit();
+        }
+        println!("'{}'",self.payload);
+        if let Some(ref right) = self.right {
+            right.visit();
+        }
+    }
+    ...
+    ...
+    root.visit();
+    // 'four'
+    // 'one'
+    // 'root'
+    // 'two'
+```
+So we're visiting the strings in order! Please note the reappearance of `ref` - `if let`
+uses exactly the same rules as `match`.
+
+`Box` is a _smart_ pointer; note that no 'unboxing' was needed to call
+`Node` methods on it!
+
+## Generic Functions
+
+The operation of squaring a number is _generic_ in that `x*x` will work for integers,
+floats and generally for anything that knows about the multiplication operator `*`.
+
+This Just Happens in dynamic languages because the arguments carry their type, and the
+runtime will then call the appropriate multiply operator - or fail miserably.
+(Which is always the painful thing about dynamic languages.)
+
+The Rust solution is a _generic function_, which has _type parameters_.
+
+```rust
+// gen1.rs
+
+fn sqr<T> (x: T) -> T {
+    x*x
+}
+
+fn main() {
+    let res = sqr(10.0);
+    println!("res {}",res);
+}
+```
+However, Rust is not C++ - it's not going to let you do this without knowing _something_
+about `T`:
+
+```
+error[E0369]: binary operation `*` cannot be applied to type `T`
+ --> gen1.rs:4:5
+  |
+4 |     x*x
+  |     ^
+  |
+note: an implementation of `std::ops::Mul` might be missing for `T`
+ --> gen1.rs:4:5
+  |
+4 |     x*x
+  |     ^
+```
+Following the advice of the compiler, let's _constrain_ that type parameter using
+that trait, which is used to implement the multiplication operator `*`:
+(`T: Mul` means 'any type T that implements Mul')
+
+```rust
+use std::ops::Mul;
+
+fn sqr<T: Mul> (x: T) -> T {
+    x*x
+}
+```
+
+Which still doesn't work:
+
+```
+rror[E0308]: mismatched types
+ --> gen2.rs:6:5
+  |
+6 |     x*x
+  |     ^^^ expected type parameter, found associated type
+  |
+  = note: expected type `T`
+  = note:    found type `<T as std::ops::Mul>::Output`
+```
+What `rustc` is saying that the type of `x*x` is `T::Output`, not `T`. There's actually
+no reason that the type of `x*x` is the same as the type of `x`, e.g. the dot product
+of two vectors is a scalar.
+
+```rust
+fn sqr<T: Mul> (x: T) -> T::Output {
+    x*x
+}
+```
+
+and now the error is:
+
+```
+error[E0382]: use of moved value: `x`
+ --> gen2.rs:6:7
+  |
+6 |     x*x
+  |     - ^ value used here after move
+  |     |
+  |     value moved here
+  |
+  = note: move occurs because `x` has type `T`, which does not implement the `Copy` trait
+```
+
+So, we need to constrain the type even further!
+
+```rust
+fn sqr<T: Mul + Copy> (x: T) -> T::Output {
+    x*x
+}
+```
+And that (finally) works. Calmly listening to the compiler will often get you closer
+to the magic point when ... things compile cleanly.
+
+It _is_ a bit simpler in C++:
+
+```cpp
+template <typename T>
+T sqr(x: T) {
+    return x*x;
+}
+```
+but (to be honest) C++ is adopting cowboy tactics here. C++ template errors are famously
+bad, because all the compiler knows (ultimately) is that some operator or method is
+not defined. The C++ committee knows this is a problem and so they are working
+toward [concepts](https://en.wikipedia.org/wiki/Concepts_(C%2B%2B)), which are pretty
+much like trait-constrained type parameters in Rust.
+
+Rust generic functions may look a bit overwhelming at first, but being explicit means
+you will know exactly what kind of values you can safely feed it.
+
+These functions are called _monomorphic_, in constrast to _polymorphic_. The body of
+the function is compiled separately for each unique type.  With polymorphic functions,
+the same machine code works with each matching type, dynamically _dispatching_
+the correct method.
+
+ Monomorphic produces faster code,
+specialized for the particular type, and can often be _inlined_.  So when `sqr(x)` is
+seen, it's effectively replaced with `x*x`.  The downside is that large generic
+functions produce a lot of code, for each type used, which can result in _code bloat_.
+As always, there are trade-offs; an experienced person learns to make the right choice
+for the job.
+
+
+## Generic Structs
+
+Consider the example of a binary tree. It would be _seriously irritating_ to
+have to rewrite it for all possible kinds of payload. Before C++ templates, people
+would do truly awful things with the C preprocessor to write 'generic' classes.
+
+So here's our generic `Node` with its _type parameter_ `T`. It's fairly similar to
+a C++ template struct.
+
+```rust
+type NodeBox<T> = Option<Box<Node<T>>>;
+
+#[derive(Debug)]
+struct Node<T> {
+    payload: T,
+    left: NodeBox<T>,
+    right: NodeBox<T>
+}
+```
+
+The implementation shows the difference between the languages. The fundamental operation
+on the payload is comparison, so T must be comparable with `<`, i.e. implements `PartialOrd`.
+The type parameter must be declared in the `impl` block with its constraints:
+
+
+```rust
+impl <T: PartialOrd> Node<T> {
+    fn new(s: T) -> Node<T> {
+        Node{payload: s, left: None, right: None}
+    }
+
+    fn boxer(node: Node<T>) -> NodeBox<T> {
+        Some(Box::new(node))
+    }
+
+    fn set_left(&mut self, node: Node<T>) {
+        self.left = Self::boxer(node);
+    }
+
+    fn set_right(&mut self, node: Node<T>) {
+        self.right = Self::boxer(node);
+    }
+
+    fn insert(&mut self, data: T) {
+        if data < self.payload {
+            match self.left {
+            Some(ref mut n) => n.insert(data),
+            None => self.set_left(Self::new(data)),
+            }
+        } else {
+            match self.right {
+            Some(ref mut n) => n.insert(data),
+            None => self.set_right(Self::new(data)),
+            }
+        }
+    }
+}
+
+
+fn main() {
+    let mut root = Node::new("root".to_string());
+    root.insert("one".to_string());
+    root.insert("two".to_string());
+    root.insert("four".to_string());
+
+    println!("root {:#?}",root);
+}
+```
+
+So generic structs need their type parameter(s) specified
+in angle brackets, like C++. Unlike C++, Rust is usually smart enough to work out
+that type parameter from context. But you do need to constrain that type appropriately!

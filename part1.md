@@ -205,7 +205,7 @@ at run time.
 
 At the moment, it feels like Rust is _hiding_ those types from you. What
 exactly is the type of `i`?  The compiler can work it out, starting with 0,
-with _type inference_, and comes up with `i32` (four byte signed integer.) 
+with _type inference_, and comes up with `i32` (four byte signed integer.)
 
 Let's make exactly one change - turn that `0` into `0.0`. Then we get errors:
 
@@ -218,7 +218,7 @@ error[E0277]: the trait bound `{float}: std::ops::AddAssign<{integer}>` is not s
   |
 
 ```
- 
+
 Ok, so the honeymoon is over: what does this mean? `AddAssign` is the name of the
 trait implementing the `+=` operator, and the error is saying that floating point
 numbers do not implement this operator for a integer.  Again, Rust likes to be
@@ -230,7 +230,7 @@ We have to _cast_ that value to a floating-point value explicitly.
 // add3.rs
 fn main() {
     let mut sum = 0.0;
-    for i in 0..5 { 
+    for i in 0..5 {
         sum += i as f64;
     }
     println!("sum is {}",sum);
@@ -372,7 +372,7 @@ fn main() {
 ```
 This is much more how C would do it, than C++. You have to explicitly pass the
 reference (with `&`) and explicitly _dereference_ with `*`. And then throw in `mut`
-because it's not the default. (I've always felt that C++ references are 
+because it's not the default. (I've always felt that C++ references are
 too easy to miss compared to C.)
 
 Basically, Rust is introducing some _friction_ here, and not-so-subtly pushing
@@ -403,7 +403,7 @@ _value itself_ as a method, like so:
 ```rust
 let pi = 3.1416;
 let x = pi/2.0;
-let cosine = x.cos() 
+let cosine = x.cos()
 ```
 And the result will be sort-of zero; we obviously need a more authoritative source
 of pi-ness!
@@ -439,7 +439,7 @@ fn main() {
     assert!(abs_difference < 1e-10);
 }
 ```
-Why haven't we needed to do this up to now? 
+Why haven't we needed to do this up to now?
 This is because Rust helpfully makes a lot of basic functionality visible without
 explicit `use` statements.
 
@@ -458,7 +458,7 @@ fn main() {
     for i in 0..4 {
         println!("[{}] = {}", i,arr[i]);
     }
-    println!("length {}", arr.len());   
+    println!("length {}", arr.len());
 }
 ```
 
@@ -580,13 +580,13 @@ Array slices give you different _views_ of the _same_ array:
 ```rust
 // slice1.rs
 fn main() {
-    let ints = [1, 2, 3, 4, 5];    
-    let slice1 = &ints[0..2]; 
+    let ints = [1, 2, 3, 4, 5];
+    let slice1 = &ints[0..2];
     let slice2 = &ints[1..];  // open range!
 
     println!("ints {:?}", ints);
     println!("slice1 {:?}", slice1);
-    println!("slice2 {:?}", slice2);    
+    println!("slice2 {:?}", slice2);
 }
 ```
 
@@ -619,11 +619,11 @@ There is a slice method `get` which does not panic. But what does it return?
 ```rust
 // slice2.rs
 fn main() {
-    let ints = [1, 2, 3, 4, 5];    
+    let ints = [1, 2, 3, 4, 5];
     let slice = &ints;
     let first = slice.get(0);
     let last = slice.get(5);
-    
+
     println!("first {:?}", first);
     println!("last {:?}", last);
 }
@@ -689,7 +689,7 @@ fn main() {
 
     let first = v[0];  // will panic if out-of-range
     let maybe_first = v.get(0);
-    
+
     println!("v is {:?}", v);
     println!("first is {}", first);
     println!("maybe_first is {:?}", maybe_first);
@@ -721,11 +721,11 @@ fn main() {
     v.push(10);
     v.push(20);
     v.push(30);
-    
+
     dump(&v);
 
     let slice = &v[1..];
-    println!("slice is {:?}", slice);    
+    println!("slice is {:?}", slice);
 }
 ```
 That little, so-important borrow operator `&` is _coercing_ the vector into a
@@ -868,7 +868,7 @@ values!
 ```rust
 // slice4.rs
 fn main() {
-    let ints = [1, 2, 3, 4, 5];    
+    let ints = [1, 2, 3, 4, 5];
     let slice = &ints;
 
     for s in slice.windows(2) {
@@ -902,12 +902,12 @@ using any compatible iterator.
 fn main() {
     let mut v1 = vec![10, 20, 30, 40];
     v1.pop();
-    
+
     let mut v2 = Vec::new();
     v2.push(10);
     v2.push(20);
     v2.push(30);
-    
+
     assert_eq!(v1, v2);
 
     v2.extend(0..2);
@@ -989,7 +989,7 @@ fn main() {
     s += "World!"; // short for `push_str`
     // remove the last char
     s.pop();
-    
+
     assert_eq!(s,"Hello World");
 }
 ```
@@ -1000,7 +1000,7 @@ up more complicated strings using the same format strings as `println!`.
 ```rust
 // string5.rs
 fn array_to_str(arr: &[i32]) -> String {
-    let mut res = "[".to_string();    
+    let mut res = "[".to_string();
     for v in arr {
         res += &v.to_string();
         res.push(',');
@@ -1013,7 +1013,7 @@ fn array_to_str(arr: &[i32]) -> String {
 fn main() {
     let arr = array_to_str(&[10, 20, 30]);
     let res = format!("hello {}",arr);
-    
+
     assert_eq!(res,"hello [10,20,30]");
 }
 ```
@@ -1025,7 +1025,7 @@ The slice notation we saw used for array slices works with strings as well:
 ```rust
 // string2.rs
 fn main() {
-    let text = "static"; 
+    let text = "static";
     let string = "dynamic".to_string();
 
     let text_s = &text[1..];
@@ -1059,7 +1059,7 @@ fn main() {
         println!("Russian hi {}", hi);
     }
 }
-// 'H' 'i' '!' ' ' '¡' 'H' 'o' 'l' 'a' '!' ' ' 'п' 'р' 'и' 'в' 'е' 'т' '!' 
+// 'H' 'i' '!' ' ' '¡' 'H' 'o' 'l' 'a' '!' ' ' 'п' 'р' 'и' 'в' 'е' 'т' '!'
 // len 25
 // count 18
 // Russian hi привет!
@@ -1268,7 +1268,7 @@ straightforward.
 
 If you know anything about file handling in other languages, you may wonder when
 the file is _closed_. If we were writing to this file, then not closing it could
-result in loss of data. 
+result in loss of data.
 But the file here is closed when the function ends and the `file` variable is _dropped_.
 
 This 'throwing away errors' thing is getting too much of a habit. You do not
@@ -1302,7 +1302,7 @@ fn read_to_string(filename: &str) -> io::Result<String> {
 
 fn main() {
     let file = env::args().nth(1).expect("please supply a filename");
-    
+
     let text = read_to_string(&file).expect("bad file man!");
 
     println!("file had {} bytes",text.len());
