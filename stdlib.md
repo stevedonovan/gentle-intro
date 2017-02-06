@@ -54,7 +54,7 @@ println!("before {}",map.get("two").unwrap());
     *mref = 20;
 }
 
-println!("before {}",map.get("two").unwrap());
+println!("after {}",map.get("two").unwrap());
 // before 2
 // after 20
 ```
