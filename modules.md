@@ -25,7 +25,7 @@ mod foo {
 
 fn main() {
     let f = foo::Foo{s: "hello"};
-    println!("{:?}",f);
+    println!("{:?}", f);
 }
 ```
 
@@ -59,7 +59,7 @@ mod foo {
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}",f);
+    println!("{:?}", f);
 }
 ```
 
@@ -105,7 +105,7 @@ mod foo;
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}",f);
+    println!("{:?}", f);
 }
 ```
 Now `rustc mod3.rs` will cause `foo.rs` to be compiled as well. There is no need to fool around
@@ -130,7 +130,7 @@ mod boo;
 fn main() {
     let f = foo::Foo::new("hello");
     let res = boo::answer();
-    println!("{:?} {}",f,res);
+    println!("{:?} {}", f, res);
 }
 ```
 
@@ -196,6 +196,7 @@ We can now _link_ this into our main program:
 ```
 src$ rustc mod4.rs --extern foo=libfoo.rlib
 ```
+
 But the main program must now look like this, where the `extern` name is the same
 as the one used when linking. There is an implicit top-level module `foo` associated
 with the library crate:
@@ -206,9 +207,10 @@ extern crate foo;
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}",f);
+    println!("{:?}", f);
 }
 ```
+
 Before people start chanting 'Cargo! Cargo!' let me justify this lower-level look at building Rust.
 I'm a great believer in 'Know Thy Toolchain', and this will reduce the amount of new magic you need
 to learn when we look at managing projects with Cargo. Modules are basic language features and can be
@@ -230,9 +232,10 @@ src$ strip mod4
 src$ ls -lh mod4
 -rwxrwxr-x 1 steve steve 300K Jan  5 13:49 mod4
 ```
+
 Still feels a little large for something so simple, but this program links _statically_ against
 the Rust standard library. This is a Good Thing, since you can hand this executable to anyone
-with the right operating system - they will not need a 'Rust install`. (And `rustup` will even let
+with the right operating system - they will not need a 'Rust install'. (And `rustup` will even let
 you cross-compile for other operating systems and platforms as well.)
 
 We can link dynamically against the Rust runtime and get truly tiny exes:
@@ -247,6 +250,7 @@ src$ ldd mod4
 	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f3cd47aa000)
 	/lib64/ld-linux-x86-64.so.2 (0x00007f3cd4d72000)
 ```
+
 That 'not found' is because `rustup` doesn't install the dynamic libraries globally. We
 can hack our way to happiness, at least on Unix (yes, I know the best solution is a symlink.)
 
@@ -590,4 +594,3 @@ incubation in unstable nightly versions, and only then beta and stable.  For lib
 experimentation and refinement, it's much better that they remain independent and get tracked
 with Cargo. For all practical purposes, these two crates _are_ standard - they are not going away and
 may be folded back into the stdlib at some point.
-
