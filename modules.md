@@ -59,7 +59,7 @@ mod foo {
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}", f);    
+    println!("{:?}", f);
 }
 ```
 
@@ -105,7 +105,7 @@ mod foo;
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}", f);    
+    println!("{:?}", f);
 }
 ```
 Now `rustc mod3.rs` will cause `foo.rs` to be compiled as well. There is no need to fool around
