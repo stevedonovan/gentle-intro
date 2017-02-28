@@ -1,8 +1,83 @@
-## Maps
+## Reading the Documentation
 
 In this section I'll briefly introduce some very useful parts of the Rust standard
-library. The documentation (as always) is excellent but a little motivation is
-useful.
+library. The documentation (as always) is excellent but a little context and a few examples is
+always useful.
+
+Initially, reading the Rust documentation can be challenging. I'll take the `Vec` struct as an
+example.  A useful tip is to tick the '[-]' box to collapse the docs. (If you download the 
+standard library source using `rustup component add rust-src` a '[src]' link will appear next to this.)
+This gives you a bird's eye view of all the available methods.
+
+The first point to notice is that _not all possible methods_ are defined on `Vec` itself. They are (mostly)
+mutable methods that change the vector, e.g. `push`. Some methods are only implemented for vectors where
+the type matches some constraint. For example, you can only call `dedup` (remove duplicates) if the 
+type is indeed something that can be compared for equality.
+
+Then there's the very special relationship between `Vec<T>` and `&[T]`.  Any method that works on
+array slices will also directly work on vectors, without explicitly having to use the `as_slice` method.
+This relationship is expressed by `Deref<Target=[T]>`. This also kicks in when you pass a vector by
+mutable reference to something that expects an array slice - this is one of the few places where
+a conversion between types happens automatically. So array slice methods like `first`, which maybe-returns
+a reference to the first element, or `last`, work for vectors as well. Many of the methods are similar
+to the corresponding string methods, so there's `split_at` for getting a pair of slices spit at an index,
+`starts_with` to check whether a vector starts with sequence of values, and `contains` to check whether
+a vector contains a particular value.
+
+There's no `search` method for finding the index of a particular value, but here's a rule of thumb:
+if you can't find a method on the container, look for a method on the iterator:
+
+```rust
+    let v = vec![10,20,30,40,50];
+    assert_eq!(v.iter().position(|&i| i == 30).unwrap(), 2);
+```
+
+(The `&` is because this is an iterator over _references_ - alternatively you could say `*i == 30` for
+the comparison.)
+
+Likewise, there's no `map` method on vectors, because `iter().map(...).collect()` will do the job
+just fine. Rust does not like to allocate unnecessarily - often you don't need the result of that `map`
+as an actual allocated vector.
+
+This is followed by the common traits: vectors know how to do a debug display of themselves
+(but only if the elements implement `Debug`). Likewise, they are clonable if their elements are clonable.
+They implement `Drop`, which happens when vectors get to finally die; memory is released,
+and all the elements are dropped as well.
+
+The `Extend` trait means values from iterators can be added to a vector without a loop
+
+```rust
+v.extend([60,70,80].iter());
+let mut strings = vec!["hello".to_string(), "dolly".to_string()];
+strings.extend(["you","are","fine"].iter().map(|s| s.to_string()));
+```
+
+There's also `FromIterator`, which lets vectors be _constructed_ from iterators. (The iterator `collect`
+method leans on this.)
+
+Any container needs to be iterable as well. Recall that there are three kinds of iterators:
+
+```rust
+for x in v {...} // returns T, consumes v
+for x in &v {...} // returns &T
+for x in &mut v {...} // returns &mut T
+```
+The `for` statement relies on the `IntoIterator` trait, and there's indeed three implementations.
+
+Then there is indexing, controlled by `Index` (reading from a vector) and `IndexMut` (modifying a
+vector.)  There are many possibilities, because there's slice indexing as well, like `v[0..2]`,
+returning these return slices, as well as plain `v[0]` which returns a reference to the first element.
+
+There's a few implementations of the `From` trait. For instance `Vec::from("hello".to_string())`
+will give you a vector of the underlying bytes of the string `Vec<u8>`.
+Now, there's already a method 'into_bytes` on `String`, so why the redundancy?
+It seems confusing to have multiple ways of doing the same thing.
+But it's needed because explicit traits make generic methods possible.
+
+Sometimes limitations of the Rust type system make things clumsy. An example here is how `PartialEq`
+is _separately_ defined for arrays up to size 32!  This will get better.
+
+## Maps
 
 _Maps_  (sometimes called _associative arrays_ or _dicts_) let you look up values
 associated with a _key_.  It's not really a fancy concept, and can be done with
@@ -184,7 +259,7 @@ as 863
 had 830
 ```
 
-A little sunrise - what's that empty word? It is because `split` works on single-character
+A little surprise - what's that empty word? It is because `split` works on single-character
 delimiters, so any punctuation or extra spaces causes a new split.
 
 ## Sets
@@ -250,7 +325,7 @@ let intersect = fruit.intersection(&colours).to_set();
 ```
 As with all Rust generics, you do need to constrain types - this can only be
 implemented for types that understand equality (`Eq`) and for which a 'hash function'
-exists (`Hash`). Remember that there is no _type_ called `Iterator`, so `I` defines
+exists (`Hash`). Remember that there is no _type_ called `Iterator`, so `I` represents
 any type that _implements_ `Iterator`.
 
 This technique for implementing our own methods on standard library types may appear
@@ -281,81 +356,8 @@ of the intersection.
 // intersect is HashSet<String> - much better
 let intersect = fruit.intersection(&colours).cloned().to_set();
 ```
-
 A more robust definition of `to_set` might be `self.cloned().collect()`,
 which I invite you to try out.
-
-## Queues
-
-`Vec` has a classic stack interface - it's efficient to push (at to the end) or pop
-(remove from the end). This is often called LIFO (last in first out).
-
-Vectors aren't that efficient at inserting or removing anywhere else. Sometimes what
-you want is a _queue_ - FIFO (first in first out).  This is what `VecDeque` provides;
-items are added at the end and removed from the front.
-
-```rust
-// queue1.rs
-use std::collections::VecDeque;
-
-fn main() {
-    let mut queue = VecDeque::new();
-    queue.push_back(10);
-    queue.push_back(20);
-    assert_eq! (queue.pop_front(),Some(10));
-    assert_eq! (queue.pop_front(),Some(20));
-}
-```
-A common way of using queues is to fill them up and empty them in order of insertion
-(doing this with a `Vec` would get the words in reverse order.)
-
-```rust
-queue.push_back("hello");
-queue.push_back("dolly");
-while let Some(word) = queue.pop_front() {
-    print!("{} ", word);
-}
-println!("");
-// hello dolly
-```
-
-Queues behave like vectors in many ways. `get(i)` returns a reference to an element
-at an index (maybe), and `queue[i]` will return a reference (or panic)
-
-How do I know this?
-Because it implements the trait `Index`, which is how Rust does the overloaded
-index operator. There's also `IndexMut`, which kicks in when the indexing is on the
-left side `queue[0] = "foo"`.
-
-A powerful method (also implemented for `Vec`) is `extend`
-
-```rust
-    queue.extend(1..10);
-    queue.extend(12..15);
-    // queue is now 1 2 3 4 5 6 7 8 9 12 13 14
-```
-
-Again, this comes from implementing the `Extend` trait. You will see that many
-methods of containers aren't defined directly on the type, but on traits. This makes
-it possible to write generic code using them - you can't rely just on compile-time
-duck-typing like C++ templates ("If it says extend(), then it's Extendable"). But it
-does making reading the documentation a little more challenging.
-
-Let's have a look at some other trait implementations in the docs for `VecDeque`:
-
-  - `PartialOrd` queues can be compared with '<', '>', '<=' and '=<'. (But only if
-  the value type also satisfies `PartialOrd`)
-  - `Eq` queues can be compared with '==' (same proviso)
-  - `Clone` queues can be cloned  (same proviso)
-  - `From` queues can be constructed from vectors: `let q = VecDeque::from(v)`
-  - `Hash` queues can be used as keys in a hash map (seriously)
-  - `IntoIterator` queues can be iterated directly using `for`. Note the three
-  implementations, corresponding to `for v in q`, `for v in &q` and
-  `for v in &mut q`.
-  ....
-
-But `VecDeque` doesn't have that intimate relationship with array slices `&[T]`
-that `Vec` has, expressed by the `Deref` trait.
 
 ## Example: Interactive command processing
 
@@ -375,8 +377,8 @@ let set = |n| a = n;
 let get = || a;  // can't borrow `a` again!
 ```
 
-So the closures are passed a _mutable reference_ and
-an array slice of string slices (`&[&str]`) and return some `Result`.
+So the closures are passed a _mutable reference_ as an argument, plus
+an array slice of string slices (`&[&str]`). They will return some `Result` -
 We'll use `String` errors at first.
 
 Recall that all closures
@@ -441,7 +443,6 @@ Now for reading and running commands:
     }
 
 ```
-
 This is all reasonably straightforward - split the line into words as a vector,
 look up the first word in the map and call the closure with our stored mutable
 data and the rest of the words. An empty line is ignored and not considered an error.
@@ -459,8 +460,7 @@ fn err<T: ToString>(s: T) -> CliResult {
     Err(s.to_string())
 }
 ```
-
-So finally, the Main Program - look at how `ok(answer)` works - because
+So finally, the Main Program. Look at how `ok(answer)` works - because
 integers know how to convert themselves to strings!
 
 ```rust
@@ -492,7 +492,6 @@ fn main() {
     cli.go();
 }
 ```
-
 The error handling is a bit clunky here, and we'll later see how to use the question
 mark operator in cases like this.
 Basically, the particular error `std::num::ParseIntError` implements
@@ -520,6 +519,6 @@ Err("invalid digit found in string")
 Here are some obvious improvements for you to try. First, if we give `cmd` three
 arguments with the second being a help line, then we can store these help lines
 and automatically implement a 'help' command. Second, having some command editing and
-history is _so_ convenient, so use the [rustyline](https://crates.io/crates/rustyline) crate
+history is _very_ convenient, so use the [rustyline](https://crates.io/crates/rustyline) crate
 from Cargo.
 
