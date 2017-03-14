@@ -370,7 +370,7 @@ fn main() {
     println!("res is {}",res);
 }
 ```
-This is much more how C would do it, than C++. You have to explicitly pass the
+This is more how C would do it than C++. You have to explicitly pass the
 reference (with `&`) and explicitly _dereference_ with `*`. And then throw in `mut`
 because it's not the default. (I've always felt that C++ references are
 too easy to miss compared to C.)
@@ -730,7 +730,7 @@ fn main() {
 ```
 That little, so-important borrow operator `&` is _coercing_ the vector into a
 slice. And it makes complete sense, because the vector is looking after an array of
-values; that array is allocated _dynamically_.
+values, with the difference that the array is allocated _dynamically_.
 
 If you come from a dynamic language, now is time for that little talk. In systems
 languages, program memory comes in two kinds: the stack and the heap. It is very fast
@@ -826,7 +826,7 @@ fn main() {
         println!("{}", i);
     }
 
-    // slices are themselves iterators...
+    // slices can be converted implicitly to iterators...
     let slice = &arr;
     for i in slice {
         println!("{}", i);
@@ -858,7 +858,7 @@ problem to create a new variable of the same name if you run out of names to
 give things.)
 
 With this background, some more of the array slice methods will make more sense.
-Another documentation tip; on the right-hand side there's a '[-]' which you can
+Another documentation tip; on the right-hand side of every page there's a '[-]' which you can
 click to collapse the method list. You can then expand the details of anything
 that looks interesting. (Anything that looks too weird, just ignore for now.)
 

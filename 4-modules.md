@@ -376,7 +376,7 @@ so `members()` will return a non-empty iterator over `&JsonValue`.
 What if the 'payload' object didn't have a 'features' key? Then `features` would be set to `Null`.
 There will be no explosion. This convenience expresses the free-form, anything-goes nature of JSON
 very well. It is up to you to examine the structure of any document you receive and create your own
-error if the structure does not match.
+errors if the structure does not match.
 
 You can modify these structures. If we had `let mut doc` then this would do what you expect:
 

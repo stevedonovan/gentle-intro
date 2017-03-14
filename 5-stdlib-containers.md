@@ -12,7 +12,8 @@ This gives you a bird's eye view of all the available methods.
 The first point to notice is that _not all possible methods_ are defined on `Vec` itself. They are (mostly)
 mutable methods that change the vector, e.g. `push`. Some methods are only implemented for vectors where
 the type matches some constraint. For example, you can only call `dedup` (remove duplicates) if the 
-type is indeed something that can be compared for equality.
+type is indeed something that can be compared for equality.  There are multiple `impl` blocks that
+define `Vec` for different type constraints.
 
 Then there's the very special relationship between `Vec<T>` and `&[T]`.  Any method that works on
 array slices will also directly work on vectors, without explicitly having to use the `as_slice` method.
@@ -44,7 +45,7 @@ This is followed by the common traits: vectors know how to do a debug display of
 They implement `Drop`, which happens when vectors get to finally die; memory is released,
 and all the elements are dropped as well.
 
-The `Extend` trait means values from iterators can be added to a vector without a loop
+The `Extend` trait means values from iterators can be added to a vector without a loop:
 
 ```rust
 v.extend([60,70,80].iter());
@@ -74,8 +75,25 @@ Now, there's already a method 'into_bytes` on `String`, so why the redundancy?
 It seems confusing to have multiple ways of doing the same thing.
 But it's needed because explicit traits make generic methods possible.
 
+We've met this before with `String` - there seem to be so many ways to create strings! There's the
+`to_string` method on `&str` - this comes from the `ToString` trait and will be implemented for anything
+that knows how to `Display` itself.  There is `String::from` which comes from the `From` trait. There's
+also `Into` which is the inverse of `From` and is automatically available if `From` exists.
+If a function argument expects a `String`, you will often
+see the value passed as `"some text".into()` since string slices implement `Into<String>`. 
+
 Sometimes limitations of the Rust type system make things clumsy. An example here is how `PartialEq`
-is _separately_ defined for arrays up to size 32!  This will get better.
+is _separately_ defined for arrays up to size 32!  This will get better. This allows the convenience
+of directly comparing vectors with arrays, but beware the limit.
+
+This is still clearer than what the C++ docs say about `std::vector`
+
+> The requirements that are imposed on the elements depend on the actual operations performed
+> on the container. Generally, it is required that element type is a complete type and meets
+> the requirements of Erasable, but many member functions impose stricter requirements. 
+
+Clearly, you're on your own! The explicitness of Rust is daunting at first, but as you learn to 
+read the constraints you will know exactly what any particular method of `Vec` requires.
 
 ## Maps
 
@@ -109,7 +127,7 @@ assert_eq! (map.contains_key("two"), true);
 assert_eq! (map.get("two"), Some(&"zwei"));
 ```
 
-'&"zwei"'? This is because `get` returns a _reference_ to the value, not the value
+`&"zwei"`? This is because `get` returns a _reference_ to the value, not the value
 itself. Here the value type is `&str`, so we get a `&&str`. In general it _has_ to be
 a reference, because we can't just _move_ a value out of its owning type.
 

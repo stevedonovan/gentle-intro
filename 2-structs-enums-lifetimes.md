@@ -51,7 +51,7 @@ the copy will need its own allocated block.
     | 8 bytes |
 ```
 The second value is a string slice (`&str`) which refers to the same memory as the string,
-with a size - just the guy's name.
+with a size - just the guy's name. Cheap to copy!
 
 The third value is an `f64` - just 8 bytes. It does not refer to any other memory, so
 it's just as cheap to copy as to move.
@@ -430,8 +430,9 @@ fn how(i: u32) -> &'static str {
     }
 }
 ```
-That works for the special case of static strings, but this is very restrictive. However
-we can specify that the lifetime of the reference is _as least as long_ as that of
+That works for the special case of static strings, but this is very restrictive.
+
+However we can specify that the lifetime of the reference is _as least as long_ as that of
 the struct itself.
 
 ```rust
@@ -459,21 +460,18 @@ invalidate the reference.  It isn't necessary to do this - for instance, if your
 struct has a string field, and needs to provide slices, then it could keep indices
 and have a method to generate the actual slices.
 
-
-
 ## Traits
 
 Please note that Rust does not spell `struct` _class_. The keyword `class` in other
 languages is so overloaded with meaning that it effectively shuts down original thinking.
 
 Let's put it like this: Rust structs cannot _inherit_ from other structs; they are
-all unique types. There is no _sub-typing_.
+all unique types. There is no _sub-typing_. They are dumb data.
 
 So how _does_ one establish relationships between types? This is where _traits_ come in.
 
 `rustc` often talks about `implementing X trait` and so it's time to talk about traits
 properly.
-
 
 Here's a little example of defining a trait and _implementing_ it for a particular type.
 
@@ -587,7 +585,7 @@ The iterator trait for `f64` is written `Iterator<Item=f64>`, which can be read 
 "an Iterator with its associated type Item set to f64".
 
 The `...` refers to the _default methods_ of `Iterator`. You only need to define `Item`
-and `next`, and the default methods fill out the rest.
+and `next`, and the default methods are defined for you.
 
 ```rust
 // trait3.rs
@@ -673,11 +671,11 @@ must implement `Iterator` with its associated type `Item` set to `T`, the elemen
 type. There is only one free type parameter `T` since `I` is defined in terms of `T`.
 
 Alternatively: This implementation of `ToVec` has type parameters `T` and `I`. `T` must implement `Size` to
-make `Vec` happy. `I` is any concrete type that implements an iterator for values of
-the type `T`.
+make `Vec` happy. `I` is any concrete type that implements an iterator for values of the type `T`.
 
 The actual implementation is delegated to the `FromIterator` trait, which is
-defined for vectors.
+defined for vectors and constructs a vector by consuming an iterator (it's exactly how `collect` is
+implemented)
 
 ```rust
 impl <T,I> ToVec for I
@@ -739,7 +737,7 @@ which boil down to this type mismatch:
    = note:    found type `Direction`
 ```
 This is because `self` has type `&Direction`, so we have to throw in the `*` to
-_deference_ the value.
+_deference_ the type.
 
 Like structs, enums can implement traits, and our friend `#[derive(Debug)]` can
 be added to `Direction`:
@@ -749,7 +747,7 @@ be added to `Direction`:
         // start Left
 ```
 So that `as_str` method isn't really necessary, since we can always get the name from `Debug`.
-(But it does _not allocate_, which may be important.)
+(But `as_str` does _not allocate_, which may be important.)
 
 You should not assume any particular ordering here - there's no implied integer
 'ordinal' value.
@@ -803,7 +801,6 @@ note: an implementation of `std::cmp::PartialEq` might be missing for `Direction
 
 The solution is to say `#[derive(Debug,PartialEq)]` in front of `enum Direction`.
 
-
 This is an important point - Rust user-defined types start out fresh and unadorned.
 You give them sensible default behaviours by implementing the common traits. This
 applies also to structs - if you ask for Rust to derive `PartialEq` for a struct it
@@ -834,12 +831,12 @@ with a type cast. It's essentially a convenient way to create a set of constants
 Like with C enums, you only need to give the first name a value, and thereafter the
 value goes up by one each time.
 
-By the way, 'name' is too vague, like saying 'thingy' all the time. The proper term here
-is _variant_.
+(By the way, 'name' is too vague, like saying 'thingy' all the time. The proper term here
+is _variant_ - `Speed` has variants `Slow`,`Medium` and `Fast`.)
 
 These enums _do_ have a natural ordering, but you have to ask nicely.
 After placing `#[derive(PartialEq,PartialOrd)]` in front of `enum Speed`, then it's indeed
-true that `Speed::Fast > Speed::Slow`.
+true that `Speed::Fast > Speed::Slow` and `Speed::Medium != Speed::Slow`.
 
 ## Enums in their Full Glory
 
@@ -881,9 +878,9 @@ a move would take place and the value would be eaten:
 fn dump(v: &Value) {
     use Value::*;
     match *v {
-    Number(n) => println!("number is {}",n),
-    Str(s) => println!("string is '{}'",s),
-    Bool(b) => println!("boolean is {}",b)
+        Number(n) => println!("number is {}",n),
+        Str(s) => println!("string is '{}'",s),
+        Bool(b) => println!("boolean is {}",b)
     }
 }
 ```
@@ -929,7 +926,7 @@ you cannot yank out a value which belongs to some owning type. Some knowledge of
 C++ is a hindrance here, since `c++` will copy its way out of the problem, whether that
 copy even _makes sense_.  You will get exactly the same error if you try to pull out
 a value from a vector, say with `*v[0]` (`*` because indexing returns references.)
-It will simply not let you do this. (_Sometimes_ `clone` isn't such a bad solution to this.)
+It will simply not let you do this. (Sometimes `clone` isn't such a bad solution to this.)
 
 As for `match`, you can see `Str(s) =>` as short for `Str(s: String) =>`. A local variable
 (often called a _binding_) is created.  Often that inferred type is cool, when you
@@ -956,8 +953,8 @@ impl Value {
 }
     ...
     println!("s? {:?}",s.to_str());
-    // (s is now dead, moved, dropped, etc)
     // s? Some("hello")
+    // println!("{:?}",s) // error! s has moved...
 ```
 Naming also matters - this is called `to_str`, not `as_str`. You can write a
 method that just borrows that string as an `Option<&String>` (The reference will need
@@ -992,7 +989,6 @@ data and wish to either pull it apart (like here) or just borrow its values.
 Either way, we get the parts of a structure.
 
 The syntax used for borrowing is just like that used in `match`.
-
 
 ```rust
     let (ref n,ref s) = t;
@@ -1036,7 +1032,7 @@ fn match_tuple(t: (i32,String)) {
 ```
 
 Why not just match against `(1,"hello")`? Matching is an exact business, and the compiler
-complains:
+will complain:
 
 ```
   = note: expected type `std::string::String`
@@ -1074,7 +1070,7 @@ An interesting problem happens when using `parse` (or any function which needs t
 out its return type from context)
 
 ```rust
-    if let Some(n) = "42".parse() {
+    if let Ok(n) = "42".parse() {
         ...
     }
 ```
@@ -1083,20 +1079,21 @@ So what's the type of `n`? You have to give a hint somehow - what kind of intege
 even an integer?
 
 ```rust
-    if let Some(n) = "42".parse::<i32>() {
+    if let Ok(n) = "42".parse::<i32>() {
         ...
     }
 ```
 
-This somewhat non-elegant syntax is called the 'turbofish operator'. Otherwise, it
-would be even more non-elegant:
+This somewhat non-elegant syntax is called the 'turbofish operator'.
+
+If you are in a function returning `Result`, then the question-mark operator provides a much
+more elegant solution:
 
 ```rust
-    let maybe_n: Option<i32> = "42".parse();
-    if let Some(n) = maybe_n {
-        ...
-    }
+    let n: i32 = "42".parse()?;
 ```
+However, the parse error needs to be convertible to the error type of the `Result`, which is a topic
+we'll take up later when discussing error handling.
 
 ## Closures
 
@@ -1212,24 +1209,8 @@ error[E0382]: use of moved value: `lin`
 ```
 
 That's it, `apply` ate our closure. And there's the actual type of the struct that
-`rustc` made up to implement it.
-
-Thinking of closures as structs is useful because they are _values_ and it's
-important to know what happens when values move.  Here's a closure that refers to a
-string.
-
-```rust
-    fn call<F>(ch: char, f: F)
-    where F: Fn(char)->bool {
-        let res = f(ch);
-        println!("{}", res);
-    }
-
-    let s = "hello dolly".to_string();
-
-    call('d',|c| s.find(c).is_some());
-
-```
+`rustc` made up to implement it. Thinking of closures as structs is useful because they
+are _values_ and it's important to know what happens when values move.
 
 Thinking of calling a closure as a _method call_ makes it easy to understand the
 three kinds of function traits - they are the three kinds of methods:
@@ -1347,12 +1328,13 @@ a condition:
 
 ```rust
     let tuples = [(10,"ten"),(20,"twenty"),(30,"thirty"),(40,"forty")];
-    let ti = tuples.iter();
-    let iter = ti.filter(|t| t.0 > 20).map(|t| t.1);
+    let iter = tuples.iter().filter(|t| t.0 > 20).map(|t| t.1);
 
     for name in iter {
-        print!("{} ",name);
+        println!("{} ",name);
     }
+    // thirty
+    // forty
 ```
 
 ## The Three Kinds of Iterators
@@ -1390,7 +1372,7 @@ what the implicit types actually are!
 
 `map` takes whatever value the iterator returns and converts it into something else,
 but `filter` takes a _reference_ to that value. In this case, we're using `iter` so
-the iterator return type is `&String`. Note that `filter` receives a reference to this type.
+the iterator item type is `&String`. Note that `filter` receives a reference to this type.
 
 ```rust
 for n in vec.iter().map(|x: &String| x.len()) {...} // n is usize
@@ -1515,9 +1497,12 @@ the tree are dropped, they drop _their_ fields and so on. `Box::new` may be the
 closest you will get to a `new` keyword, but we have no need for `delete` or `free`.
 
 We must know work out what use such a tree is. Note that strings can be ordered:
-'bar' < 'foo', 'abba' > 'aardvark'; so-called 'alphabetical order'.
+'bar' < 'foo', 'abba' > 'aardvark'; so-called 'alphabetical order'. (Strictly speaking, this
+is _lexical order_, since human languages are very diverse and have strange rules.)
 
- Here is a method which inserts nodes in _lexical order_ of the strings:
+Here is a method which inserts nodes in lexical order of the strings. We compare the new data
+to the current node - if it's less, then we try to insert on the left, otherwise try to insert
+on the right. There may be no node on the left, so then `set_left` and so forth.
 
 ```rust
     fn insert(&mut self, data: &str) {
@@ -1547,7 +1532,8 @@ We must know work out what use such a tree is. Note that strings can be ordered:
 
 Note the `match` - we're pulling out a mutable reference to the box, if the `Option`
 is `Some`, and applying the `insert` method. Otherwise, we need to create a new `Node`
-for the left side and so forth.
+for the left side and so forth. `Box` is a _smart_ pointer; note that no 'unboxing' was
+needed to call `Node` methods on it!
 
 And here's the output tree:
 
@@ -1602,9 +1588,6 @@ the node, and then visit the right.
 ```
 So we're visiting the strings in order! Please note the reappearance of `ref` - `if let`
 uses exactly the same rules as `match`.
-
-`Box` is a _smart_ pointer; note that no 'unboxing' was needed to call
-`Node` methods on it!
 
 ## Generic Functions
 
@@ -1669,8 +1652,8 @@ rror[E0308]: mismatched types
   = note: expected type `T`
   = note:    found type `<T as std::ops::Mul>::Output`
 ```
-What `rustc` is saying that the type of `x*x` is `T::Output`, not `T`. There's actually
-no reason that the type of `x*x` is the same as the type of `x`, e.g. the dot product
+What `rustc` is saying that the type of `x*x` is the associated type `T::Output`, not `T`.
+There's actually no reason that the type of `x*x` is the same as the type of `x`, e.g. the dot product
 of two vectors is a scalar.
 
 ```rust
@@ -1718,7 +1701,8 @@ toward [concepts](https://en.wikipedia.org/wiki/Concepts_(C%2B%2B)), which are p
 much like trait-constrained type parameters in Rust.
 
 Rust generic functions may look a bit overwhelming at first, but being explicit means
-you will know exactly what kind of values you can safely feed it.
+you will know exactly what kind of values you can safely feed it, just by looking at the
+definition.
 
 These functions are called _monomorphic_, in constrast to _polymorphic_. The body of
 the function is compiled separately for each unique type.  With polymorphic functions,
@@ -1731,7 +1715,6 @@ seen, it's effectively replaced with `x*x`.  The downside is that large generic
 functions produce a lot of code, for each type used, which can result in _code bloat_.
 As always, there are trade-offs; an experienced person learns to make the right choice
 for the job.
-
 
 ## Generic Structs
 

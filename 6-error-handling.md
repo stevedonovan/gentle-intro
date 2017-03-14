@@ -121,7 +121,7 @@ It also by default implements `From` so strings can be converted into errors. He
 
 Our first `src/main.rs` file looks like this. All the main program does is call `run`, print out any
 errors, and end the program with a non-zero exit code.  The macro `error_chain` generates all the
-definitions needed, within an `error` module - in a larger problem you would put this in its own file.
+definitions needed, within an `error` module - in a larger program you would put this in its own file.
 We need to bring everything in `error` back into global scope because our code will need to see
 the generated traits. By default, there will be an `Error` struct and a `Result` defined with that
 error:
@@ -192,8 +192,8 @@ fn run() -> Result<()> {
 }
 ```
 
-We can freely use `?` for the I/O errors, which is the state of happiness we desired. There is a useful
-little macro `bail!` for 'throwing' errors. An alternative to the `ok_or` method here could be:
+There is a useful little macro `bail!` for 'throwing' errors.
+An alternative to the `ok_or` method here could be:
 
 ```rust
     let file = match args().skip(1).next() {
@@ -354,6 +354,7 @@ replaces the whole main program:
 quick_main!(run);
 ```
 
-So `run` is where all the action takes place.
+(`run` is where all the action takes place, anyway.)
+
 
 

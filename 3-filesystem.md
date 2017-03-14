@@ -70,7 +70,9 @@ place.
 This is one of those cases where we use a block to control a borrow. `line` is
 borrowed from `buf`, and this borrow must finish before we modify `buf`.  Again,
 Rust is trying to stop us doing something stupid, which is to access `line` _after_
-we've cleared the buffer.
+we've cleared the buffer. (The borrow checker can be restrictive sometimes.
+Rust is due to get 'non-lexical lifetimes' this year, where
+it will analyze the code and see that `line` isn't used after `buf.clear()`.)
 
 This isn't very pretty. I cannot give you a proper iterator that returns references
 to a buffer, but I can give you something that _looks_ like an iterator.
@@ -111,7 +113,7 @@ Trim this away, and package up the string slice.
         self.buf.clear();
         match self.reader.read_line(&mut self.buf) {
             Ok(nbytes) => if nbytes == 0 {
-                None
+                None // no more lines!
             } else {
                 let line = self.buf.trim_right();
                 Some(Ok(line))
@@ -122,7 +124,7 @@ Trim this away, and package up the string slice.
 ```
 Now, note how the lifetimes work. We need an explicit lifetime because Rust will never
 allow us to hand out borrowed string slices without knowing their lifetime. And here
-we say that the lifetime of this borrowed string is the same as the lifetime of `self`.
+we say that the lifetime of this borrowed string is within the lifetime of `self`.
 
 And this signature, with the lifetime, is incompatible with the interface of `Iterator`.
 But it's easy to see problems if it were compatible; consider `collect` trying to make
@@ -158,7 +160,7 @@ string slice:
 
 It's tempting, but you are throwing away a possible error here; this loop will
 silently stop whenever an error occurs. In particular, it will stop at the first place
-where Rust can't convert a line to UTF-8.  Fine for 'casual' code, bad for production code!
+where Rust can't convert a line to UTF-8.  Fine for casual code, bad for production code!
 
 ## Writing To Files
 
@@ -276,7 +278,7 @@ People have trouble at this point because they have become too attached to 'stri
 has to be as simple as possible, but no simpler. A systems language _needs_ a
 `String/&str` distinction (owned versus borrowed: this is also very _convenient_)
 and if it wishes to standardize on Unicode strings then it needs another type to handle
-text which isn't valid Unicode.
+text which isn't valid Unicode - hence `OsString/&OsStr`.
 
 People are also very used to processing filenames as if they were text, which is why
 Rust makes it easier to manipulate file paths using `PathBuf` methods.
@@ -306,7 +308,8 @@ fn main() {
 ```
 
 Here's a useful variation. I have a program which searches for a configuration file,
-and the rule is that it may appear in any subdirectory. So I create `/home/steve/rust/config.txt`:
+and the rule is that it may appear in any subdirectory of the current directory.
+So I create `/home/steve/rust/config.txt` and start this program up in `/home/steve/rust/gentle-intro/src`:
 
 ```rust
 // file9.rs
