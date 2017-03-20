@@ -563,7 +563,7 @@ If you are curious about the actual types of these variables, here is a useful t
 Just declare a variable with an explicit type which you know will be wrong:
 
 ```rust
-let var: () = {1.1, 1.2};
+let var: () = [1.1, 1.2];
 ```
 Here is the informative error:
 
