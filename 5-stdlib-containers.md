@@ -147,14 +147,14 @@ map.insert("one",1);
 map.insert("two",2);
 map.insert("three",3);
 
-println!("before {}",map.get("two").unwrap());
+println!("before {}", map.get("two").unwrap());
 
 {
     let mut mref = map.get_mut("two").unwrap();
     *mref = 20;
 }
 
-println!("after {}",map.get("two").unwrap());
+println!("after {}", map.get("two").unwrap());
 // before 2
 // after 20
 ```
@@ -307,7 +307,7 @@ fn make_set(words: &str) -> HashSet<&str> {
 fn main() {
     let fruit = make_set("apple orange pear orange");
 
-    println!("{:?}",fruit);
+    println!("{:?}", fruit);
 }
 // {"orange", "pear", "apple"}
 ```
@@ -460,7 +460,7 @@ Now for reading and running commands:
             {
                 let line = buff.trim_left();
                 let res = self.process(line);
-                println!("{:?}",res);
+                println!("{:?}", res);
 
             }
             buff.clear();

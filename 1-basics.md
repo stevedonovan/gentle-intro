@@ -47,7 +47,7 @@ The next step is to introduce a _variable_:
 // let1.rs
 fn main() {
     let answer = 42;
-    println!("Hello {}",answer);
+    println!("Hello {}", answer);
 }
 
 ```
@@ -57,7 +57,7 @@ like Python or JavaScript.  This will save you a lot of stress later! And if I w
  'answr' instead of 'answer', the compiler is actually _nice_ about it:
 
 ```
-4 |     println!("Hello {}",answr);
+4 |     println!("Hello {}", answr);
   |                         ^^^^^ did you mean `answer`?
 
 ```
@@ -94,7 +94,7 @@ Anything interesting can be done more than once:
 // for1.rs
 fn main() {
     for i in 0..5 {
-        println!("Hello {}",i);
+        println!("Hello {}", i);
     }
 }
 ```
@@ -109,9 +109,9 @@ And interesting things have to be done _conditionally_:
 fn main() {
     for i in 0..5 {
         if i % 2 == 0 {
-            println!("even {}",i);
+            println!("even {}", i);
         } else {
-            println!("odd {}",i);
+            println!("odd {}", i);
         }
     }
 }
@@ -136,7 +136,7 @@ This does the same, written in a more interesting way:
 fn main() {
     for i in 0..5 {
         let even_odd = if i % 2 == 0 {"even"} else {"odd"};
-        println!("{} {}",even_odd,i);
+        println!("{} {}", even_odd, i);
     }
 }
 ```
@@ -160,7 +160,7 @@ fn main() {
     for i in 0..5 {
         sum += i;
     }
-    println!("sum is {}",sum);
+    println!("sum is {}", sum);
 }
 ```
 
@@ -188,7 +188,7 @@ fn main() {
     for i in 0..5 {
         sum += i;
     }
-    println!("sum is {}",sum);
+    println!("sum is {}", sum);
 }
 ```
 
@@ -233,7 +233,7 @@ fn main() {
     for i in 0..5 {
         sum += i as f64;
     }
-    println!("sum is {}",sum);
+    println!("sum is {}", sum);
 }
 ```
 
@@ -256,12 +256,12 @@ Here is a simple user-defined function:
 // fun1.rs
 
 fn sqr(x: f64) -> f64 {
-    return x*x;
+    return x * x;
 }
 
 fn main() {
     let res = sqr(2.0);
-    println!("square is {}",res);
+    println!("square is {}", res);
 }
 ```
 
@@ -283,7 +283,7 @@ often, it will look like this:
 
 ```rust
 fn sqr(x: f64) -> f64 {
-    x*x
+    x * x
 }
 ```
 
@@ -303,7 +303,7 @@ here and get the following error:
 help: consider removing this semicolon:
  --> fun2.rs:4:8
   |
-4 |     x*x;
+4 |     x * x;
   |       ^
 
 ```
@@ -347,7 +347,7 @@ fn factorial(n: u64) -> u64 {
     if n == 0 {
         1
     } else {
-        n*factorial(n-1)
+        n * factorial(n-1)
     }
 }
 ```
@@ -367,7 +367,7 @@ fn modifies(x: &mut f64) {
 fn main() {
     let mut res = 0.0;
     modifies(&mut res);
-    println!("res is {}",res);
+    println!("res is {}", res);
 }
 ```
 This is more how C would do it than C++. You have to explicitly pass the
@@ -510,7 +510,7 @@ fn main() {
     let arr = [10,20,30,40];
     // look at that &
     let res = sum(&arr);
-    println!("sum {}",res);
+    println!("sum {}", res);
 }
 ```
 
@@ -802,7 +802,7 @@ Here is the first attempt to iterate over an array:
 fn main() {
     let arr = [10, 20, 30];
     for i in arr {
-        println!("{}",i);
+        println!("{}", i);
     }
 }
 ```
@@ -990,7 +990,7 @@ fn main() {
     // remove the last char
     s.pop();
 
-    assert_eq!(s,"Hello World");
+    assert_eq!(s, "Hello World");
 }
 ```
 You can convert many types to strings using `to_string`
@@ -1013,9 +1013,9 @@ fn array_to_str(arr: &[i32]) -> String {
 
 fn main() {
     let arr = array_to_str(&[10, 20, 30]);
-    let res = format!("hello {}",arr);
+    let res = format!("hello {}", arr);
 
-    assert_eq!(res,"hello [10,20,30]");
+    assert_eq!(res, "hello [10,20,30]");
 }
 ```
 Note the `&` in front of `v.to_string()` - the operator is defined on a string
@@ -1075,7 +1075,7 @@ of chars!)
 
 String slicing may explode like vector indexing, because it uses byte offsets. In this case,
 the string consists of two bytes, so trying to pull out the first byte is a Unicode error. So be
-careful to only pass it valid offsets that come from string methods.
+careful to only slice strings using valid offsets that come from string methods.
 
 ```rust
     let s = "¡";
@@ -1205,7 +1205,7 @@ But if you're not interested in failure here, then `if let` is your friend:
 
 ```rust
     if let Some(idx) = multilingual.find('п') {
-        println!("Russian hi {}",&multilingual[idx..]);
+        println!("Russian hi {}", &multilingual[idx..]);
     }
 ```
 This is convenient if you want to do a match and are _only_ interested in one possible
@@ -1315,7 +1315,7 @@ fn main() {
 
     let text = read_to_string(&file).expect("bad file man!");
 
-    println!("file had {} bytes",text.len());
+    println!("file had {} bytes", text.len());
 }
 ```
 The `Result` 'box' has two compartments, one labelled `Ok`

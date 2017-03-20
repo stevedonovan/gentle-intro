@@ -25,7 +25,7 @@ mod foo {
 
 fn main() {
     let f = foo::Foo{s: "hello"};
-    println!("{:?}",f);
+    println!("{:?}", f);
 }
 ```
 
@@ -59,7 +59,7 @@ mod foo {
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}",f);
+    println!("{:?}", f);
 }
 ```
 
@@ -105,7 +105,7 @@ mod foo;
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}",f);
+    println!("{:?}", f);
 }
 ```
 Now `rustc mod3.rs` will cause `foo.rs` to be compiled as well. There is no need to fool around
@@ -130,7 +130,7 @@ mod boo;
 fn main() {
     let f = foo::Foo::new("hello");
     let res = boo::answer();
-    println!("{:?} {}",f,res);
+    println!("{:?} {}", f,res);
 }
 ```
 
@@ -209,7 +209,7 @@ extern crate foo;
 
 fn main() {
     let f = foo::Foo::new("hello");
-    println!("{:?}",f);
+    println!("{:?}", f);
 }
 ```
 Before people start chanting 'Cargo! Cargo!' let me justify this lower-level look at building Rust.
@@ -332,8 +332,8 @@ fn main() {
     }
     "#).expect("parse failed");
 
-    println!("debug {:?}",doc);
-    println!("display {}",doc);
+    println!("debug {:?}", doc);
+    println!("display {}", doc);
 }
 ```
 
@@ -366,7 +366,7 @@ return `Option<TYPE>` since we cannot be sure that the field exists or is of the
 
     let features = &doc["payload"]["features"];
     for v in features.members() {
-        println!("{}",v.as_str().unwrap()); // MIGHT explode
+        println!("{}", v.as_str().unwrap()); // MIGHT explode
     }
     // awesome
     // easyAPI

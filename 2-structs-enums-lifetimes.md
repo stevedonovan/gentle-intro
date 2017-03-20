@@ -7,7 +7,7 @@ I'd like to move back a little, and show you something surprising:
 fn main() {
     let s1 = "hello dolly".to_string();
     let s2 = s1;
-    println!("s1 {}",s1);
+    println!("s1 {}", s1);
 }
 ```
 And we get the following error:
@@ -18,7 +18,7 @@ error[E0382]: use of moved value: `s1`
   |
 4 |     let s2 = s1;
   |         -- value moved here
-5 |     println!("s1 {}",s1);
+5 |     println!("s1 {}", s1);
   |                      ^^ value used here after move
   |
   = note: move occurs because `s1` has type `std::string::String`,
@@ -62,13 +62,13 @@ Re-writing with a function call reveals exactly the same error:
 // move2.rs
 
 fn dump(s: String) {
-    println!("{}",s);
+    println!("{}", s);
 }
 
 fn main() {
     let s1 = "hello dolly".to_string();
     dump(s1);
-    println!("s1 {}",s1);
+    println!("s1 {}", s1);
 }
 ```
 Here, you have a choice. You may explicitly create a reference to that string, or
@@ -77,7 +77,7 @@ to go.
 
 ```rust
 fn dump(s: &String) {
-    println!("{}",s);
+    println!("{}", s);
 }
 ```
 The call becomes `dump(&s1)`, and the error goes away. But you'll rarely see a plain
@@ -91,7 +91,7 @@ So altogether the best way to declare that function is:
 
 ```rust
 fn dump(s: &str) {
-    println!("{}",s);
+    println!("{}", s);
 }
 ```
 
@@ -148,7 +148,7 @@ of its block:
 06        let tmp = "hello world".to_string();
 07        rs1 = &tmp;
 08    }
-09    println!("ref {}",rs1);
+09    println!("ref {}", rs1);
 10 }
 ```
 We borrow the value of `s1` and then borrow the value of `tmp`. But `tmp`'s value
@@ -162,7 +162,7 @@ error: `tmp` does not live long enough
    |                --- borrow occurs here
 8  |     }
    |     ^ `tmp` dropped here while still borrowed
-9  |     println!("ref {}",rs1);
+9  |     println!("ref {}", rs1);
 10 | }
    | - borrowed value needs to live until here
 ```
@@ -179,21 +179,21 @@ the solution:
 // tuple1.rs
 
 fn add_mul(x: f64, y: f64) -> (f64,f64) {
-    (x+y, x*y)
+    (x + y, x * y)
 }
 
 fn main() {
     let t = add_mul(2.0,10.0);
 
     // can debug print
-    println!("t {:?}",t);
+    println!("t {:?}", t);
 
     // can 'index' the values
-    println!("add {} mul {}",t.0,t.1);
+    println!("add {} mul {}", t.0,t.1);
 
     // can _extract_ values
     let (add,mul) = t;
-    println!("add {} mul {}",add,mul);
+    println!("add {} mul {}", add,mul);
 }
 // t (12, 20)
 // add 12 mul 20
@@ -227,7 +227,7 @@ tuples containing the values:
     let names = ["ten","hundred","thousand"];
     let nums = [10,100,1000];
     for (name,num) in names.iter().zip(nums.iter()) {
-        print!(" {} {};",name,num);
+        print!(" {} {};", name,num);
     }
     //  ten 10; hundred 100; thousand 1000;
 ```
@@ -252,7 +252,7 @@ fn main() {
         first_name: "John".to_string(),
         last_name: "Smith".to_string()
     };
-    println!("person {} {}",p.first_name,p.last_name);
+    println!("person {} {}", p.first_name,p.last_name);
 }
 ```
 
@@ -286,7 +286,7 @@ impl Person {
 
 fn main() {
     let p = Person::new("John","Smith");
-    println!("person {} {}",p.first_name,p.last_name);
+    println!("person {} {}", p.first_name,p.last_name);
 }
 ```
 There is nothing magic or reserved about the name `new` here. Note that it's accessed
@@ -300,12 +300,12 @@ impl Person {
     ...
 
     fn full_name(&self) -> String {
-        format!("{} {}",self.first_name, self.last_name)
+        format!("{} {}", self.first_name, self.last_name)
     }
 
 }
 ...
-    println!("fullname {}",p.full_name());
+    println!("fullname {}", p.full_name());
 // fullname John Smith
 ```
 The `self` is used explicitly (unlike the `this` of C++) and is passed as a reference.
@@ -342,7 +342,7 @@ If you try to do a debug dump of a `Person`, you will get an informative error:
 error[E0277]: the trait bound `Person: std::fmt::Debug` is not satisfied
   --> struct2.rs:23:21
    |
-23 |     println!("{:?}",p);
+23 |     println!("{:?}", p);
    |                     ^ the trait `std::fmt::Debug` is not implemented for `Person`
    |
    = note: `Person` cannot be formatted using `:?`; if it is defined in your crate,
@@ -377,7 +377,7 @@ struct A {
 fn main() {
     let a = A { s: "hello dammit" };
 
-    println!("{:?}",a);
+    println!("{:?}", a);
 }
 ```
 
@@ -412,7 +412,7 @@ struct A {
 fn main() {
     let a = A { s: "hello dammit" };
 
-    println!("{:?}",a);
+    println!("{:?}", a);
 }
 // A { s: "hello dammit" }
 ```
@@ -447,7 +447,7 @@ fn main() {
     let string = "I'm a little string".to_string();
     let a = A { s: &string };
 
-    println!("{:?}",a);
+    println!("{:?}", a);
 }
 ```
 Lifetimes are conventionally called 'a','b',etc but you could just as well called it
@@ -484,13 +484,13 @@ trait Show {
 
 impl Show for i32 {
     fn show(&self) -> String {
-        format!("four-byte unsigned {}",self)
+        format!("four-byte unsigned {}", self)
     }
 }
 
 impl Show for f64 {
     fn show(&self) -> String {
-        format!("eight-byte float {}",self)
+        format!("eight-byte float {}", self)
     }
 }
 
@@ -499,8 +499,8 @@ fn main() {
     let maybe_pi = 3.14;
     let s1 = answer.show();
     let s2 = maybe_pi.show();
-    println!("show {}",s1);
-    println!("show {}",s2);
+    println!("show {}", s1);
+    println!("show {}", s2);
 }
 // show four-byte signed 42
 // show eight-byte float 3.14
@@ -523,7 +523,7 @@ impl fmt::Debug for Person {
     }
 }
 ...
-    println!("{:?}",p);
+    println!("{:?}", p);
     // John Smith
 ```
 `write!` is a very useful macro - here `f` is anything that implements `Write`.
@@ -617,7 +617,7 @@ impl Iterator for FRange {
 
 fn main() {
     for x in range(0.0, 1.0, 0.1) {
-        println!("{} ",x);
+        println!("{} ", x);
     }
 }
 ```
@@ -640,7 +640,7 @@ This is because 0.1 is not precisely representable as a float, so a little forma
 help is needed. Replace the `println!` with this
 
 ```rust
-println!("{:.1} ",x);
+println!("{:.1} ", x);
 ```
 And we get cleaner output (this format means 'one decimal after dot'.)
 
@@ -769,7 +769,7 @@ very handy _wildcard use_ temporarily puts the enum names into the method contex
 
     let mut d = start;
     for _ in 0..8 {
-        println!("d {:?}",d);
+        println!("d {:?}", d);
         d = d.inc();
     }
     // d Left
@@ -787,12 +787,12 @@ order. It is (in fact) a very simple _state machine_.
 Out of the box, these values can't be compared:
 
 ```
-assert_eq!(start,Direction::Left);
+assert_eq!(start, Direction::Left);
 
 error[E0369]: binary operation `==` cannot be applied to type `Direction`
   --> enum1.rs:42:5
    |
-42 |     assert_eq!(start,Direction::Left);
+42 |     assert_eq!(start, Direction::Left);
    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
 note: an implementation of `std::cmp::PartialEq` might be missing for `Direction`
@@ -822,7 +822,7 @@ enum Speed {
 fn main() {
     let s = Speed::Slow;
     let speed = s as u32;
-    println!("speed {}",speed);
+    println!("speed {}", speed);
 }
 ```
 They are initialized with an integer value, and can be converted into that integer
@@ -859,7 +859,7 @@ fn main() {
     let s = Str("hello".to_string());
     let b = Bool(true);
 
-    println!("n {:?} s {:?} b {:?}",n,s,b);
+    println!("n {:?} s {:?} b {:?}", n,s,b);
 }
 // n Number(2.3) s Str("hello") b Bool(true)
 ```
@@ -878,9 +878,9 @@ a move would take place and the value would be eaten:
 fn dump(v: &Value) {
     use Value::*;
     match *v {
-        Number(n) => println!("number is {}",n),
-        Str(s) => println!("string is '{}'",s),
-        Bool(b) => println!("boolean is {}",b)
+        Number(n) => println!("number is {}", n),
+        Str(s) => println!("string is '{}'", s),
+        Bool(b) => println!("boolean is {}", b)
     }
 }
 ```
@@ -906,9 +906,9 @@ to that contained string.
 fn dump(v: &Value) {
     use Value::*;
     match *v {
-    Number(n) => println!("number is {}",n),
-    Str(ref s) => println!("string is '{}'",s),
-    Bool(b) => println!("boolean is {}",b)
+    Number(n) => println!("number is {}", n),
+    Str(ref s) => println!("string is '{}'", s),
+    Bool(b) => println!("boolean is {}", b)
     }
 }
     ....
@@ -952,9 +952,9 @@ impl Value {
     }
 }
     ...
-    println!("s? {:?}",s.to_str());
+    println!("s? {:?}", s.to_str());
     // s? Some("hello")
-    // println!("{:?}",s) // error! s has moved...
+    // println!("{:?}", s) // error! s has moved...
 ```
 Naming also matters - this is called `to_str`, not `as_str`. You can write a
 method that just borrows that string as an `Option<&String>` (The reference will need
@@ -1061,7 +1061,7 @@ isn't necessary to have nested `if let` statements here.
     let ot = Some((2,"hello".to_string());
 
     if let Some((_,ref s)) = ot {
-        assert_eq!(s,"hello");
+        assert_eq!(s, "hello");
     }
     // we just borrowed the string, no 'destructive destructuring'
 ```
@@ -1101,11 +1101,11 @@ A great deal of Rust's power comes from _closures_. In their simplest form, they
 act like shortcut functions:
 
 ```rust
-    let f = |x| x*x;
+    let f = |x| x * x;
 
     let res = f(10);
 
-    println!("res {}",res);
+    println!("res {}", res);
     // res 100
 ```
 
@@ -1163,7 +1163,7 @@ let set = |v| answer = v;
 //let get = || answer;
 
 set(58);
-assert_eq! (answer, 58);
+assert_eq!(answer, 58);
 ```
 
 But uncomment `get` and you get a borrowing error:
@@ -1228,7 +1228,7 @@ So it's possible for a closure to mutate its _captured_ references:
     }
     let mut s = "world";
     mutate(|| s = "hello");
-    assert_eq!(s,"hello");
+    assert_eq!(s, "hello");
 ```
 
 Note that `mut` - `f` needs to be mutable for this to work.
@@ -1249,12 +1249,12 @@ Here's a first try:
 
 ```rust
     let mut v = Vec::new();
-    v.push(Box::new(|x| x*x));
-    v.push(Box::new(|x| x/2.0));
+    v.push(Box::new(|x| x * x));
+    v.push(Box::new(|x| x / 2.0));
 
     for f in v.iter() {
         let res = f(1.0);
-        println!("res {}",res);
+        println!("res {}", res);
     }
 ```
 
@@ -1285,7 +1285,7 @@ Sometimes you don't want a closure to borrow those variables, but instead _move_
     let age = 42;
 
     let c = move || {
-        println!("name {} age {}",name,age);
+        println!("name {} age {}", name,age);
     };
 
     c();
@@ -1331,7 +1331,7 @@ a condition:
     let iter = tuples.iter().filter(|t| t.0 > 20).map(|t| t.1);
 
     for name in iter {
-        println!("{} ",name);
+        println!("{} ", name);
     }
     // thirty
     // forty
@@ -1468,7 +1468,7 @@ fn main() {
     root.set_left(Node::new("left"));
     root.set_right(Node::new("right"));
 
-    println!("arr {:#?}",root);
+    println!("arr {:#?}", root);
 }
 ```
 The output is surprisingly pretty, thanks to "{:#?}" ('#' means 'extended'.)
@@ -1526,7 +1526,7 @@ on the right. There may be no node on the left, so then `set_left` and so forth.
         root.insert("two");
         root.insert("four");
 
-        println!("root {:#?}",root);
+        println!("root {:#?}", root);
     }
 ```
 
@@ -1573,7 +1573,7 @@ the node, and then visit the right.
         if let Some(ref left) = self.left {
             left.visit();
         }
-        println!("'{}'",self.payload);
+        println!("'{}'", self.payload);
         if let Some(ref right) = self.right {
             right.visit();
         }
@@ -1604,7 +1604,7 @@ The Rust solution is a _generic function_, which has _type parameters_.
 // gen1.rs
 
 fn sqr<T> (x: T) -> T {
-    x*x
+    x * x
 }
 
 fn main() {
@@ -1619,13 +1619,13 @@ about `T`:
 error[E0369]: binary operation `*` cannot be applied to type `T`
  --> gen1.rs:4:5
   |
-4 |     x*x
+4 |     x * x
   |     ^
   |
 note: an implementation of `std::ops::Mul` might be missing for `T`
  --> gen1.rs:4:5
   |
-4 |     x*x
+4 |     x * x
   |     ^
 ```
 Following the advice of the compiler, let's _constrain_ that type parameter using
@@ -1636,7 +1636,7 @@ that trait, which is used to implement the multiplication operator `*`:
 use std::ops::Mul;
 
 fn sqr<T: Mul> (x: T) -> T {
-    x*x
+    x * x
 }
 ```
 
@@ -1646,7 +1646,7 @@ Which still doesn't work:
 rror[E0308]: mismatched types
  --> gen2.rs:6:5
   |
-6 |     x*x
+6 |     x * x
   |     ^^^ expected type parameter, found associated type
   |
   = note: expected type `T`
@@ -1658,7 +1658,7 @@ of two vectors is a scalar.
 
 ```rust
 fn sqr<T: Mul> (x: T) -> T::Output {
-    x*x
+    x * x
 }
 ```
 
@@ -1668,7 +1668,7 @@ and now the error is:
 error[E0382]: use of moved value: `x`
  --> gen2.rs:6:7
   |
-6 |     x*x
+6 |     x * x
   |     - ^ value used here after move
   |     |
   |     value moved here
@@ -1680,7 +1680,7 @@ So, we need to constrain the type even further!
 
 ```rust
 fn sqr<T: Mul + Copy> (x: T) -> T::Output {
-    x*x
+    x * x
 }
 ```
 And that (finally) works. Calmly listening to the compiler will often get you closer
@@ -1691,7 +1691,7 @@ It _is_ a bit simpler in C++:
 ```cpp
 template <typename T>
 T sqr(x: T) {
-    return x*x;
+    return x * x;
 }
 ```
 but (to be honest) C++ is adopting cowboy tactics here. C++ template errors are famously
@@ -1781,7 +1781,7 @@ fn main() {
     root.insert("two".to_string());
     root.insert("four".to_string());
 
-    println!("root {:#?}",root);
+    println!("root {:#?}", root);
 }
 ```
 

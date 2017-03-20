@@ -31,7 +31,7 @@ fn read_all_lines(filename: &str) -> io::Result<()> {
 
     for line in reader.lines() {
         let line = line?;
-        println!("{}",line);
+        println!("{}", line);
     }
     Ok(())
 }
@@ -57,7 +57,7 @@ can be removed using `trim_right`.
     while reader.read_line(&mut buf)? > 0 {
         {
             let line = buf.trim_right();
-            println!("{}",line);
+            println!("{}", line);
         }
         buf.clear();
     }
@@ -142,7 +142,7 @@ fn read_all_lines(filename: &str) -> io::Result<()> {
     let mut lines = Lines::new(file);
     while let Some(line) = lines.next() {
         let line = line?;
-        println!(stdout,"{}",line)?;
+        println!("{}", line)?;
     }
 
     Ok(())
@@ -154,7 +154,7 @@ string slice:
 
 ```
     while let Some(Ok(line)) = lines.next() {
-        println!(stdout,"{}",line)?;
+        println!"{}", line)?;
     }
 ```
 
@@ -170,7 +170,7 @@ that implements `Write`. So here's a another way of saying `print!`:
 ```rust
     let mut stdout = io::stdout();
     ...
-    write!(stdout,"answer is {}\n",42).expect("write failed");
+    write!(stdout,"answer is {}\n", 42).expect("write failed");
 ```
 
 If an error is _possible_, you must handle it. It may not be
@@ -189,7 +189,7 @@ use std::io::prelude::*;
 
 fn write_out(f: &str) -> io::Result<()> {
     let mut out = File::create(f)?;
-    write!(out,"answer is {}\n",42)?;
+    write!(out,"answer is {}\n", 42)?;
     Ok(())
 }
 
@@ -235,7 +235,7 @@ fn main() {
     path.push(".cargo");
 
     if path.is_dir() {
-        println!("{}",path.display());
+        println!("{}", path.display());
     }
 }
 ```
@@ -293,7 +293,7 @@ use std::env;
 fn main() {
     let mut path = env::current_dir().expect("can't access current dir");
     loop {
-        println!("{}",path.display());
+        println!("{}", path.display());
         if ! path.pop() {
             break;
         }
@@ -320,7 +320,7 @@ fn main() {
     loop {
         path.push("config.txt");
         if path.is_file() {
-            println!("gotcha {}",path.display());
+            println!("gotcha {}", path.display());
             break;
         } else {
             path.pop();
@@ -349,12 +349,12 @@ fn main() {
     let path = Path::new(&file);
     match path.metadata() {
         Ok(data) => {
-            println!("type {:?}",data.file_type());
-            println!("len {}",data.len());
-            println!("perm {:?}",data.permissions());
-            println!("modified {:?}",data.modified());
+            println!("type {:?}", data.file_type());
+            println!("len {}", data.len());
+            println!("perm {:?}", data.permissions());
+            println!("modified {:?}", data.modified());
         },
-        Err(e) => println!("error {:?}",e)
+        Err(e) => println!("error {:?}", e)
     }
 }
 // type FileType(FileType { mode: 33204 })
@@ -402,7 +402,7 @@ fn dump_dir(dir: &str) -> io::Result<()> {
         if data.is_file() {
             if let Some(ex) = path.extension() {
                 if ex == "rs" && data.len() > 1024 {
-                    println!("{} length {}",path.display(),data.len());
+                    println!("{} length {}", path.display(),data.len());
                 }
             }
         }
@@ -461,7 +461,7 @@ fn main() {
         .status()
         .expect("no rustc?");
 
-    println!("cool {} code {}",status.success(), status.code().unwrap());
+    println!("cool {} code {}", status.success(), status.code().unwrap());
 }
 // rustc 1.15.0-nightly (8f02c429a 2016-12-15)
 // cool true code 0
@@ -506,7 +506,7 @@ fn main() {
     if output.status.success() {
         println!("ok!");
     }
-    println!("len stdout {} stderr {}",output.stdout.len(), output.stderr.len());
+    println!("len stdout {} stderr {}", output.stdout.len(), output.stderr.len());
 }
 // ok!
 // len stdout 44 stderr 0

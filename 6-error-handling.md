@@ -78,9 +78,9 @@ And the results:
 
 ```rust
 fn main() {
-    println!(" {:?}",parse_f64("42",false));
-    println!(" {:?}",parse_f64("42",true));
-    println!(" {:?}",parse_f64("?42",false));
+    println!(" {:?}", parse_f64("42",false));
+    println!(" {:?}", parse_f64("42",true));
+    println!(" {:?}", parse_f64("?42",false));
 }
 //  Ok(42)
 //  Err(MyError { details: "borked" })
@@ -183,7 +183,7 @@ fn run() -> Result<()> {
     let mut l = 0;
     for line in BufReader::new(f).lines() {
         let line = line?;
-        println!("{}",line);
+        println!("{}", line);
         l += 1;
         if l == 10 {
             break;
@@ -259,9 +259,9 @@ fn main() {
     if let Err(e) = run() {
         println!("error {}",e);
         match e.kind() {
-            &ErrorKind::Msg(ref s) => println!("msg {}",s),
-            &ErrorKind::Io(ref s) => println!("io {}",s),
-            &ErrorKind::NoArgument(ref s) => println!("no argument {:?}",s),
+            &ErrorKind::Msg(ref s) => println!("msg {}", s),
+            &ErrorKind::Io(ref s) => println!("io {}", s),
+            &ErrorKind::NoArgument(ref s) => println!("no argument {:?}", s),
         }
         std::process::exit(1);
     }
@@ -327,7 +327,7 @@ fn run() -> Result<()> {
     let mut l = 0;
     for line in BufReader::new(f).lines() {
         let line = line.chain_err(|| "cannot read a line")?;
-        println!("{}",line);
+        println!("{}", line);
         l += 1;
         if l == 10 {
             break;
@@ -340,11 +340,11 @@ fn run() -> Result<()> {
 
 fn main() {
     if let Err(e) = run() {
-        println!("error {}",e);
+        println!("error {}", e);
 
         /////// look at the chain of errors... ///////
         for e in e.iter().skip(1) {
-            println!("caused by: {}",e);
+            println!("caused by: {}", e);
         }
 
         std::process::exit(1);

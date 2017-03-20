@@ -226,7 +226,7 @@ use std::thread;
 fn main() {
     let name = "dolly".to_string();
     let t = thread::spawn(|| {
-        println!("hello {}",name);
+        println!("hello {}", name);
     });
     println!("wait {:?}", t.join());
 }
@@ -240,7 +240,7 @@ error[E0373]: closure may outlive the current function, but it borrows `name`, w
   |
 6 |     let t = thread::spawn(|| {
   |                           ^^ may outlive borrowed value `name`
-7 |         println!("hello {}",name);
+7 |         println!("hello {}", name);
   |                             ---- `name` is borrowed here
   |
 help: to force the closure to take ownership of `name` (and any other referenced variables), use the `move` keyword, as shown:
@@ -261,7 +261,7 @@ fn main() {
 
     for i in 0..5 {
         let t = thread::spawn(move || {
-            println!("hello {}",i);
+            println!("hello {}", i);
         });
         threads.push(t);
     }
@@ -308,7 +308,7 @@ fn main() {
     for i in 0..5 {
         let tname = name.clone();
         let t = thread::spawn(move || {
-            println!("hello {} count {}",tname,i);
+            println!("hello {} count {}", tname,i);
         });
         threads.push(t);
     }
@@ -609,7 +609,7 @@ use std::net::*;
 
 fn main() {
     for res in "google.com:80".to_socket_addrs().expect("bad") {
-        println!("got {:?}",res);
+        println!("got {:?}", res);
     }
 }
 // got V4(216.58.223.14:80)
@@ -718,9 +718,9 @@ fn main() {
             Ok(mut stream) => {
                 let mut text = String::new();
                 stream.read_to_string(&mut text).expect("read failed");
-                println!("got '{}'",text);
+                println!("got '{}'", text);
             }
-            Err(e) => { println!("connection failed {}",e); }
+            Err(e) => { println!("connection failed {}", e); }
         }
     }
 }
@@ -752,7 +752,7 @@ fn handle_connection(stream: TcpStream) -> io::Result<()>{
     let mut rdr = io::BufReader::new(stream);
     let mut text = String::new();
     rdr.read_line(&mut text)?;
-    println!("got '{}'",text.trim_right());
+    println!("got '{}'", text.trim_right());
     Ok(())
 }
 
@@ -765,10 +765,10 @@ fn main() {
         match connection {
             Ok(stream) => {
                 if let Err(e) = handle_connection(stream) {
-                    println!("error {:?}",e);
+                    println!("error {:?}", e);
                 }
             }
-            Err(e) => { print!("connection failed {}\n",e); }
+            Err(e) => { print!("connection failed {}\n", e); }
         }
     }
 }
@@ -792,7 +792,7 @@ fn main() {
     let mut stream = TcpStream::connect("127.0.0.1:8000").expect("connection failed");
     let msg = "hello from the client!";
 
-    write!(stream,"{}\n",msg).expect("write failed");
+    write!(stream,"{}\n", msg).expect("write failed");
 
     let mut resp = String::new();
     stream.read_to_string(&mut resp).expect("read failed");
