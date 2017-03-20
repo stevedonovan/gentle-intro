@@ -488,11 +488,11 @@ size.  The type of the array in the example is
 have _different types_.  So they are basically bastards to pass around as
 function arguments.
 
-What _are_ used often are _array slices_. You can think of these as _views_ into
+What _are_ used often are _slices_. You can think of these as _views_ into
 an underlying array of values. They otherwise behave very much like an array, and
 _know their size_, unlike those dangerous animals C pointers.
 
-Note two important things here - how to write an array-slice type, and that
+Note two important things here - how to write an slice type, and that
 you have to use `&` to pass it to the function.
 
 ```rust
@@ -575,7 +575,7 @@ Here is the informative error:
   = note:    found type `[{float}; 2]`
 ```
 
-Array slices give you different _views_ of the _same_ array:
+Slices give you different _views_ of the _same_ array:
 
 ```rust
 // slice1.rs
@@ -603,7 +603,7 @@ of effort to make sure that relationship does not break down.
 
 ## Optional Values
 
-Array slices, like arrays, can be _indexed_. Rust knows the size of an array at
+Slices, like arrays, can be _indexed_. Rust knows the size of an array at
 compile-time, but the size of a slice is only known at run-time. So `s[i]` can
 cause an out-of-bounds error when running and will _panic_.  This is really not
 what you want to happen - it can be the difference between a safe launch abort and
@@ -914,7 +914,7 @@ fn main() {
     assert_eq!(v2, &[10, 20, 30, 0, 1]);
 }
 ```
-Vectors compare with each other and with array slices by value.
+Vectors compare with each other and with slices by value.
 
 You can insert values into a vector at arbitrary positions with `insert`,
 and remove with `remove`. This is not as efficient as pushing and popping since
@@ -1021,7 +1021,7 @@ fn main() {
 Note the `&` in front of `v.to_string()` - the operator is defined on a string
 slice, not a `String` itself, so it needs a little persuasion to match.
 
-The slice notation we saw used for array slices works with strings as well:
+The notation used for slices works with strings as well:
 
 ```rust
 // string2.rs
