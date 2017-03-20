@@ -601,7 +601,7 @@ a copy of the data is never made.  These slices all _borrow_ their data from the
 arrays. They have a very intimate relationship with that array, and Rust spends a lot
 of effort to make sure that relationship does not break down.
 
-## You have Options
+## Optional Values
 
 Array slices, like arrays, can be _indexed_. Rust knows the size of an array at
 compile-time, but the size of a slice is only known at run-time. So `s[i]` can
@@ -993,14 +993,15 @@ fn main() {
     assert_eq!(s,"Hello World");
 }
 ```
-You can convert many types to strings (essentially, if you can display them with '{}'
-then they can be converted). The `format!` macro is a very useful way to build
+You can convert many types to strings using `to_string`
+(essentially, if you can display them with '{}' then they can be converted).
+The `format!` macro is a very useful way to build
 up more complicated strings using the same format strings as `println!`.
 
 ```rust
 // string5.rs
 fn array_to_str(arr: &[i32]) -> String {
-    let mut res = "[".to_string();
+    let mut res = '['.to_string();
     for v in arr {
         res += &v.to_string();
         res.push(',');
@@ -1072,15 +1073,24 @@ any slice will be fine.
 (The Rust `char` type is a 4-byte Unicode code point. Strings are _not_ arrays
 of chars!)
 
+String slicing may explode like vector indexing, because it uses byte offsets. In this case,
+the string consists of two bytes, so trying to pull out the first byte is a Unicode error. So be
+careful to only pass it valid offsets that come from string methods.
+
+```rust
+    let s = "¡";
+    println!("{}", &s[0..1]); <-- bad, first byte of a multibyte character
+```
+
 Breaking up strings is a popular and useful pastime. The string `split_whitespace`
 method returns an _iterator_, and we then choose what to do with it. `collect`
 is very general and so needs some clues about _what_ it is collecting - hence
 the explicit type.
 
 ```rust
-    let text = "the brown fox and the lazy dog";
+    let text = "the red fox and the lazy dog";
     let words: Vec<&str> = text.split_whitespace().collect();
-    // ["the", "brown", "fox", "and", "the", "lazy", "dog"]
+    // ["the", "red", "fox", "and", "the", "lazy", "dog"]
 ```
 You could also say it like this, passing the iterator into the `extend` method:
 
@@ -1099,7 +1109,7 @@ a clue (we may have wanted a vector of chars, say):
 ```rust
     let stripped: String = text.chars()
         .filter(|ch| !ch.is_whitespace()).collect();
-    // thebrownfoxandthelazydog
+    // theredfoxandthelazydog
 ```
 The `filter` method takes a _closure_, which is Rust-speak for what C++ calls
 lambdas or anonymous functions.  Here the argument type is clear from the
@@ -1261,9 +1271,9 @@ thread 'main' panicked at 'can't read the file: Error { repr: Custom(Custom { ki
 note: Run with `RUST_BACKTRACE=1` for a backtrace.
 ```
 So `open` can fail because the file doesn't exist or we aren't allowed to read it,
-and `read_to_string` can fail because the file doesn't contain valid UTF-8. Which is
+and `read_to_string` can fail because the file doesn't contain valid UTF-8. (Which is
 fair enough, you can use `read_to_end` and put the contents into a vector of bytes
-instead. For files that aren't too big, reading them in one gulp is useful and
+instead.) For files that aren't too big, reading them in one gulp is useful and
 straightforward.
 
 If you know anything about file handling in other languages, you may wonder when

@@ -72,7 +72,7 @@ work up as your programs get larger.
 
 Personally I'm a fan of [Geany](https://www.geany.org/Download/Releases) which is
 one of the few editors with Rust support out-of-the-box; it's particularly easy
-on Linux since it's available through the package manager but it works fine on
+on Linux since it's available through the package manager, but it works fine on
 other platforms.
 
 The main thing is knowing how to edit, compile and run Rust programs.

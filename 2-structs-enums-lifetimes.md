@@ -1011,7 +1011,7 @@ Destructuring works with structs as well:
     // both x and y are f32
 ```
 
-Time to revisit `match` with some new patterns. The first is exactly like a `let`
+Time to revisit `match` with some new patterns. The first two patterns are exactly like `let`
 destructuring - it only matches tuples with first element zero, but _any_ string;
 the second adds an `if` so that it only matches `(1,"hello")`.
 

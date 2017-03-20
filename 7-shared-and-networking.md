@@ -29,9 +29,6 @@ write to a field `v.a` if `v` itself is writeable. `Cell` values relax this rule
 we can change the value contained within them with `set` even if the cell itself is
 not mutable.
 
-`Cell` would be one way of preserving our original design in the last example, at the
-cost of introducing a few `set` and `get` calls.
-
 However, `Cell` only works with values that can be copied, that is, they implement `Copy`,
 like primitive types and structs containing them marked as 'derive(Copy)'.
 
@@ -57,7 +54,7 @@ fn main() {
 The explicit dereference operator `*` can be a little bit confusing in Rust, because
 often you don't need it - for instance `greeting.borrow().len()` is fine since method
 calls will deference implicitly.  But you _do_ need `*` to pull out the underlying
-`&String` from `greeting.borrow()` or the `&mut String` from `greeting.mut_borrow()`.
+`&String` from `greeting.borrow()` or the `&mut String` from `greeting.borrow_mut()`.
 
 Using a `RefCell` isn't always safe, because any references returned from these
 methods must follow the usual rules.
@@ -141,7 +138,7 @@ So the application code isn't too bad, but the type signatures get a bit scary. 
 always simplify them with a `type` alias:
 
 ```rust
-type PlayRef = Rc<RefCell<Player>>;
+type PlayerRef = Rc<RefCell<Player>>;
 ```
 
 ## Multithreading
@@ -213,6 +210,13 @@ thread '<unnamed>' panicked at 'I give up!', thread2.rs:7
 note: Run with `RUST_BACKTRACE=1` for a backtrace.
 wait Err(Any)
 ```
+
+In fact, the word 'panic' is unfortunate, because it sounds desperate and unplanned. Rust panics
+are more structured. The stack is 'unwound' just as in C++ - all allocated objects are dropped, and
+a backtrace is generated.
+
+## Threads Don't Borrow
+
 It's possible for the thread closure to capture values, but _not_ by borrowing!
 
 ```rust
@@ -282,6 +286,48 @@ for different runs), and this is key - they really are _independent threads of e
 Multithreading is easy; what's hard is _concurrency_ - managing and synchronizing multiple
 threads of execution.
 
+Threads can't share the same environment - by _design_ in Rust. In particular,
+they cannot share regular references because the closures move their captured variables.
+
+__shared references_ are fine however - but you cannot use `Rc` for this. This is because
+`Rc` is not _thread safe_ - it's optimized to be fast for the non-threaded case. For
+threads, you need `std::sync::Arc` - 'Arc' stands for 'Atomic Reference Counting'. That
+is, it guarantees that the reference count will be modified in one logical operation. To
+make this guarantee, it must ensure that the operation is locked so that only the current
+thread has access.
+
+```rust
+// thread5.rs
+use std::thread;
+use std::sync::Arc;
+
+fn main() {
+    let mut threads = Vec::new();
+    let name = Arc::new("dolly".to_string());
+
+    for i in 0..5 {
+        let tname = name.clone();
+        let t = thread::spawn(move || {
+            println!("hello {} count {}",tname,i);
+        });
+        threads.push(t);
+    }
+
+    for t in threads {
+        t.join().expect("thread failed");
+    }
+}
+```
+
+So the shared reference `name` is passed to each new thread by making a new reference
+with `clone` and moving it into the closure. It's a little verbose, but this is a safe
+pattern. Safety is important in concurrency precisely because the problems are so
+unpredictable. A program may run fine on your machine, but occasionally crash on the
+server, usually on the weekend. Worse still, the symptoms of such problems are
+not easy to diagnose.
+
+## Channels
+
 There are ways to send data between threads. This
 is done in Rust using _channels_. `std::sync::mpsc::channel()` returns a pair:
 the _receiver_ channel and the _sender_ channel. Each thread is passed a copy
@@ -321,69 +367,47 @@ end execution, but obviously this can happen at any time. `recv` will block, and
 return an error if the sender channel is disconnected. `recv_timeout` will only block
 for a given time period, and may return a timeout error as well.
 
-`send` never blocks, which is useful because threads can push out data without waiting for the receiver to process.
-In addition, the channel is buffered so multiple `send` operations can take place,
-which will be received in order.
+`send` never blocks, which is useful because threads can push out data without waiting
+for the receiver to process. In addition, the channel is buffered so multiple
+send` operations can take place, which will be received in order.
 
 However, not blocking means that `Ok` does not automatically mean 'successfully delivered message'!
 
-Threads can't share the same environment - by _design_ in Rust. In particular,
-they cannot share regular references because the closures move their captured variables.
-
-__shared references_ are fine however - but you cannot use `Rc` for this. This is because
-`Rc` is not _thread safe_ - it's optimized to be fast for the non-threaded case. For
-threads, you need `std::sync::Arc` - 'Arc' stands for 'Atomic Reference Counting'. That
-is, it guarantees that the reference count will be modified in one logical operation. To
-make this guarantee, it must ensure that the operation is locked so that only the current
-thread has access.
+A `sync_channel` _does_ block on send. With an argument of zero, the send blocks until the
+recv happens. The threads must meet up or _rendezvous_ (on the sound principle that most things
+sound better in French.)
 
 ```rust
-// thread5.rs
-use std::thread;
-use std::sync::Arc;
+    let (tx, rx) = mpsc::sync_channel(0);
 
-fn main() {
-    let mut threads = Vec::new();
-    let name = Arc::new("dolly".to_string());
-
-    for i in 0..5 {
-        let tname = name.clone();
-        let t = thread::spawn(move || {
-            println!("hello {} count {}",tname,i);
-        });
-        threads.push(t);
-    }
-
-    for t in threads {
-        t.join().expect("thread failed");
-    }
-}
-```
-
-So the shared reference `name` is passed to each new thread by making a new reference
-with `clone` and moving it into the closure. It's a little verbose, but this is a safe
-pattern. Safety is important in concurrency precisely because the problems are so
-unpredictable. A program may run fine on your machine, and occasionally crash on the
-server, usually on the weekend. Worse still, the symptoms of such problems are
-not easy to diagnose.
-
-Let's look at _synchronization_. `join` is very basic, and merely tells us that a
-particular thread has finished. In this case, the second thread only gets going
-when the first thread has finished.
-
-```rust
-    let one = thread::spawn(move || {
-        println!("I am one");
+    let t1 = thread::spawn(move || {
+        for i in 0..5 {
+            tx.send(i).unwrap();
+        }
     });
 
-    let two = thread::spawn(move || {
-        // wait for one to finish...
-        one.join().unwrap();
-        // and then we can go
-        println!("I am two");
-    });
+    for _ in 0..5 {
+        let res = rx.recv().unwrap();
+        println!("{}",res);
+    }
+    t1.join().unwrap();
 ```
-(Which _is_ synchronization, just not very interesting.)
+
+We can easily cause an error here by calling `recv` when there has been no corresponding `send`, e.g
+by looping `for i in 0..4`. The thread ends, and `tx` drops, and then `recv` will fail. This will also
+happen if the thread panics, which causes its stack to be unwound, dropping any values.
+
+If the `sync_channel` was created with a non-zero argument `n`, then it acts like a queue with a
+maximum size of `n` - `send` will only block when it tries to add more than `n` values to the queue.
+
+Channels are strongly typed - here the channel had type `i32` - but type inference makes this implicit.
+If you need to pass different kinds of data, then enums are a good way to express this.
+
+## Synchronization
+
+Let's look at _synchronization_. `join` is very basic, and merely waits until a
+particular thread has finished.  A `sync_channel` synchronizes two threads - in the last example, the
+spawned thread and the main thread are completely locked together.
 
 Barrier synchronization is a checkpoint where the threads must wait until _all_ of
 them have reached that point. Then they can keep going as before. The barrier is
@@ -430,7 +454,10 @@ The threads do their semi-random thing, all meet up, and then continue. It's lik
 of resumable `join` and useful when you need to farm off pieces of a job to
 different threads and want to take some action when all the pieces are finished.
 
-How can threads _modify_ shared state?
+
+## Shared State
+
+But how can threads _modify_ shared state?
 
 Recall the `Rc<RefCell>` strategy for _dynamically_ doing a
 mutable borrow on shared references.  The threading equivalent to `RefCell` is
@@ -479,8 +506,166 @@ expensive calculations! So typically such code would be used like this:
 }
 //... continue with the thread
 ```
+## Higher-Level Operations
 
-## TCP Networking
+It's better to find higher-level ways of doing threading, rather than managing the synchronization
+yourself. An example is when you need to do things in parallel and collect the results. One very
+cool crate is [pipeliner](https://docs.rs/pipeliner/0.1.1/pipeliner/) which has a very straightforward
+API. Here's the 'Hello, World!' - an iterator feeds us inputs and we execute up to `n` of the operations
+on the values in parallel.
+
+```rust
+extern crate pipeliner;
+use pipeliner::Pipeline;
+
+fn main() {
+    for result in (0..50).with_threads(10).map(|x| x + 1) {
+        println!("result: {}", result);
+    }
+}
+```
+
+It's silly of course, because the operation is so cheap to calculate, but shows how simple it is
+to collect parallel results.
+
+Here's something more useful. Doing network operations in parallel is very useful, because they can
+take time, and you don't want to wait for them _all_ to finish before starting to do work.
+
+This example is pretty crude (believe me, there are better ways of doing it) but here we want to focus
+on the principle. We reuse the `shell` function defined in section 4 to call `ping` on a range
+of IP4 addresses.
+
+```rust
+extern crate pipeliner;
+use pipeliner::Pipeline;
+
+use std::process::Command;
+
+fn shell(cmd: &str) -> (String,bool) {
+    let cmd = format!("{} 2>&1",cmd);
+    let output = Command::new("/bin/sh")
+        .arg("-c")
+        .arg(&cmd)
+        .output()
+        .expect("no shell?");
+    (
+        String::from_utf8_lossy(&output.stdout).trim_right().to_string(),
+        output.status.success()
+    )
+}
+
+fn main() {
+    let addresses: Vec<_> = (1..40).map(|n| format!("ping -c1 192.168.0.{}",n)).collect();
+    let n = addresses.len();
+
+    for result in addresses.with_threads(n).map(|s| shell(&s)) {
+        if result.1 {
+            println!("got: {}", result.0);
+        }
+    }
+
+}
+```
+
+And the result on my home network looks like this:
+
+```
+got: PING 192.168.0.1 (192.168.0.1) 56(84) bytes of data.
+64 bytes from 192.168.0.1: icmp_seq=1 ttl=64 time=43.2 ms
+
+--- 192.168.0.1 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 43.284/43.284/43.284/0.000 ms
+got: PING 192.168.0.18 (192.168.0.18) 56(84) bytes of data.
+64 bytes from 192.168.0.18: icmp_seq=1 ttl=64 time=0.029 ms
+
+--- 192.168.0.18 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.029/0.029/0.029/0.000 ms
+got: PING 192.168.0.3 (192.168.0.3) 56(84) bytes of data.
+64 bytes from 192.168.0.3: icmp_seq=1 ttl=64 time=110 ms
+
+--- 192.168.0.3 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 110.008/110.008/110.008/0.000 ms
+got: PING 192.168.0.5 (192.168.0.5) 56(84) bytes of data.
+64 bytes from 192.168.0.5: icmp_seq=1 ttl=64 time=207 ms
+...
+```
+
+The active addresses come through pretty fast within the first half-second, and we then wait for the negative
+results to come in. Otherwise, we would wait for the better part of a minute! You can now proceed
+to scrape things like ping times from the output, although this would only work on Linux. `ping`
+is universal, but the exact output format is different for each platform.  To do better we need to use
+the cross-platform Rust networking API, and so let's move onto Networking.
+
+## A Better Way to Resolve Addresses
+
+If you _just_ want availability and not detailed ping statistics, the `std::net::ToSocketAddrs` trait
+will do any DNS resolution for you:
+
+```rust
+use std::net::*;
+
+fn main() {
+    for res in "google.com:80".to_socket_addrs().expect("bad") {
+        println!("got {:?}",res);
+    }
+}
+// got V4(216.58.223.14:80)
+// got V6([2c0f:fb50:4002:803::200e]:80)
+```
+
+It's an iterator because there is often more than one interface associated with a domain - there are
+both IPV4 and IPV6 interfaces to Google.
+
+So, let's naively use this method to rewrite the pipeliner example. Most networking protocols use both an
+address and a port:
+
+```rust
+extern crate pipeliner;
+use pipeliner::Pipeline;
+
+use std::net::*;
+
+fn main() {
+    let addresses: Vec<_> = (1..40).map(|n| format!("192.168.0.{}:0",n)).collect();
+    let n = addresses.len();
+
+    for result in addresses.with_threads(n).map(|s| s.to_socket_addrs()) {
+        println!("got: {:?}", result);
+    }
+}
+// got: Ok(IntoIter([V4(192.168.0.1:0)]))
+// got: Ok(IntoIter([V4(192.168.0.39:0)]))
+// got: Ok(IntoIter([V4(192.168.0.2:0)]))
+// got: Ok(IntoIter([V4(192.168.0.3:0)]))
+// got: Ok(IntoIter([V4(192.168.0.5:0)]))
+// ....
+```
+
+This is much faster than the ping example because it's just checking that the IP address is valid - if we fed
+it a list of actual domain names the DNS lookup could take some time, hence the importance of parallelism.
+
+Suprisingly, it sort-of Just Works. The fact that everything in the standard library implements `Debug`
+is great for exploration as well as debugging.  The iterator is returning `Result` (hence `Ok`) and
+in that `Result` is an `IntoIter` into a `SocketAddr` which is an enum with either a IPV4 or a IPV6 address.
+
+```rust
+    for result in addresses.with_threads(n)
+        .map(|s| s.to_socket_addrs().unwrap().next().unwrap())
+    {
+        println!("got: {:?}", result);
+    }
+// got: V4(192.168.0.1:0)
+// got: V4(192.168.0.39:0)
+// got: V4(192.168.0.3:0)
+```
+This also works, surprisingly enough, at least for our simple example. The first `unwrap` gets rid of
+the `Result`, and then we explicitly pull the first value out of the iterator. The `Result` will get
+bad typically when we give a nonsense address (like an address name without a port.)
+
+## TCP Client Server
 
 Rust provides a straightforward interface to the most commonly used network protocol, TCP.
 It is very fault-resistant and is the base on which our networked world is built - _packets_ of
@@ -495,6 +680,9 @@ eventually.
 TCP works as a client/server model; the server listens on a address and a particular _network port_,
 and the client connects to that server. A connection is established and thereafter the client and server
 can communicate with a socket.
+
+`TcpStream::connect` takes anything that can convert into a `SocketAddr`, in particular the plain strings
+we have been using.
 
 A simple TCP client in Rust is easy - a `TcpStream` struct is both readable and writeable. As usual, we
 have to bring the `Read`, `Write` and other `std::io` traits into scope:
@@ -588,13 +776,12 @@ fn main() {
 
 `read_line` might fail in `handle_connection`, but the resulting error is safely handled.
 
-
 One-way communications like this are certainly useful - for instance. a set of services across a
 network which want to collect their status reports together in one central place. But it's
 reasonable to expect a polite reply, even if just 'ok'!
 
 A simple example is an 'echo' server. The client writes some text ending in a newline to the
-server, and receives the same text back with a newline.
+server, and receives the same text back with a newline - the stream is readable and writeable.
 
 ```rust
 // client_echo.rs

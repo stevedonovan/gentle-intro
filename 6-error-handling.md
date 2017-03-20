@@ -1,4 +1,4 @@
-## Error Handling
+## Basic Error Handling
 
 Error handling in Rust can be clumsy if you can't use the question-mark operator.
 To achieve happiness, we need to create our own error type. The basic requirements
@@ -107,7 +107,9 @@ For example, say we had a `HashMap` and must fail if a key isn't defined:
 Now here the error returned is completely clear! (This form uses a closure, so the error value
 is only created if the lookup fails.)
 
-Thinking about error handling is important, and for serious applications have a look
+## error-chain to the Rescue
+
+Error handling is important, and for non-trivial applications have a look
 at the [error_chain](http://brson.github.io/2016/11/30/starting-with-error-chain) crate.
 A little macro magic can go a long way in Rust...
 
@@ -149,7 +151,7 @@ fn run() -> Result<()> {
 
 
 fn main() {
-    if let Err(ref e) = run() {
+    if let Err(e) = run() {
         println!("error: {}", e);
 
         std::process::exit(1);
@@ -273,11 +275,21 @@ Generally, it's useful to make errors as specific as possible, _particularly_ if
 function! This match-on-kind technique is pretty much the equivalent of traditional exception handling,
 where you match on exception types.
 
+In summary, __error-chain__ creates a type `Error` for you, and defines `Result<T>` to be `std::result::Result<T,Error>`.
+`Error` contains an enum `ErrorKind` and by default there is one variant `Msg` for errors created from
+strings. You define 'foreign' errors with `foreign_links` which does two things. First, it creates a new
+`ErrorKind` variant. Second, it defines `From` on these external errors so they can be converted to our
+error.  New error variants can be easily added.  A lot of irritating boilerplate code is eliminated.
+
+## Chaining Errors
+
+But the really cool thing that this crate provides is _error chaining_.
+
 As a _library user_, it's irritating when a method simply just 'throws' a generic I/O error. OK, it
 could not open a file, fine, but what file? Basically, what use is this information to me?
 
 `error_chain` does _error chaining_ which helps solve this problem of over-generic errors. When we
-try to open the file, we just lazily leant on the conversion to `io::Error` using `?`.
+try to open the file, we can lazily lean on the conversion to `io::Error` using `?` or chain the error.
 
 ```rust
 // non-specific error
@@ -355,6 +367,4 @@ quick_main!(run);
 ```
 
 (`run` is where all the action takes place, anyway.)
-
-
 

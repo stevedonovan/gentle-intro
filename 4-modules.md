@@ -134,8 +134,11 @@ fn main() {
 }
 ```
 
+So far, there's `mod3.rs`, containing `main`, a module `foo.rs` and a directory `boo` containing
+`mod.rs`.  The usual convention is that the file containing `main` is just called `main.rs`.
+
 Why two ways to do the same thing? Because `boo/mod.rs` can refer to other modules defined in `boo`,
-Update `boo/mod.rs` and add a new module - note this is explicitly exported as a submodule!
+Update `boo/mod.rs` and add a new module - note that this is explicitly exported.
 
 ```rust
 pub fn answer()->u32 {
@@ -307,7 +310,7 @@ test-json$ cargo build
 The main file of this project has already been created - it's 'main.rs' in the 'src'
 directory. It starts out just as a 'hello world' app, so let's edit it to be a proper test program.
 
-Mote the very useful 'raw' string literal - otherwise we would need to escape those double quotes
+Mote the very convenient 'raw' string literal - otherwise we would need to escape those double quotes
 and end up with ugliness:
 
 ```rust
@@ -334,7 +337,7 @@ fn main() {
 }
 ```
 
-You can now build and run this project:
+You can now build and run this project - only `main.rs` has changed.
 
 ```
 test-json$ cargo run
@@ -384,8 +387,7 @@ You can modify these structures. If we had `let mut doc` then this would do what
     let features = &mut doc["payload"]["features"];
     features.push("cargo!").expect("couldn't push");
 ```
-The `push` might fail, hence it returns `Result<()>`:
-here we _will_ get an explosion if it isn't an array.
+The `push` will fail if `features` wasn't an array, hence it returns `Result<()>`.
 
 Here's a truly beautiful use of macros to generate _JSON literals_:
 
@@ -482,11 +484,11 @@ code, mostly error handling. Tedious, easy to mess up, and not where you want to
 
 This is clearly the best solution if you are processing well-structured JSON from outside sources (it's
 possible to remap field names if needed) and provides a robust way for Rust programs to share data
-with other Rust programs (or anything that can write jSON) over the network.
+with other programs over the network (since everything understands JSON these days.)
 
 Serialization is an important technique and similar solutions exist for Java and Go - but with a big
 difference. In those languages the structure of the data is found at _run-time_ using _reflection_, but
-in this case the serialization code is generated at _compile-time_ - altogether more efficient.
+in this case the serialization code is generated at _compile-time_ - altogether more efficient!
 
 Cargo is considered to be one of the great strengths of the Rust ecosystem, because it does
 a lot of work for us. Otherwise we would have had to download these libraries from Github,
@@ -548,8 +550,8 @@ assert_eq!("03", &caps["month"]);
 assert_eq!("14", &caps["day"]);
 ```
 
-Regular expressions can break up strings, but won't check whether they make _sense_. That is,
-you can specify and match the _syntax_ of ISO-style dates, but _semantically_ they may be nonsense,
+Regular expressions can break up strings that match a pattern, but won't check whether they make sense.
+That is, you can specify and match the _syntax_ of ISO-style dates, but _semantically_ they may be nonsense,
 like "2014-24-52".
 
 For this, you need dedicated date-time processing, which is provided by [chrono](https://github.com/lifthrasiir/rust-chrono).

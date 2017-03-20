@@ -5,13 +5,13 @@ library. The documentation (as always) is excellent but a little context and a f
 always useful.
 
 Initially, reading the Rust documentation can be challenging. I'll take the `Vec` struct as an
-example.  A useful tip is to tick the '[-]' box to collapse the docs. (If you download the 
+example.  A useful tip is to tick the '[-]' box to collapse the docs. (If you download the
 standard library source using `rustup component add rust-src` a '[src]' link will appear next to this.)
 This gives you a bird's eye view of all the available methods.
 
 The first point to notice is that _not all possible methods_ are defined on `Vec` itself. They are (mostly)
 mutable methods that change the vector, e.g. `push`. Some methods are only implemented for vectors where
-the type matches some constraint. For example, you can only call `dedup` (remove duplicates) if the 
+the type matches some constraint. For example, you can only call `dedup` (remove duplicates) if the
 type is indeed something that can be compared for equality.  There are multiple `impl` blocks that
 define `Vec` for different type constraints.
 
@@ -37,10 +37,17 @@ if you can't find a method on the container, look for a method on the iterator:
 the comparison.)
 
 Likewise, there's no `map` method on vectors, because `iter().map(...).collect()` will do the job
-just fine. Rust does not like to allocate unnecessarily - often you don't need the result of that `map`
+just as well. Rust does not like to allocate unnecessarily - often you don't need the result of that `map`
 as an actual allocated vector.
 
-This is followed by the common traits: vectors know how to do a debug display of themselves
+In other languages, things like `map` are functions. For instance, in C++ `std::count` is a function that
+takes two C++ iterators to establish a range, but it's an iterator method in Rust.
+
+So I'd suggest you become familiar with all the iterator methods, because they are crucial to writing
+good Rust code without having to write loops all the time. As always, write little programs to explore
+iterator methods, rather than wrestling with them in the context of a more complicated program.
+
+The `Vec<T>` and `&[T]` methods are followed by the common traits: vectors know how to do a debug display of themselves
 (but only if the elements implement `Debug`). Likewise, they are clonable if their elements are clonable.
 They implement `Drop`, which happens when vectors get to finally die; memory is released,
 and all the elements are dropped as well.
@@ -80,7 +87,7 @@ We've met this before with `String` - there seem to be so many ways to create st
 that knows how to `Display` itself.  There is `String::from` which comes from the `From` trait. There's
 also `Into` which is the inverse of `From` and is automatically available if `From` exists.
 If a function argument expects a `String`, you will often
-see the value passed as `"some text".into()` since string slices implement `Into<String>`. 
+see the value passed as `"some text".into()` since string slices implement `Into<String>`.
 
 Sometimes limitations of the Rust type system make things clumsy. An example here is how `PartialEq`
 is _separately_ defined for arrays up to size 32!  This will get better. This allows the convenience
@@ -90,9 +97,9 @@ This is still clearer than what the C++ docs say about `std::vector`
 
 > The requirements that are imposed on the elements depend on the actual operations performed
 > on the container. Generally, it is required that element type is a complete type and meets
-> the requirements of Erasable, but many member functions impose stricter requirements. 
+> the requirements of Erasable, but many member functions impose stricter requirements.
 
-Clearly, you're on your own! The explicitness of Rust is daunting at first, but as you learn to 
+Clearly, you're on your own! The explicitness of Rust is daunting at first, but as you learn to
 read the constraints you will know exactly what any particular method of `Vec` requires.
 
 ## Maps
@@ -163,7 +170,7 @@ sure that mutable borrow doesn't last very long.
 It is not the most elegant API possible, but we can't throw away any possible
 errors. Python would bail out with an exception, and C++ would just create
 a default value. (This is convenient but sneaky; easy to forget that the price
-of `map["two"]` always returning an integer is that we can't tell the difference
+of `a_map["two"]` always returning an integer is that we can't tell the difference
 between zero and 'not found', _plus_ an extra entry is created!)
 
 And no-one just calls `unwrap`, except in examples. However, most Rust code you see consists
@@ -396,8 +403,8 @@ let get = || a;  // can't borrow `a` again!
 ```
 
 So the closures are passed a _mutable reference_ as an argument, plus
-an array slice of string slices (`&[&str]`). They will return some `Result` -
-We'll use `String` errors at first.
+an array slice of string slices (`&[&str]`) representing the command arguments.
+They will return some `Result` - We'll use `String` errors at first.
 
 Recall that all closures
 implementing a particular function signature are all distinct types, and are (in fact)
