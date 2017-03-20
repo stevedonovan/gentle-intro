@@ -403,7 +403,7 @@ _value itself_ as a method, like so:
 ```rust
 let pi = 3.1416;
 let x = pi/2.0;
-let cosine = x.cos()
+let cosine = x.cos();
 ```
 And the result will be sort-of zero; we obviously need a more authoritative source
 of pi-ness!
