@@ -63,7 +63,7 @@ $ rustup component add rust-docs
 
 I would recommend getting the default stable version; it's easy to switch later.
 
-THis gets the compiler, the Cargo package manager, the API documentation, and the Rust Book.
+This gets the compiler, the Cargo package manager, the API documentation, and the Rust Book.
 The journey of a thousand miles starts with one step, and this first step is painless.
 
 You will probably already have an editor you like, and [basic Rust support](https://areweideyet.com/)
