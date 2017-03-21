@@ -193,7 +193,12 @@ fn main() {
 ```
 
 This can be puzzling when coming from other languages, where variables can be
-re-written by default, but there is a reason for letting the default be _read-only_. In a larger
+re-written by default. What makes something a 'variable' is that it gets assigned
+a computed value at run-time - it is not a _constant_.
+It is pretty much how the word is used in mathematics, like when we say
+'let n be the largest number in set S'.
+
+There is a reason for declaring variables to be _read-only_ by default. In a larger
 program, it gets hard to track where writes are taking place. So Rust makes things
 like mutability ('write-ability') explicit. There's a lot of cleverness in the
 language, but it never hides anything.
