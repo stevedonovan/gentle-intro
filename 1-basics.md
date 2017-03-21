@@ -225,10 +225,15 @@ error[E0277]: the trait bound `{float}: std::ops::AddAssign<{integer}>` is not s
 
 ```
 
-Ok, so the honeymoon is over: what does this mean? `AddAssign` is the name of the
-trait implementing the `+=` operator, and the error is saying that floating point
-numbers do not implement this operator for a integer.  Again, Rust likes to be
-explicit - it will not silently convert that integer into a float for you.
+Ok, so the honeymoon is over: what does this mean? Each operator (like `+=`) corresponds
+to a _trait_, which is like an abstract interface that must be implemented for each concrete type.
+We'll deal with traits in detail later, but here all you need to know is that
+`AddAssign` is the name of the trait implementing the `+=` operator, and the error is saying
+that floating point numbers do not implement this operator for a integer. (The full list of
+operator traits is [here](https://doc.rust-lang.org/std/ops/index.html).
+
+
+Again, Rust likes to be explicit - it will not silently convert that integer into a float for you.
 
 We have to _cast_ that value to a floating-point value explicitly.
 
@@ -242,10 +247,6 @@ fn main() {
     println!("sum is {}", sum);
 }
 ```
-
-It is (in fact) the same adjustment you have to make when working with Go; the
-compiler will work out the variable types nine times out of ten,
-but will refuse to do the lazy conversions that most other languages do.
 
 ## Get Explicit
 
@@ -775,7 +776,7 @@ cleaning. Roberto Ierusalimschy, the chief designer of Lua (one of the most eleg
 dynamic languages ever) said that he would not like to fly on an airplane that
 relied on garbage-collected software.
 
-Back to vectors: when a vector is modified, it allocates from the heap and becomes
+Back to vectors: when a vector is modified or created, it allocates from the heap and becomes
  the _owner_ of that memory. The slice _borrows_ the array from the vector.
 When the vector dies or _drops_, it lets the memory go.
 
