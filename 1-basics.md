@@ -751,7 +751,13 @@ The first C program I wrote (on an DOS PC)
 took out the whole computer. Unix systems always behaved better, and only the process died
 with a _segfault_. Why is this worse than a Rust (or Go) program panicking?
 Because the panic happens when the original problem happens, not when the program
-has become hopelessly confused and eaten all your homework.
+has become hopelessly confused and eaten all your homework. Panics are _memory safe_
+because they happen before any illegal access to memory. This is a common cause of
+security problems in C, because all memory accesses are unsafe and a cunning attacker
+can exploit this weakness.
+
+Panicking sounds desperate and unplanned, but Rust panics are structured - the stack is _unwound_
+just as with exceptions. All allocated objects are dropped, and a backtrace is generated.
 
 The downsides of garbage collection? The first is that it is wasteful of memory, which
 matters in those small embedded microchips which increasingly rule our world. The

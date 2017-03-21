@@ -211,10 +211,6 @@ note: Run with `RUST_BACKTRACE=1` for a backtrace.
 wait Err(Any)
 ```
 
-In fact, the word 'panic' is unfortunate, because it sounds desperate and unplanned. Rust panics
-are more structured. The stack is 'unwound' just as in C++ - all allocated objects are dropped, and
-a backtrace is generated.
-
 ## Threads Don't Borrow
 
 It's possible for the thread closure to capture values, but _not_ by borrowing!
