@@ -36,6 +36,9 @@ of memory use.  So the uses are pretty hardcore: operating systems, device drive
 and embedded systems that might not even have an operating system.  However, it's
 actually a very pleasant language to write normal application code in as well.
 
+The big difference from C and C++ is that Rust is _safe by default_; all memory accesses
+are checked. It is not possible to corrupt memory by accident.
+
 The unifying principles behind Rust are:
 
   - strictly enforcing _safe borrowing_ of data
