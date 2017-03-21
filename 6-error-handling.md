@@ -114,7 +114,7 @@ at the [error_chain](http://brson.github.io/2016/11/30/starting-with-error-chain
 A little macro magic can go a long way in Rust...
 
 Create a binary crate with `cargo new --bin test-error-chain` and
-change to this directory. Edit `Cargo.toml` and add `error-chain="*"` to the end.
+change to this directory. Edit `Cargo.toml` and add `error-chain="0.8.1"` to the end.
 
 What __error-chain__ does for you is create all the definitions we needed for manually implementing
 an error type; creating a struct, and implementing the necessary traits: `Display`, `Debug` and `Error`.
