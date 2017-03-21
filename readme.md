@@ -1,4 +1,6 @@
-## A Gentle Introduction To Rust
+# A Gentle Introduction To Rust
+
+## Why learn a new Programming Language?
 
 The aim of this tutorial is to take you to a place where you can read and write
 enough Rust to fully appreciate the excellent learning resources available
@@ -16,12 +18,14 @@ in hilly country and I will point out some interesting rock formations on the wa
 with only a few geology lectures. There will be some uphill but the view will be
 inspiring; the community is unusually pleasant and happy to help.
 
-Why learn a new programming language? It's an investment of time and energy
-that needs some justification, after all. But even if you do not immediately land
+Why learn a new programming language? It is an investment of time and energy
+and that needs some justification. Even if you do not immediately land
 a cool job using that language, it stretches the mental muscles and makes you a
 better programmer. That seems a poor kind of return-on-investment but if you're
 not learning something _genuinely_ new all the time then you will stagnate and be
 like the person who has ten years of experience in doing the same thing over and over.
+
+## Where Rust Shines
 
 Rust is a statically and strongly typed systems programming language. _statically_
 means that all types are known at compile-time, _strongly_ means that these types
@@ -42,7 +46,7 @@ The unifying principles behind Rust are:
 
 There is a fast-growing ecosystem of available libraries through Cargo
 but here we will concentrate on the core principles of the language
-and learning to use the standard library. My advice is to write _lots of small programs_,
+by learning to use the standard library. My advice is to write _lots of small programs_,
 so learning to use `rustc` directly is a core skill. When doing the examples in this
 tutorial I defined a little script called `rrun` which does a compilation and runs
 the result:

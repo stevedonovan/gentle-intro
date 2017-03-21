@@ -1,3 +1,5 @@
+# Structs, Enums and Matching
+
 ## Rust likes to Move It, Move It
 
 I'd like to move back a little, and show you something surprising:

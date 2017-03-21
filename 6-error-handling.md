@@ -1,3 +1,5 @@
+# Error Handling
+
 ## Basic Error Handling
 
 Error handling in Rust can be clumsy if you can't use the question-mark operator.
