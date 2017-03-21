@@ -16,10 +16,10 @@ type is indeed something that can be compared for equality.  There are multiple 
 define `Vec` for different type constraints.
 
 Then there's the very special relationship between `Vec<T>` and `&[T]`.  Any method that works on
-array slices will also directly work on vectors, without explicitly having to use the `as_slice` method.
+slices will also directly work on vectors, without explicitly having to use the `as_slice` method.
 This relationship is expressed by `Deref<Target=[T]>`. This also kicks in when you pass a vector by
-mutable reference to something that expects an array slice - this is one of the few places where
-a conversion between types happens automatically. So array slice methods like `first`, which maybe-returns
+mutable reference to something that expects a slice - this is one of the few places where
+a conversion between types happens automatically. So slice methods like `first`, which maybe-returns
 a reference to the first element, or `last`, work for vectors as well. Many of the methods are similar
 to the corresponding string methods, so there's `split_at` for getting a pair of slices spit at an index,
 `starts_with` to check whether a vector starts with sequence of values, and `contains` to check whether
@@ -403,7 +403,7 @@ let get = || a;  // can't borrow `a` again!
 ```
 
 So the closures are passed a _mutable reference_ as an argument, plus
-an array slice of string slices (`&[&str]`) representing the command arguments.
+a slice of string slices (`&[&str]`) representing the command arguments.
 They will return some `Result` - We'll use `String` errors at first.
 
 Recall that all closures

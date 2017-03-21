@@ -4,7 +4,7 @@ At the end of Part 1, I showed how to read a whole file into a string. Naturally
 this isn't always such a good idea, so here is how to read a file line-by-line.
 
 `fs::File` implements `io::Read`, which is the trait for anything readable.
-This trait defines a `read` method which will fill an array slice of `u8` with bytes -
+This trait defines a `read` method which will fill a slice of `u8` with bytes -
 this is the only _required_ method of the trait, and you get some _provided_ methods
 for free, much like with `Iterator`.  You can use `read_to_end` to fill a vector of
 bytes with contents from the readable, and `read_to_string` to fill a string - which

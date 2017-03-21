@@ -680,7 +680,7 @@ how to use them safely!
 
 We'll return to slice methods again, but first: vectors. These are _re-sizeable_
 arrays and behave much like Python `List` and C++ `std::vector`. The Rust type
-`Vec` (pronounced 'vector') behaves very much like an array slice in fact; the
+`Vec` (pronounced 'vector') behaves very much like an slice in fact; the
 difference is that you can append extra values to a vector - note that it must
 be declared as mutable.
 
@@ -775,7 +775,7 @@ dynamic languages ever) said that he would not like to fly on an airplane that
 relied on garbage-collected software.
 
 Back to vectors: when a vector is modified, it allocates from the heap and becomes
- the _owner_ of that memory. The array slice _borrows_ the array from the vector.
+ the _owner_ of that memory. The slice _borrows_ the array from the vector.
 When the vector dies or _drops_, it lets the memory go.
 
 ## Iterators
@@ -844,7 +844,7 @@ fn main() {
     }
 }
 ```
-In fact, it is more efficient to iterate over an array or array slice this way
+In fact, it is more efficient to iterate over an array or slice this way
 than to use `for i in 0..slice.len() {}` because Rust does not have to obsessively
 check every index operation.
 
@@ -868,7 +868,7 @@ Here we do sums with two different integer sizes, no problem. (It is also no
 problem to create a new variable of the same name if you run out of names to
 give things.)
 
-With this background, some more of the array slice methods will make more sense.
+With this background, some more of the slice methods will make more sense.
 Another documentation tip; on the right-hand side of every page there's a '[-]' which you can
 click to collapse the method list. You can then expand the details of anything
 that looks interesting. (Anything that looks too weird, just ignore for now.)
