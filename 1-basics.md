@@ -531,7 +531,7 @@ A C programmer pronounces `&` as 'address of'; a Rust programmer pronounces it
 'borrow'. This is going to be the key word when learning Rust. Borrowing is the name
 given to a common pattern in programming; whenever you pass something by reference
 (as nearly always happens in dynamic languages) or pass a pointer in C. Anything
-borrowed remains the 'property' of the original owner.
+borrowed remains belongs to the original owner.
 
 ## Slicing and Dicing
 
@@ -664,7 +664,7 @@ If you were to _unwrap_ `last`, you would get a panic. But at least you can call
         -1
     };
 ```
-Which is long-winded, so there's a shortcut (the `&` is because `get` always 
+Which is long-winded, so there's a shortcut (the `&` is because `get` always
 returns a reference):
 
 ```rust
@@ -677,7 +677,7 @@ C++-style notation for _generics_.  Unwrapping this box may cause an explosion,
 but unlike Schroedinger's Cat, we know if it contains a value up-front.
 
 It is very common for Rust functions/methods to return such maybe-boxes, so learn
-how to use them safely!
+how to [use them](https://doc.rust-lang.org/std/option/enum.Option.html) comfortably.
 
 ## Vectors
 
