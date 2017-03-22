@@ -664,10 +664,11 @@ If you were to _unwrap_ `last`, you would get a panic. But at least you can call
         -1
     };
 ```
-Which is long-winded, so there's a shortcut:
+Which is long-winded, so there's a shortcut (the `&` is because `get` always 
+returns a reference):
 
 ```rust
-    let last = slice.get(5).unwrap_or(-1);
+    let last = slice.get(5).unwrap_or(&-1);
 ```
 You can think of `Option` as a box which may contain a value, or nothing (`None`).
 (It is called `Maybe` in Haskell). It may contain _any_ kind of value, which is
