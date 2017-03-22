@@ -235,7 +235,7 @@ But we can deduce that the key type is `String` and the value type is `i32`.
 
 Using [The Adventures of Sherlock Holmes](http://www.gutenberg.org/cache/epub/1661/pg1661.txt)
 from Project Gutenberg, we can test this out
-more thoroughly.  The total number of unique words (`map.len`) is 8071.
+more thoroughly.  The total number of unique words (`map.len()`) is 8071.
 
 How to find the twenty most common words? First, convert the map into a vector
 of (key,value) tuples. (This consumes the map, since we used `into_iter`.)
@@ -298,7 +298,7 @@ is in a set.
 Like all containers, you can create a `HashSet` from an iterator. And this
 is exactly what `collect` does, once you have given it the necessary type hint.
 
-```
+```rust
 // set1.rs
 use std::collections::HashSet;
 
