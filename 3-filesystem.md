@@ -93,6 +93,7 @@ struct Lines<R> {
     reader: io::BufReader<R>,
     buf: String
 }
+
 impl <R: Read> Lines<R> {
     fn new(r: R) -> Lines<R> {
         Lines{reader: io::BufReader::new(r), buf: String::new()}
@@ -207,11 +208,13 @@ error stream. If the program wants then to stop running, the convention is also 
 return a non-zero exit code.
 
 ```rust
-fn quit(msg: &str) {
+fn quit(msg: &str) -> ! {
     write!(io::stderr(),"error: {}\n", msg).expect("write?");
     std::process::exit(1);
 }
 ```
+(The `!` means that function never returns, so you can call `quit` anywhere
+and there will be no type mismatch complaints)
 
 ## Files, Paths and Directories
 
@@ -220,7 +223,7 @@ simplest case is that it's '~/.cargo'. This is a Unix shell expansion,
 so we use `env::home_dir` because it's cross-platform. (It might fail, but a
 computer without a home directory isn't going to be hosting Rust tools anyway.)
 
-We then create a `PathBuf`
+We then create a [PathBuf](https://doc.rust-lang.org/std/ops/trait.Mul.html)
 and use its `push` method to build up the full file path from its _components_.
 (This is much easier than fooling around with '/','\' or whatever, depending on
 the system.)
@@ -580,9 +583,9 @@ fn main() {
 
 By default, the child 'inherits' the standard input and output of the parent. In this case,
 we redirect the child's output handles into 'nowhere'. It's equivalent to saying
-`> /dev/null 2> /dev/null` in the Unix shell.
+`> /dev/null > /dev/null 2> /dev/null` in the Unix shell.
 
-Now, it's possible to do these things using the shell in Rust, although not in a portable way.
+Now, it's possible to do these things using the shell (`sh` or `cmd`) in Rust, although not in a portable way.
 But this way you get full programmatic control of process creation.
 
 For example, if we just had `.stdout(Stdio::piped())` then the child's standard output
