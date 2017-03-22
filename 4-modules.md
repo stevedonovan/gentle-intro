@@ -237,7 +237,7 @@ src$ ls -lh mod4
 ```
 Still feels a little large for something so simple, but this program links _statically_ against
 the Rust standard library. This is a Good Thing, since you can hand this executable to anyone
-with the right operating system - they will not need a 'Rust install`. (And `rustup` will even let
+with the right operating system - they will not need a 'Rust runtime'. (And `rustup` will even let
 you cross-compile for other operating systems and platforms as well.)
 
 We can link dynamically against the Rust runtime and get truly tiny exes:
@@ -296,7 +296,7 @@ To make the project depend on the [JSON crate](http://json.rs/doc/json/), edit t
 
 ```
 [dependencies]
-json="*"
+json="0.11.4"
 ```
 
 Then do a first build with Cargo:
@@ -507,7 +507,7 @@ out to your buddies without external dependencies.
 
 When processing anything except simple text, regular expressions make your life much easier.
 These are commonly available for most languages and I'll here assume a basic familiarity with
-regex notation.  To use the [regex](https://github.com/rust-lang/regex) crate, put 'regex = "*"'
+regex notation.  To use the [regex](https://github.com/rust-lang/regex) crate, put 'regex = "0.2.1"'
 after "[dependencies]" in your Cargo.toml.
 
 We'll use 'raw strings' again so that the backslashes don't have to be escaped. In English, this
