@@ -1056,7 +1056,8 @@ If the type _was_ `&str` then we match it directly:
 
 What applies to `match` applies to `if let`. This is a cool example, since if we
 get a `Some`, we can match inside it and only extract the string from the tuple. So it
-isn't necessary to have nested `if let` statements here.
+isn't necessary to have nested `if let` statements here. We use `_` because we aren't interested
+in the first part of the tuple.
 
 ```rust
     let ot = Some((2,"hello".to_string());
@@ -1133,7 +1134,7 @@ So, the first call fixes the type of the argument `x`. It's equivalent to this f
 
 ```rust
     fn f (x: i32) -> i32 {
-        x*x
+        x * x
     }
 ```
 
@@ -1172,8 +1173,8 @@ But uncomment `get` and you get a borrowing error:
 
 Now, what's the type of `lin`? Only `rustc` knows. Exactly the same situation applies
 to C++ lambdas, and for exactly the same version. Under the hood, a closure is a _struct_
-that implements the call operator. All closures are unique types
-- but they have traits in common.
+that implements the call operator. All closures are unique types,
+ but they have traits in common.
 
 So even though we don't know the exact type, we know the generic constraint:
 
@@ -1388,6 +1389,8 @@ into a `&String` which _does_ match.
 
 ```rust
 for s in vec.iter().filter(|x: &&String| *x == "one") {...}
+// same as
+for s in vec.iter().filter(|x| *x == "one") {...}
 ```
 
 If you leave out the explicit type, you can modify the argument so that the type of `s`
@@ -1509,13 +1512,13 @@ on the right. There may be no node on the left, so then `set_left` and so forth.
     fn insert(&mut self, data: &str) {
         if data < &self.payload {
             match self.left {
-            Some(ref mut n) => n.insert(data),
-            None => self.set_left(Self::new(data)),
+                Some(ref mut n) => n.insert(data),
+                None => self.set_left(Self::new(data)),
             }
         } else {
             match self.right {
-            Some(ref mut n) => n.insert(data),
-            None => self.set_right(Self::new(data)),
+                Some(ref mut n) => n.insert(data),
+                None => self.set_right(Self::new(data)),
             }
         }
     }
@@ -1630,8 +1633,8 @@ note: an implementation of `std::ops::Mul` might be missing for `T`
   |     ^
 ```
 Following the advice of the compiler, let's _constrain_ that type parameter using
-that trait, which is used to implement the multiplication operator `*`:
-(`T: Mul` means 'any type T that implements Mul')
+[that trait](https://doc.rust-lang.org/std/ops/trait.Mul.html), which is used to implement the multiplication operator `*`:
+ (`T: Mul` means 'any type T that implements Mul')
 
 ```rust
 use std::ops::Mul;
