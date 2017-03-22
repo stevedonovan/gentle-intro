@@ -92,7 +92,7 @@ objects. There isn't a neat one-to-one relationship between these values, and pe
 
 `Rc` works like `Box` - heap memory is allocated and the value is moved to it. If you
 clone a `Box`, it allocates a full cloned copy of the value.  But cloning an `Rc` is
-cheap, because each time you clone it just updates a _reference count_to the _same data_.
+cheap, because each time you clone it just updates a _reference count_ to the _same data_.
 This is an old and very popular strategy for memory management,
 for example it's used in the Objective C runtime on iOS/MacOS.
 (In modern C++, it is implemented with `std::shared_ptr`.)
@@ -215,7 +215,7 @@ wait Err(Any)
 
 ## Threads Don't Borrow
 
-It's possible for the thread closure to capture values, but _not_ by borrowing!
+It's possible for the thread closure to capture values, but by _moving_,  not by _borrowing_!
 
 ```rust
 // thread3.rs
@@ -287,7 +287,7 @@ threads of execution.
 Threads can't share the same environment - by _design_ in Rust. In particular,
 they cannot share regular references because the closures move their captured variables.
 
-__shared references_ are fine however - but you cannot use `Rc` for this. This is because
+_shared references_ are fine however - but you cannot use `Rc` for this. This is because
 `Rc` is not _thread safe_ - it's optimized to be fast for the non-threaded case. For
 threads, you need `std::sync::Arc` - 'Arc' stands for 'Atomic Reference Counting'. That
 is, it guarantees that the reference count will be modified in one logical operation. To
@@ -327,8 +327,8 @@ not easy to diagnose.
 ## Channels
 
 There are ways to send data between threads. This
-is done in Rust using _channels_. `std::sync::mpsc::channel()` returns a pair:
-the _receiver_ channel and the _sender_ channel. Each thread is passed a copy
+is done in Rust using _channels_. `std::sync::mpsc::channel()` returns a tuple consisting
+of the _receiver_ channel and the _sender_ channel. Each thread is passed a copy
 of the sender with `clone`, and calls `send`. Meanwhile the main thread calls
 `recv` on the receiver.
 
@@ -460,7 +460,7 @@ But how can threads _modify_ shared state?
 Recall the `Rc<RefCell>` strategy for _dynamically_ doing a
 mutable borrow on shared references.  The threading equivalent to `RefCell` is
 `Mutex` - you may get your mutable reference by calling `lock`. While this reference
-exists, no other thread can access it. `mutex` stands for `Mutual Exclusion' - we lock
+exists, no other thread can access it. `mutex` stands for 'Mutual Exclusion' - we lock
 a section of code so that only one thread can access it, and then unlock it. You get the
 lock with the `lock` method, and it is unlocked when the reference is dropped.
 
