@@ -196,7 +196,7 @@ fn main() {
 This can be puzzling when coming from other languages, where variables can be
 re-written by default. What makes something a 'variable' is that it gets assigned
 a computed value at run-time - it is not a _constant_.
-It is pretty much how the word is used in mathematics, like when we say
+It is also how the word is used in mathematics, like when we say
 'let n be the largest number in set S'.
 
 There is a reason for declaring variables to be _read-only_ by default. In a larger
@@ -248,7 +248,7 @@ fn main() {
 }
 ```
 
-## Get Explicit
+## Function Types are Explicit
 
 _Functions_ are one place where the compiler will not work out types for you.
 And this in fact was a deliberate decision, since languages like Haskell have
@@ -362,6 +362,22 @@ This can be a little strange at first, and the best thing is then to use pencil 
 and work out some examples. It isn't usually the most _efficient_ way to do that
 operation however.
 
+Values can also be passed by _reference_. A reference is created by `&` and _dererefenced_
+by `*`.
+
+```rust
+fn by_ref(x: &i32) -> i32{
+    *x + 1
+}
+
+fn main() {
+    let i = 10;
+    let res1 = by_ref(&i);
+    let res2 = by_ref(&41);
+    println!("{} {}", res1,res2);
+}
+// 11 42
+```
 What if you want a function to modify one of its arguments?  Enter _mutable references_:
 
 ```rust
@@ -659,16 +675,19 @@ If you were to _unwrap_ `last`, you would get a panic. But at least you can call
 ```rust
     let maybe_last = slice.get(5);
     let last = if maybe_last.is_some() {
-        maybe_last.unwrap()
+        *maybe_last.unwrap()
     } else {
         -1
     };
 ```
+Note the `*` - the precise type inside the `Some` is `&i32`, which is a reference. We need
+to deference this to get back to a `i32` value.
+
 Which is long-winded, so there's a shortcut (the `&` is because `get` always
-returns a reference):
+returns a reference, and `*` is to get the value as `i32`):
 
 ```rust
-    let last = slice.get(5).unwrap_or(&-1);
+    let last = *slice.get(5).unwrap_or(&-1);
 ```
 You can think of `Option` as a box which may contain a value, or nothing (`None`).
 (It is called `Maybe` in Haskell). It may contain _any_ kind of value, which is
