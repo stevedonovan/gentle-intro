@@ -209,7 +209,7 @@ think of C (statically but weakly typed) and Python (dynamically but strongly ty
 In static types the type is known at compile time, and dynamic types are only known
 at run time.
 
-At the moment, it feels like Rust is _hiding_ those types from you. What
+At the moment, however, it feels like Rust is _hiding_ those types from you. What
 exactly is the type of `i`?  The compiler can work it out, starting with 0,
 with _type inference_, and comes up with `i32` (four byte signed integer.)
 
@@ -229,9 +229,8 @@ Ok, so the honeymoon is over: what does this mean? Each operator (like `+=`) cor
 to a _trait_, which is like an abstract interface that must be implemented for each concrete type.
 We'll deal with traits in detail later, but here all you need to know is that
 `AddAssign` is the name of the trait implementing the `+=` operator, and the error is saying
-that floating point numbers do not implement this operator for a integer. (The full list of
+that floating point numbers do not implement this operator for integers. (The full list of
 operator traits is [here](https://doc.rust-lang.org/std/ops/index.html).
-
 
 Again, Rust likes to be explicit - it will not silently convert that integer into a float for you.
 
@@ -272,7 +271,7 @@ fn main() {
 }
 ```
 
-Rust (like Go, which it superficially resembles in many ways) goes back to an
+Rust goes back to an
 older style of argument declaration, where the type follows the name. This is
 how it was done in Algol-derived languages like Pascal.
 
@@ -401,7 +400,8 @@ too easy to miss compared to C.)
 Basically, Rust is introducing some _friction_ here, and not-so-subtly pushing
 you towards returning values from functions directly.  Fortunately, Rust has
 powerful ways to express things like "operation succeeded and here's the result"
-so `&mut` isn't needed that often.
+so `&mut` isn't needed that often. Passing by reference is important when we have a 
+large object and don't wish to copy it.
 
 The type-after-variable style applies to `let` as well, when you really want to nail
 down the type of a variable:
@@ -579,8 +579,7 @@ ints_ints [[1, 2], [10, 20]]
 
 So, arrays of arrays are no problem, but the important thing is that an array contains
 values of _only one type_.  The values in an array are arranged next to each other
-in memory so that `[10, 20]` takes 8 bytes (two 4-byte signed integers). This makes
-them _very_ efficient to access.
+in memory so that they are _very_ efficient to access.
 
 If you are curious about the actual types of these variables, here is a useful trick.
 Just declare a variable with an explicit type which you know will be wrong:
@@ -1187,7 +1186,7 @@ name.
         ...
     }
 ```
-Which is fine; it's pretty much how you would do it in C.
+Which is fine; it's pretty much how you would do it in most languages.
 
 A more Rust-y approach to reading a single argument (together with parsing an
 integer value):
