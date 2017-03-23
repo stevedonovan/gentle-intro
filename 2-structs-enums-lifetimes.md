@@ -73,7 +73,7 @@ fn main() {
     println!("s1 {}", s1);
 }
 ```
-Here, you have a choice. You may explicitly create a reference to that string, or
+Here, you have a choice. You may pass a reference to that string, or
 explicitly copy it using its `clone` method.  Generally, the first is the better way
 to go.
 
@@ -81,8 +81,14 @@ to go.
 fn dump(s: &String) {
     println!("{}", s);
 }
+
+fn main() {
+    let s1 = "hello dolly".to_string();
+    dump(&s1);
+    println!("s1 {}", s1);
+}    
 ```
-The call becomes `dump(&s1)`, and the error goes away. But you'll rarely see a plain
+The error goes away. But you'll rarely see a plain
 `String` reference like this, since to pass a string literal is really ugly _and_ involves
 creating a temporary string.
 
@@ -361,6 +367,58 @@ The _directive_ makes the compiler generate a `Debug` implementation, which is v
 helpful. It's good practice to do this for your structs, so they can be
 printed out (or written as a string using `format!`).  (Doing so _by default_ would be
 very un-Rustlike.)
+
+Here is the final little program:
+
+```
+// struct4.rs
+use std::fmt;
+
+#[derive(Debug)]
+struct Person {
+    first_name: String,
+    last_name: String
+}
+
+impl Person {
+    
+    fn new(first: &str, name: &str) -> Person {
+        Person {
+            first_name: first.to_string(),
+            last_name: name.to_string()
+        }
+    }
+
+    fn full_name(&self) -> String {
+        format!("{} {}",self.first_name, self.last_name)
+    }
+    
+    fn set_first_name(&mut self, name: &str) {
+        self.first_name = name.to_string();
+    }
+    
+    fn to_tuple(self) -> (String,String) {
+        (self.first_name, self.last_name)
+    }
+}
+
+fn main() {
+    let mut p = Person::new("John","Smith");
+    
+    println!("{:?}", p);
+    
+    p.set_first_name("Jane");
+    
+    println!("{:?}", p);
+    
+    println!("{:?}", p.to_tuple());
+    // p has now moved.
+    
+}
+// Person { first_name: "John", last_name: "Smith" }
+// Person { first_name: "Jane", last_name: "Smith" }
+// ("Jane", "Smith")
+```
 
 ## Lifetimes Start to Bite
 
@@ -643,7 +701,8 @@ help is needed. Replace the `println!` with this
 ```rust
 println!("{:.1} ", x);
 ```
-And we get cleaner output (this format means 'one decimal after dot'.)
+And we get cleaner output (this [format](https://doc.rust-lang.org/std/fmt/index.html)
+ means 'one decimal after dot'.)
 
 All of the default iterator methods are available, so we can collect these values into
 a vector:
@@ -832,8 +891,8 @@ with a type cast. It's essentially a convenient way to create a set of constants
 Like with C enums, you only need to give the first name a value, and thereafter the
 value goes up by one each time.
 
-(By the way, 'name' is too vague, like saying 'thingy' all the time. The proper term here
-is _variant_ - `Speed` has variants `Slow`,`Medium` and `Fast`.)
+By the way, 'name' is too vague, like saying 'thingy' all the time. The proper term here
+is _variant_ - `Speed` has variants `Slow`,`Medium` and `Fast`.
 
 These enums _do_ have a natural ordering, but you have to ask nicely.
 After placing `#[derive(PartialEq,PartialOrd)]` in front of `enum Speed`, then it's indeed
