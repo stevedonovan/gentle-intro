@@ -138,7 +138,7 @@ the original string.)
 
 The resulting loop is much cleaner, and the file buffering is invisible to the user.
 
-```
+```rust
 fn read_all_lines(filename: &str) -> io::Result<()> {
     let file = File::open(&filename)?;
 
@@ -155,7 +155,7 @@ fn read_all_lines(filename: &str) -> io::Result<()> {
 You can even write the loop like this, since the explicit match can pull out the
 string slice:
 
-```
+```rust
     while let Some(Ok(line)) = lines.next() {
         println!"{}", line)?;
     }
@@ -291,7 +291,7 @@ Rust makes it easier to manipulate file paths using `PathBuf` methods.
 You can `pop` to successively remove path components. Here we start with the
 current directory of the program:
 
-```
+```rust
 // file8.rs
 use std::env;
 
