@@ -1427,7 +1427,7 @@ moreorless indefinitely.
 
 Rust does not do `NULL` (at least not _safely_) so it's clearly a job for `Option`.
 But you cannot just put a `Node` in that `Option`, because we don't know the size
-of `Node` (and so forth.)  This is a job for `Box`, since it contains a allocated
+of `Node` (and so forth.)  This is a job for `Box`, since it contains an allocated
 pointer to the data, and always has a fixed size.
 
 So here's the Rust equivalent, using `type` to create an alias:
