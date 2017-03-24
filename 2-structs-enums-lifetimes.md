@@ -370,7 +370,7 @@ very un-Rustlike.)
 
 Here is the final little program:
 
-```
+```rust
 // struct4.rs
 use std::fmt;
 
