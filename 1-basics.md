@@ -361,7 +361,7 @@ This can be a little strange at first, and the best thing is then to use pencil 
 and work out some examples. It isn't usually the most _efficient_ way to do that
 operation however.
 
-Values can also be passed by _reference_. A reference is created by `&` and _dererefenced_
+Values can also be passed by _reference_. A reference is created by `&` and _dereferenced_
 by `*`.
 
 ```rust
@@ -680,7 +680,7 @@ If you were to _unwrap_ `last`, you would get a panic. But at least you can call
     };
 ```
 Note the `*` - the precise type inside the `Some` is `&i32`, which is a reference. We need
-to deference this to get back to a `i32` value.
+to dereference this to get back to a `i32` value.
 
 Which is long-winded, so there's a shortcut (the `&` is because `get` always
 returns a reference, and `*` is to get the value as `i32`):
