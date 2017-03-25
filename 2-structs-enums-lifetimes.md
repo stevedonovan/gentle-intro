@@ -86,7 +86,7 @@ fn main() {
     let s1 = "hello dolly".to_string();
     dump(&s1);
     println!("s1 {}", s1);
-}    
+}
 ```
 The error goes away. But you'll rarely see a plain
 `String` reference like this, since to pass a string literal is really ugly _and_ involves
@@ -381,7 +381,7 @@ struct Person {
 }
 
 impl Person {
-    
+
     fn new(first: &str, name: &str) -> Person {
         Person {
             first_name: first.to_string(),
@@ -392,11 +392,11 @@ impl Person {
     fn full_name(&self) -> String {
         format!("{} {}",self.first_name, self.last_name)
     }
-    
+
     fn set_first_name(&mut self, name: &str) {
         self.first_name = name.to_string();
     }
-    
+
     fn to_tuple(self) -> (String,String) {
         (self.first_name, self.last_name)
     }
@@ -404,16 +404,16 @@ impl Person {
 
 fn main() {
     let mut p = Person::new("John","Smith");
-    
+
     println!("{:?}", p);
-    
+
     p.set_first_name("Jane");
-    
+
     println!("{:?}", p);
-    
+
     println!("{:?}", p.to_tuple());
     // p has now moved.
-    
+
 }
 // Person { first_name: "John", last_name: "Smith" }
 // Person { first_name: "Jane", last_name: "Smith" }
@@ -451,7 +451,7 @@ To understand the complaint, you have to see the problem from the point of view 
 It will not allow a reference to be stored without knowing its lifetime. All
 references are borrowed from some value, and all values have lifetimes. The lifetime of
 a reference cannot be longer than the lifetime of that value.
-Rust cannot allow 
+Rust cannot allow
 a situation where that reference could suddenly become invalid.
 
 Now, string slices borrow from _string literals_
@@ -483,9 +483,9 @@ This can also be used to specify a string slice that is returned from a function
 ```rust
 fn how(i: u32) -> &'static str {
     match i {
-    0: 'none',
-    1: 'one',
-    _: 'many'
+    0 => 'none',
+    1 => 'one',
+    _ => 'many'
     }
 }
 ```
