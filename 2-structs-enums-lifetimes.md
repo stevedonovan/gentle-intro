@@ -483,9 +483,9 @@ This can also be used to specify a string slice that is returned from a function
 ```rust
 fn how(i: u32) -> &'static str {
     match i {
-    0 => 'none',
-    1 => 'one',
-    _ => 'many'
+    0 => "none",
+    1 => "one",
+    _ => "many"
     }
 }
 ```
