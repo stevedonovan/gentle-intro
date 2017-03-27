@@ -1,0 +1,8 @@
+[package]
+name = "test-nom"
+version = "0.1.0"
+authors = ["steve donovan <steve.j.donovan@gmail.com>"]
+
+[dependencies]
+nom="*"
+approx="0.1.1"
