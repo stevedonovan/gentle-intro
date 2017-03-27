@@ -1213,17 +1213,23 @@ Here we evaluate a linear function:
 You cannot do this with the explicit `fn` form - it does not know about variables
 in the enclosing scope. The closure has _borrowed_ `m` and `c` from its context.
 
-The usual Rules of Borrowing apply. This works fine - our little closure is borrowing
-`answer` mutably.
+The usual Rules of Borrowing apply. This example works fine - our little closure is borrowing
+`answer` mutably. Note here that the mutable borrow of `answer` by `set` has to take
+place in a block, so it ends before we do an _immutable_ borrow of `answer` in
+the assert statement. (The borrow checker can be a little ... picky, and using blocks
+to control scopes of borrows is common.)
 
 ```rust
 let mut answer = 42;
 
-let set = |v| answer = v;
+{
+    let mut set = |v| answer = v;
 
-//let get = || answer;
+    //let get = || answer;
 
-set(58);
+    set(58);
+}
+
 assert_eq!(answer, 58);
 ```
 
