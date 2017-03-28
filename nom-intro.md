@@ -3,25 +3,29 @@
 [nom](https://github.com/Geal/nom) is a parser library for Rust which is well worth
 the initial time investment. If you have to parse a known data format, like CSV or JSON, then
 it's best to use a specialized library like [Rust CSV](https://github.com/BurntSushi/rust-csv) or
-the JSON libraries discussed in [Section 3)(?).  Likewise, for configuration files
+the JSON libraries discussed in [Section 4)(../4-modules.html#modules). 
+
+Likewise, for configuration files
 use dedicated parsers like [ini](https://docs.rs/rust-ini/0.10.0/ini/) or
 [toml](http://alexcrichton.com/toml-rs/toml/index.html). (The last one is particularly cool since
 it integrates with the Serde framework, just as we saw with __serde-json__).
 
 But if the text is not regular, or some made-up format, then you need to scan that text without
-writing a lot of tedious string-processing code. The suggested go-to is often [regex](?), but
-regexes can be frustratingly opaque when sufficiently involved. Nom provides a way to parse
+writing a lot of tedious string-processing code. The suggested go-to is often [regex](https://github.com/rust-lang/regex),
+but regexes can be frustratingly opaque when sufficiently involved. Nom provides a way to parse
 text which is just as powerful and can be built up by combining simpler parsers. And regexes have
 their limits, for instance, don't [use regexes for parsing HTML](http://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags)
 but you _could_ use Nom to parse HTML.  If you ever had the itch to write your own programming
 language, Nom is a good place for you start on that hard road to obscurity.
 
-There are some [excellent tutorials](?) for learning Nom, but I want to start at the hello-world
+There are some excellent tutorials for learning Nom, but I want to start at the hello-world
 level to build some initial familiarity. The basic things you need to know - first, Nom is macros all the
 way down, and second, Nom works with byte slices, not strings. The first means that you have to
 be especially careful to get Nom expressions right, because the error messages are not going to be
 friendly. And the second means that Nom can be used for _any_ data format, not just text. People
-have used Nom to decode binary protocols and file headers.  There will be a little friction, because
+have used Nom to decode binary protocols and file headers.  
+
+So for text there will be a little friction, because
 you feed a Nom parser byte slices and the basic parsers return byte slices, which need to be converted.
 
 ```rust
@@ -40,7 +44,7 @@ fn main() {
 ```
 
 The `named!` macro creates functions which take byte slices (`&[u8]`) and return the type in
-angle brackets.  `tag!` matches a literal string [ASCII?] in that stream of bytes, and its value is
+angle brackets.  `tag!` matches a literal string in that stream of bytes, and its value is
 a byte slice representing that literal.
 
 We call the defined parser `get_greeting` with a `&str` converted to '&[u8]`, and
@@ -65,8 +69,9 @@ among spaces, tabs or newlines:
 The result is "hi" as before, and the remaining bytes are also "hi"! The spaces have been skipped.
 
 It's irritating to work in bytes when we know for a fact that they are valid UTF-8, since this
-is what we fed the parser.  [from_utf8](?) will convert bytes to a string, but may of course fail.
-The macro `map_res!` applies a function to something,  returning a `Result`, and unwraps the value.
+is what we fed the parser.  [from_utf8](https://doc.rust-lang.org/std/str/fn.from_utf8.html)
+ will convert bytes to a string, but may of course fail.
+The macro `map_res!` applies a function to something,  returning a `Result`, and _unwraps_ the value.
 We redeclare `get_greeting` to reflect the new string return type.
 
 ```rust
@@ -82,7 +87,7 @@ We redeclare `get_greeting` to reflect the new string return type.
 By now you should be suspicious of anything that can throw away errors (`map_res!` does not
 panic) but this seems safe for now: flag it mentally with a warning.
 
-"hi" is now rendered nicely as a string, although it isn't telling us anything new.
+"hi" is now rendered nicely as a string, although it this doesn't tell us much.
 Let's match _either_ "hi" or "bye". The `alt!` macro ("alternate") takes parser expressions
 separated by `|` and matches _any_ of them. Note that you can use whitespace here to make
 the parser function easier to read:
@@ -131,7 +136,7 @@ seconds to compile, which is not much more than "Hello world". But the regex exa
 ## What a Nom Parser returns
 
 [IResult](http://rust.unhandledexpression.com/nom/enum.IResult.html) has an interesting difference
-from the standard `Result` type. There are three possibilities:
+from the standard `Result` type - there are three possibilities:
 
   # `Done` - success - you get both the result and the remaining bytes
   # `Error` - failed to parse - you get an error
@@ -289,7 +294,7 @@ Consider:
     named!(signed_digits<(Option<&[u8]>,&[u8])>,
         pair!(
             opt!(alt!(tag!("+") | tag!("-"))),  // maybe sign?
-            digits
+            digit
         )
     );
 
@@ -339,7 +344,7 @@ By defining a little helper macro, we get some passing tests:
 
 ```rust
     macro_rules! nom_eq {
-        ($p:expr,$e:expr) => (assert_eq!(nom_res!($p, $e).unwrap(),$e))
+        ($p:expr,$e:expr) => (assert_eq!(nom_res!($p, $e).unwrap(), $e))
     }
 
     nom_eq!(floating_point, "+2343");
@@ -363,10 +368,6 @@ winds and throw away the error:
 
 Please note how it's possible to build up pretty complicated parsers step by step, testing each
 little part first.  That's a strong advantage of parser combinators over regexes.
-
-
-This is a nice example of something that really can't be done with regexes (together with the
-obvious hilarious example of HTML).
 
 ## Operations over Multiple Matches
 
@@ -447,11 +448,12 @@ We're not interested in that tag (it can only be a comma) but we assign the two 
 to temporary values which are used to build a struct. The code at the end can be any Rust
 expression.
 
-
 ## Parsing Arithmetic Expressions
 
 With the necessary background established, I can explain the example on the front page of
-the Nom documentation:
+the Nom documentation. 
+This is a good example of something that really can't be done with regexes (together with the
+obvious hilarious example of HTML).
 
 The idea is to build up expressions from the bottom up. Expressions consist of _terms_, which are
 added or subtracted. Terms consist of _factors_, which are multiplied or divided. And (for now)
