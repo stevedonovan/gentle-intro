@@ -1565,7 +1565,7 @@ Now, what happens when `root` is dropped? All fields are dropped; if the 'branch
 the tree are dropped, they drop _their_ fields and so on. `Box::new` may be the
 closest you will get to a `new` keyword, but we have no need for `delete` or `free`.
 
-We must know work out what use such a tree is. Note that strings can be ordered:
+We must now work out what use such a tree is. Note that strings can be ordered:
 'bar' < 'foo', 'abba' > 'aardvark'; so-called 'alphabetical order'. (Strictly speaking, this
 is _lexical order_, since human languages are very diverse and have strange rules.)
 
