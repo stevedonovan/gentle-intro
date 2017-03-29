@@ -312,7 +312,7 @@ test-json$ cargo build
 The main file of this project has already been created - it's 'main.rs' in the 'src'
 directory. It starts out just as a 'hello world' app, so let's edit it to be a proper test program.
 
-Mote the very convenient 'raw' string literal - otherwise we would need to escape those double quotes
+Note the very convenient 'raw' string literal - otherwise we would need to escape those double quotes
 and end up with ugliness:
 
 ```rust
