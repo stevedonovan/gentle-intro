@@ -8,4 +8,6 @@
 - [Standard Library Containers](./5-stdlib-containers.md)
 - [Error Handling](./6-error-handling.md)
 - [Threads, Networking and Sharing](./7-shared-and-networking.md)
+- [Parsing with Nom](nom-intro.md)
+
 

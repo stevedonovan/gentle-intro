@@ -3,7 +3,7 @@
 [nom](https://github.com/Geal/nom) is a parser library for Rust which is well worth
 the initial time investment. If you have to parse a known data format, like CSV or JSON, then
 it's best to use a specialized library like [Rust CSV](https://github.com/BurntSushi/rust-csv) or
-the JSON libraries discussed in [Section 4)(../4-modules.html#modules). 
+the JSON libraries discussed in [Section 4](4-modules.html#cargo).
 
 Likewise, for configuration files
 use dedicated parsers like [ini](https://docs.rs/rust-ini/0.10.0/ini/) or
@@ -23,7 +23,7 @@ level to build some initial familiarity. The basic things you need to know - fir
 way down, and second, Nom works with byte slices, not strings. The first means that you have to
 be especially careful to get Nom expressions right, because the error messages are not going to be
 friendly. And the second means that Nom can be used for _any_ data format, not just text. People
-have used Nom to decode binary protocols and file headers.  
+have used Nom to decode binary protocols and file headers.
 
 So for text there will be a little friction, because
 you feed a Nom parser byte slices and the basic parsers return byte slices, which need to be converted.
@@ -47,7 +47,7 @@ The `named!` macro creates functions which take byte slices (`&[u8]`) and return
 angle brackets.  `tag!` matches a literal string in that stream of bytes, and its value is
 a byte slice representing that literal.
 
-We call the defined parser `get_greeting` with a `&str` converted to '&[u8]`, and
+We call the defined parser `get_greeting` with a `&str` converted to `&[u8]`, and
 get back an [IResult](http://rust.unhandledexpression.com/nom/enum.IResult.html).
 And indeed that `[104, 105]` is "hi" in ASCII!
 
@@ -138,9 +138,9 @@ seconds to compile, which is not much more than "Hello world". But the regex exa
 [IResult](http://rust.unhandledexpression.com/nom/enum.IResult.html) has an interesting difference
 from the standard `Result` type - there are three possibilities:
 
-  # `Done` - success - you get both the result and the remaining bytes
-  # `Error` - failed to parse - you get an error
-  # `Imcomplete` - more data needed
+  - `Done` - success - you get both the result and the remaining bytes
+  - `Error` - failed to parse - you get an error
+  - `Imcomplete` - more data needed
 
 We can write a generic `dump` function that handles any return value that can be debug-printed.
 This also demonstrates the `to_result` method which returns a regular `Result` - this is probably
@@ -451,7 +451,7 @@ expression.
 ## Parsing Arithmetic Expressions
 
 With the necessary background established, I can explain the example on the front page of
-the Nom documentation. 
+the Nom documentation.
 This is a good example of something that really can't be done with regexes (together with the
 obvious hilarious example of HTML).
 
