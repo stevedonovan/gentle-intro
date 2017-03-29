@@ -1,5 +1,7 @@
 # A Gentle Introduction To Rust
 
+![Rust](PPrustS.png)
+
 ## Why learn a new Programming Language?
 
 The aim of this tutorial is to take you to a place where you can read and write
@@ -69,6 +71,10 @@ $ rustup component add rust-docs
 ```
 
 I would recommend getting the default stable version; it's easy to switch later.
+
+`rustup` is the command you use to manage your Rust installation - this 'component add' command
+downloads the Rust documentation so you can view it locally. When a new stable release
+appears, you just have to say `rustup update` to upgrade.
 
 This gets the compiler, the Cargo package manager, the API documentation, and the Rust Book.
 The journey of a thousand miles starts with one step, and this first step is painless.
