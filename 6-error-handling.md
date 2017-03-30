@@ -51,16 +51,17 @@ fn raises_my_error(yes: bool) -> Result<(),MyError> {
 }
 ```
 
-In this example we need to handle the specific error when a string can't be parsed
-as a floating-point number. It implements `Error` so `description()` is defined.
-
- Now the way that `?` works
-is to look for a conversion from the error of the expression to the error that must
-be returned. And this conversion is expressed by the `From` trait:
+In this next example we need to handle the specific error when a string can't be parsed
+as a floating-point number.  Now the way that `?` works
+is to look for a conversion from the error of the _expression_ to the error that must
+be _returned_. And this conversion must be expressed by the `From` trait.
+`ParseFloatError` implements `Error` so `description()` is defined.
 
 ```rust
-impl From<std::num::ParseFloatError> for MyError {
-    fn from(err: std::num::ParseFloatError) -> Self {
+use std::num::ParseFloatError;
+
+impl From<ParseFloatError> for MyError {
+    fn from(err: ParseFloatError) -> Self {
         MyError::new(err.description())
     }
 }
@@ -74,7 +75,7 @@ fn parse_f64(s: &str, yes: bool) -> Result<f64,MyError> {
 ```
 
 The first `?` is fine (a type always converts to itself with `From`) and the
-second `?` needs to convert from `ParseFloatError` to `MyError`.
+second `?` will convert the `ParseFloatError` to `MyError`.
 
 And the results:
 
@@ -97,8 +98,8 @@ much cleaner!
 Typing `Result<T,MyError>` gets tedious and many Rust modules define their own
 `Result` - e.g. `io::Result<T>` is short for `io::Result<T,io::Error>`.
 
-Currently, the question-mark operator only works for `Result`, not `Option`, and this can be seen
-as a feature, not a limitation.  `Option` has a `ok_or_else` which converts itself into a `Result`.
+Currently, the question-mark operator only works for `Result`, not `Option`, and this is
+a feature, not a limitation.  `Option` has a `ok_or_else` which converts itself into a `Result`.
 For example, say we had a `HashMap` and must fail if a key isn't defined:
 
 
@@ -120,15 +121,17 @@ change to this directory. Edit `Cargo.toml` and add `error-chain="0.8.1"` to the
 
 What __error-chain__ does for you is create all the definitions we needed for manually implementing
 an error type; creating a struct, and implementing the necessary traits: `Display`, `Debug` and `Error`.
-It also by default implements `From` so strings can be converted into errors. Here we also ask for
-`From` to be implemented so that `std::io::Error` will also convert into our error type.
+It also by default implements `From` so strings can be converted into errors.
 
 Our first `src/main.rs` file looks like this. All the main program does is call `run`, print out any
 errors, and end the program with a non-zero exit code.  The macro `error_chain` generates all the
 definitions needed, within an `error` module - in a larger program you would put this in its own file.
 We need to bring everything in `error` back into global scope because our code will need to see
 the generated traits. By default, there will be an `Error` struct and a `Result` defined with that
-error:
+error.
+
+Here we also ask for `From` to be implemented so that `std::io::Error` will convert into
+our error type using `foreign_links`:
 
 ```rust
 #[macro_use]
@@ -210,7 +213,7 @@ Like `?` it does an _early return_.
 
 The returned error contains an enum `ErrorKind`, which allows us to distinguish between various
 kinds of errors. There's always a variant `Msg` (when you say `Error::from(str)`) and the `foreign_links`
-macro has declared `Io` which wraps I/O errors:
+has declared `Io` which wraps I/O errors:
 
 ```rust
 fn main() {
@@ -279,7 +282,7 @@ where you match on exception types.
 
 In summary, __error-chain__ creates a type `Error` for you, and defines `Result<T>` to be `std::result::Result<T,Error>`.
 `Error` contains an enum `ErrorKind` and by default there is one variant `Msg` for errors created from
-strings. You define 'foreign' errors with `foreign_links` which does two things. First, it creates a new
+strings. You define external errors with `foreign_links` which does two things. First, it creates a new
 `ErrorKind` variant. Second, it defines `From` on these external errors so they can be converted to our
 error.  New error variants can be easily added.  A lot of irritating boilerplate code is eliminated.
 
