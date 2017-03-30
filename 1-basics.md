@@ -547,7 +547,7 @@ A C programmer pronounces `&` as 'address of'; a Rust programmer pronounces it
 'borrow'. This is going to be the key word when learning Rust. Borrowing is the name
 given to a common pattern in programming; whenever you pass something by reference
 (as nearly always happens in dynamic languages) or pass a pointer in C. Anything
-borrowed remains belongs to the original owner.
+borrowed remains owned by the original owner.
 
 ## Slicing and Dicing
 
