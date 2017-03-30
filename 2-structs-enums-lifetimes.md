@@ -966,9 +966,9 @@ to that contained string.
 fn dump(v: &Value) {
     use Value::*;
     match *v {
-    Number(n) => println!("number is {}", n),
-    Str(ref s) => println!("string is '{}'", s),
-    Bool(b) => println!("boolean is {}", b)
+        Number(n) => println!("number is {}", n),
+        Str(ref s) => println!("string is '{}'", s),
+        Bool(b) => println!("boolean is {}", b)
     }
 }
     ....
@@ -985,8 +985,11 @@ borrow checker to foil any attempt to break the Rules.  One of those Rules is th
 you cannot yank out a value which belongs to some owning type. Some knowledge of
 C++ is a hindrance here, since C++ will copy its way out of the problem, whether that
 copy even _makes sense_.  You will get exactly the same error if you try to pull out
-a value from a vector, say with `*v[0]` (`*` because indexing returns references.)
+a string from a vector, say with `*v.get(0).unwrap()` (`*` because indexing returns references.)
 It will simply not let you do this. (Sometimes `clone` isn't such a bad solution to this.)
+
+(By the way, `v[0]` does not work for non-copyable values like strings for precisely this reason.
+You must either borrow with `&v[0]` or clone with `v[0].clone()`)
 
 As for `match`, you can see `Str(s) =>` as short for `Str(s: String) =>`. A local variable
 (often called a _binding_) is created.  Often that inferred type is cool, when you
@@ -1067,7 +1070,7 @@ Destructuring works with structs as well:
     let p = Point{x:1.0,y:2.0};
     ...
     let Point{x,y} = p;
-    // p still lives, since x and y can be copied
+    // p still lives, since x and y can and will be copied
     // both x and y are f32
 ```
 
@@ -1085,7 +1088,8 @@ fn match_tuple(t: (i32,String)) {
     let text = match t {
         (0, s) => format!("zero {}", s),
         (1, ref s) if s == "hello" => format!("hello one!"),
-        tt => format!("no match {:?}", tt)
+        tt => format!("no match {:?}", tt),
+        // or say _ => format!("no match") if you're not interested in the value  
      };
     println!("{}", text);
 }
@@ -1154,7 +1158,7 @@ more elegant solution:
     let n: i32 = "42".parse()?;
 ```
 However, the parse error needs to be convertible to the error type of the `Result`, which is a topic
-we'll take up later when discussing error handling.
+we'll take up later when discussing [error handling](6-error-handling.html).
 
 ## Closures
 
@@ -1233,7 +1237,7 @@ let mut answer = 42;
 assert_eq!(answer, 58);
 ```
 
-But uncomment `get` and you get a borrowing error:
+But uncomment `let get ...` and you get a borrowing error:
 "cannot borrow `answer` as immutable because it is also borrowed as mutable"
 
 Now, what's the type of `lin`? Only `rustc` knows. Exactly the same situation applies
@@ -1344,6 +1348,9 @@ You can use these boxed closures to implement callbacks and so forth. If you wan
 these boxed closures in a struct, then you will need a lifetime annotation, because
 _closures borrow variables_ and so their lifetime is tied to the lifetime of those
 variables.
+
+(Unfortunately, you can't use `type` to declare a shorthand for function trait types; it's definitely a 
+place where I miss a `typedef` statement.)
 
 Sometimes you don't want a closure to borrow those variables, but instead _move_ them.
 

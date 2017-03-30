@@ -1,5 +1,7 @@
-// struct2.rs
+// struct4.rs
+use std::fmt;
 
+#[derive(Debug)]
 struct Person {
     first_name: String,
     last_name: String
@@ -17,19 +19,26 @@ impl Person {
     fn full_name(&self) -> String {
         format!("{} {}",self.first_name, self.last_name)
     }
-
-}
-
-use std::fmt;
-
-impl fmt::Debug for Person {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.full_name())
+    
+    fn set_first_name(&mut self, name: &str) {
+        self.first_name = name.to_string();
+    }
+    
+    fn to_tuple(self) -> (String,String) {
+        (self.first_name, self.last_name)
     }
 }
 
 fn main() {
-    let p = Person::new("John","Smith");
+    let mut p = Person::new("John","Smith");
     
-    println!("{:?}",p);
+    println!("{:?}", p);
+    
+    p.set_first_name("Jane");
+    
+    println!("{:?}", p);
+    
+    println!("{:?}", p.to_tuple());
+    // p has now moved.
+    
 }
