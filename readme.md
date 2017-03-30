@@ -1,6 +1,7 @@
 # A Gentle Introduction To Rust
 
 ![Rust](PPrustS.png)
+[thanks to David Marino](http://leftoversalad.com/c/015_programmingpeople/)
 
 ## Why learn a new Programming Language?
 
@@ -97,3 +98,7 @@ to program in Python remains good, whatever the language. He says learning to pr
 is like learning a musical instrument - the secret is practice and persistence.
 There's also good advice from Yoga and the soft martial arts like Tai Chi;
 feel the strain, but don't over-strain. You are not building dumb muscle here.
+
+I'd like to thank the many contributors who caught bad English or bad Rust for me, 
+and thanks to David Marino for his cool characterization
+of Rust as a friendly-but-hardcore no-nonsense knight in shining armour.
