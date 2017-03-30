@@ -145,7 +145,7 @@ fn read_all_lines(filename: &str) -> io::Result<()> {
     let mut lines = Lines::new(file);
     while let Some(line) = lines.next() {
         let line = line?;
-        println!("{}", line)?;
+        println!("{}", line);
     }
 
     Ok(())
@@ -157,7 +157,7 @@ string slice:
 
 ```rust
     while let Some(Ok(line)) = lines.next() {
-        println!"{}", line)?;
+        println!("{}", line)?;
     }
 ```
 
