@@ -99,6 +99,9 @@ is like learning a musical instrument - the secret is practice and persistence.
 There's also good advice from Yoga and the soft martial arts like Tai Chi;
 feel the strain, but don't over-strain. You are not building dumb muscle here.
 
-I'd like to thank the many contributors who caught bad English or bad Rust for me, 
+I'd like to thank the many contributors who caught bad English or bad Rust for me,
 and thanks to David Marino for his cool characterization
 of Rust as a friendly-but-hardcore no-nonsense knight in shining armour.
+
+Steve Donovan © 2017 MIT license version 0.2.0
+
