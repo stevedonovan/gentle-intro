@@ -230,7 +230,7 @@ to a _trait_, which is like an abstract interface that must be implemented for e
 We'll deal with traits in detail later, but here all you need to know is that
 `AddAssign` is the name of the trait implementing the `+=` operator, and the error is saying
 that floating point numbers do not implement this operator for integers. (The full list of
-operator traits is [here](https://doc.rust-lang.org/std/ops/index.html).
+operator traits is [here](https://doc.rust-lang.org/std/ops/index.html).)
 
 Again, Rust likes to be explicit - it will not silently convert that integer into a float for you.
 
