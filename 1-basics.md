@@ -1031,7 +1031,7 @@ The `format!` macro is a very useful way to build
 up more complicated strings using the same format strings as `println!`.
 
 ```rust
-// string5.rs
+// string6.rs
 fn array_to_str(arr: &[i32]) -> String {
     let mut res = '['.to_string();
     for v in arr {
