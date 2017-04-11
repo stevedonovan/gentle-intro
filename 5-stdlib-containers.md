@@ -95,7 +95,35 @@ Sometimes limitations of the Rust type system make things clumsy. An example her
 is _separately_ defined for arrays up to size 32!  This will get better. This allows the convenience
 of directly comparing vectors with arrays, but beware the limit.
 
-This is still clearer than what the C++ docs say about `std::vector`
+And there are [Hidden Gems](http://xion.io/post/code/rust-iter-patterns.html) buried
+deep in the documentation. As Karol says "Because let’s be honest: no one scrolls that far".
+How does one handle errors in an iterator? Say you map over some operation that will
+fail, and then wish to collect the results:
+
+```rust
+fn main() {
+    let nums = ["5","52","65"];
+    let iter = nums.iter().map(|s| s.parse::<i32>());
+    let converted: Vec<_> = iter.collect();
+    println!("{:?}",converted);
+}
+//[Ok(5), Ok(52), Ok(65)]
+```
+
+Fair enough, but now you have to unwrap these errors - carefully!.
+But Rust already knows how to do the Right Thing,
+if you ask for the vector to be _contained_ in a `Result`:
+
+```rust
+    let converted: Result<Vec<_>,_> = iter.collect();
+//Ok([5, 52, 65])
+```
+
+And if there was a bad conversion? Then you would just get `Err` with the first
+error encountered. It's a good example of how extremely flexible `convert` is.
+
+So there's a _lot_ of detail in the documentation. 
+But this is clearer than what the C++ docs say about `std::vector`
 
 > The requirements that are imposed on the elements depend on the actual operations performed
 > on the container. Generally, it is required that element type is a complete type and meets
