@@ -6,7 +6,7 @@ In this section I'll briefly introduce some very useful parts of the Rust standa
 library. The documentation (as always) is excellent but a little context and a few examples is
 always useful.
 
-Initially, reading the Rust documentation can be challenging. I'll take the `Vec` struct as an
+Initially, reading the Rust documentation can be challenging, so I'll go through `Vec` as an
 example.  A useful tip is to tick the '[-]' box to collapse the docs. (If you download the
 standard library source using `rustup component add rust-src` a '[src]' link will appear next to this.)
 This gives you a bird's eye view of all the available methods.
@@ -20,7 +20,7 @@ define `Vec` for different type constraints.
 Then there's the very special relationship between `Vec<T>` and `&[T]`.  Any method that works on
 slices will also directly work on vectors, without explicitly having to use the `as_slice` method.
 This relationship is expressed by `Deref<Target=[T]>`. This also kicks in when you pass a vector by
-mutable reference to something that expects a slice - this is one of the few places where
+reference to something that expects a slice - this is one of the few places where
 a conversion between types happens automatically. So slice methods like `first`, which maybe-returns
 a reference to the first element, or `last`, work for vectors as well. Many of the methods are similar
 to the corresponding string methods, so there's `split_at` for getting a pair of slices spit at an index,
@@ -42,11 +42,8 @@ Likewise, there's no `map` method on vectors, because `iter().map(...).collect()
 just as well. Rust does not like to allocate unnecessarily - often you don't need the result of that `map`
 as an actual allocated vector.
 
-In other languages, things like `map` are functions. For instance, in C++ `std::count` is a function that
-takes two C++ iterators to establish a range, but it's an iterator method in Rust.
-
 So I'd suggest you become familiar with all the iterator methods, because they are crucial to writing
-good Rust code without having to write loops all the time. As always, write little programs to explore
+good Rust code without having to write loops out all the time. As always, write little programs to explore
 iterator methods, rather than wrestling with them in the context of a more complicated program.
 
 The `Vec<T>` and `&[T]` methods are followed by the common traits: vectors know how to do a debug display of themselves
@@ -65,7 +62,7 @@ strings.extend(["you","are","fine"].iter().map(|s| s.to_string()));
 There's also `FromIterator`, which lets vectors be _constructed_ from iterators. (The iterator `collect`
 method leans on this.)
 
-Any container needs to be iterable as well. Recall that there are three kinds of iterators:
+Any container needs to be iterable as well. Recall that there are [three kinds of iterators](2-structs-enums-lifetimes.html#the-three-kinds-of-iterators)
 
 ```rust
 for x in v {...} // returns T, consumes v
@@ -80,25 +77,18 @@ returning these return slices, as well as plain `v[0]` which returns a reference
 
 There's a few implementations of the `From` trait. For instance `Vec::from("hello".to_string())`
 will give you a vector of the underlying bytes of the string `Vec<u8>`.
-Now, there's already a method 'into_bytes` on `String`, so why the redundancy?
+Now, there's already a method `into_bytes` on `String`, so why the redundancy?
 It seems confusing to have multiple ways of doing the same thing.
 But it's needed because explicit traits make generic methods possible.
 
-We've met this before with `String` - there seem to be so many ways to create strings! There's the
-`to_string` method on `&str` - this comes from the `ToString` trait and will be implemented for anything
-that knows how to `Display` itself.  There is `String::from` which comes from the `From` trait. There's
-also `Into` which is the inverse of `From` and is automatically available if `From` exists.
-If a function argument expects a `String`, you will often
-see the value passed as `"some text".into()` since string slices implement `Into<String>`.
-
 Sometimes limitations of the Rust type system make things clumsy. An example here is how `PartialEq`
-is _separately_ defined for arrays up to size 32!  This will get better. This allows the convenience
-of directly comparing vectors with arrays, but beware the limit.
+is _separately_ defined for arrays up to size 32!  (This will get better.) This allows the convenience
+of directly comparing vectors with arrays, but beware the size limit.
 
 And there are [Hidden Gems](http://xion.io/post/code/rust-iter-patterns.html) buried
-deep in the documentation. As Karol says "Because let’s be honest: no one scrolls that far".
-How does one handle errors in an iterator? Say you map over some operation that will
-fail, and then wish to collect the results:
+deep in the documentation. As Karol Kuczmarski says "Because let’s be honest: no one scrolls that far".
+How does one handle errors in an iterator? Say you map over some operation that might
+fail and so returns `Result`, and then want to collect the results:
 
 ```rust
 fn main() {
@@ -122,8 +112,8 @@ if you ask for the vector to be _contained_ in a `Result`:
 And if there was a bad conversion? Then you would just get `Err` with the first
 error encountered. It's a good example of how extremely flexible `convert` is.
 
-So there's a _lot_ of detail in the documentation. 
-But this is clearer than what the C++ docs say about `std::vector`
+So there's a _lot_ of detail in the documentation.
+But it's certainly clearer than what the C++ docs say about `std::vector`
 
 > The requirements that are imposed on the elements depend on the actual operations performed
 > on the container. Generally, it is required that element type is a complete type and meets
@@ -131,6 +121,10 @@ But this is clearer than what the C++ docs say about `std::vector`
 
 Clearly, you're on your own! The explicitness of Rust is daunting at first, but as you learn to
 read the constraints you will know exactly what any particular method of `Vec` requires.
+
+I would suggest that you do get the source using `rustup component add rust-src`, since the
+standard library source is very readable and the method implementations are usually less scary than the
+method declarations.
 
 ## Maps
 
