@@ -51,7 +51,7 @@ Now, we could just use `{:?}` to dump the innards of the vector directly, but I 
 to emphasize we are iterating over references that are all guaranteed to have the `fmt`
 method defined. A vector of references to values implementing `Debug` can be printed out.
 That's a clunky thing  to say often, so they are called `Debug` _trait objects_.
-Now integers and strings otherwise don't have much in common, but here we've found a common denomator;
+Now integers and strings otherwise don't have much in common, but here we've found a common denominator;
 they know how to print out their innards.
 And this is how you get traditional dynamic dispatch in Rust, because that `fmt` method
 defined by the `Debug` trait is called as a virtual method.
@@ -197,7 +197,7 @@ both the `Debug` and `Display` traits define `fmt` methods, but they really mean
 things.
 
 So Rust traits allow traditional _polymorphic_ OOP.  But what about inheritance? People usually
-mean _implementation inheritance' whereas Rust does _interface inheritance_.  It's as if a Java
+mean _implementation inheritance_ whereas Rust does _interface inheritance_.  It's as if a Java
 programmer never used `extend` and instead used `implements`. And this is actually
 [recommended practice](http://www.javaworld.com/article/2073649/core-java/why-extends-is-evil.html)
 by Alan Holub. He says:
@@ -232,7 +232,7 @@ quack(&d);
 
 The type parameter is _any_ type which implements `Quack`. There's an important difference
 between `quack` and `quack_ref`.  The body of this function is compiled for _each_ of the calling
-types and no virtual method is needed; such functions can be completely inlined. It's a
+types and no virtual method is needed; such functions can be completely inlined. It
 uses the trait `Quack` in a different way, as a _constraint_ on generic types.
 
 This is the C++ equivalent to the generic `quack` (note the `const`):
@@ -281,7 +281,7 @@ quack_everyone(ducks.into_iter());
 
 Iterators in Rust aren't duck-typed but are types that must implement `Iterator`, and in
 this case the iterator provides boxes of `Quack`.  There's no ambiguity about the types
-involved, and the values must satisfy `Duck`. Often the function signature is the most challenging
+involved, and the values must satisfy `Quack`. Often the function signature is the most challenging
 thing about a generic Rust function, which is why I recommend reading the source - the
 implementation is often much simpler. Here the only type parameter is the actual iterator type,
 which means that this will work with anything that can deliver a sequence of boxes, not just
