@@ -3,7 +3,38 @@
 ## Basic Error Handling
 
 Error handling in Rust can be clumsy if you can't use the question-mark operator.
-To achieve happiness, we need to create our own error type. The basic requirements
+To achieve happiness, we need to return a `Result` which can accept any error.
+All errors implement the trait `std::error::Error`, and
+ _any_ error can convert into a `Box<Error>`.
+
+Say we needed to handle _both_ i/o errors and errors from converting
+strings into numbers:
+
+```rust
+// box-error.rs
+use std::fs::File;
+use std::io::prelude::*;
+use std::error::Error;
+
+fn run(file: &str) -> Result<i32,Box<Error>> {
+    let mut file = File::open(file)?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    Ok(contents.trim().parse()?)
+}
+```
+So that's two question-marks for the i/o errors (can't open file, or can't read as string)
+and one question-mark for the conversion error. Finally, we wrap the result in `Ok`.
+Rust can work out from the return type that `parse` should convert to `i32`.
+
+It's easy to create a shortcut for this `Result` type:
+
+```rust
+type BoxResult<T> = Result<T,Box<Error>>;
+```
+
+However, our programs will have application-specific error conditions, and so
+we need to create our own error type. The basic requirements
 are straightforward:
 
   - May implement `Debug`
@@ -34,7 +65,6 @@ impl fmt::Display for MyError {
     }
 }
 
-
 impl Error for MyError {
     fn description(&self) -> &str {
         &self.details
@@ -51,10 +81,22 @@ fn raises_my_error(yes: bool) -> Result<(),MyError> {
 }
 ```
 
+Typing `Result<T,MyError>` gets tedious and many Rust modules define their own
+`Result` - e.g. `io::Result<T>` is short for `io::Result<T,io::Error>`.
+
 In this next example we need to handle the specific error when a string can't be parsed
-as a floating-point number.  Now the way that `?` works
+as a floating-point number.
+
+Now the way that `?` works
 is to look for a conversion from the error of the _expression_ to the error that must
-be _returned_. And this conversion must be expressed by the `From` trait.
+be _returned_.  And this conversion is expressed by the `From` trait. `Box<Error>`
+works as it does because it implements `From` for all types implementing `Error`.
+
+At this point you can continue to use the convenient alias `BoxResult` and catch everything
+as before; there will be a conversion from our error into `Box<Error>`.
+This is a good option for smaller applications. But I want to show other errors can
+be explicitly made to cooperate with our error type.
+
 `ParseFloatError` implements `Error` so `description()` is defined.
 
 ```rust
@@ -92,16 +134,16 @@ fn main() {
 
 Not too complicated, although a little long-winded. The tedious bit is having to
 write `From` conversions for all the other error types that need to play nice
-with `MyError`.  But once the mechanism is in place, your error handling looks
-much cleaner!
-
-Typing `Result<T,MyError>` gets tedious and many Rust modules define their own
-`Result` - e.g. `io::Result<T>` is short for `io::Result<T,io::Error>`.
+with `MyError` - or you simply lean on `Box<Error>`. Newcomers get confused
+by the multitude of ways to do the same thing in Rust; there always is another
+way to peel the avocado (or skin the cat, if you're feeling bloodthirsty). The price
+of flexibility is having many options. Error-handling for a 200 line program can afford
+to be simpler than for a large application. And if you ever want to package your precious
+droppings as a Cargo crate, then error handling becomes crucial.
 
 Currently, the question-mark operator only works for `Result`, not `Option`, and this is
 a feature, not a limitation.  `Option` has a `ok_or_else` which converts itself into a `Result`.
 For example, say we had a `HashMap` and must fail if a key isn't defined:
-
 
 ```rust
     let val = map.get("my_key").ok_or_else(|| MyError::new("my_key not defined"))?;
@@ -110,9 +152,47 @@ For example, say we had a `HashMap` and must fail if a key isn't defined:
 Now here the error returned is completely clear! (This form uses a closure, so the error value
 is only created if the lookup fails.)
 
-## error-chain to the Rescue
+## simple-error for Simple Errors
 
-Error handling is important, and for non-trivial applications have a look
+The [simple-error](https://docs.rs/simple-error/0.1.9/simple_error/) crate provides you with
+a basic error type based on a string, as we have defined it here, and a few convenient macros.
+Like any error, it works fine with `Box<Error>`:
+
+```rust
+#[macro_use]
+extern crate simple_error;
+
+use std::error::Error;
+
+type BoxResult<T> = Result<T,Box<Error>>;
+
+fn run(s: &str) -> BoxResult<i32> {
+    if s.len() == 0 {
+        bail!("empty string");
+    }
+    Ok(s.trim().parse()?)
+}
+
+fn main() {
+    println!("{:?}", run("23"));
+    println!("{:?}", run("2x"));
+    println!("{:?}", run(""));
+}
+// Ok(23)
+// Err(ParseIntError { kind: InvalidDigit })
+// Err(StringError("empty string"))
+
+```
+
+`bail!(s)` expands to `return SimpleError::new(s).into();` - return early with a conversion _into_
+the receiving type.
+
+You need to use `BoxResult` for mixing the `SimpleError` type with other errors, since
+we can't implement `From` for it, since both the trait and the type come from other crates.
+
+## error-chain for Serious Errors
+
+For non-trivial applications have a look
 at the [error_chain](http://brson.github.io/2016/11/30/starting-with-error-chain) crate.
 A little macro magic can go a long way in Rust...
 
@@ -166,7 +246,8 @@ fn main() {
 ```
 
 The 'foreign_links' has made our life easier, since the question mark operator now knows how to
-convert `std::io::Error` into our `error::Error`.
+convert `std::io::Error` into our `error::Error`.  (Under the hood, the macro is creating a
+`From<std::io::Error>` conversion, exactly as spelt out earlier.)
 
 All the action happens in `run`; let's make it print out the first 10 lines of a file given as the
 first program argument.  There may or may not be such an argument, which isn't necessarily an
@@ -199,7 +280,7 @@ fn run() -> Result<()> {
 }
 ```
 
-There is a useful little macro `bail!` for 'throwing' errors.
+There is (again) a useful little macro `bail!` for 'throwing' errors.
 An alternative to the `ok_or` method here could be:
 
 ```rust
@@ -278,7 +359,7 @@ fn main() {
 
 Generally, it's useful to make errors as specific as possible, _particularly_ if this is a library
 function! This match-on-kind technique is pretty much the equivalent of traditional exception handling,
-where you match on exception types.
+where you match on exception types in a `catch` or `except` block.
 
 In summary, __error-chain__ creates a type `Error` for you, and defines `Result<T>` to be `std::result::Result<T,Error>`.
 `Error` contains an enum `ErrorKind` and by default there is one variant `Msg` for errors created from
@@ -294,7 +375,7 @@ As a _library user_, it's irritating when a method simply just 'throws' a generi
 could not open a file, fine, but what file? Basically, what use is this information to me?
 
 `error_chain` does _error chaining_ which helps solve this problem of over-generic errors. When we
-try to open the file, we can lazily lean on the conversion to `io::Error` using `?` or chain the error.
+try to open the file, we can lazily lean on the conversion to `io::Error` using `?`, or _chain_ the error.
 
 ```rust
 // non-specific error
