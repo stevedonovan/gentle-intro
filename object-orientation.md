@@ -20,7 +20,8 @@ There was a point in the old Star Trek series where the doctor would say to the 
 object-orientation: it comes as a shock, because Rust data aggregates (structs, enums
 and tuples) are dumb. You can define methods on them, and make the data itself private,
 all the usual tactics of encapsulation, but they are all _unrelated types_.
-There is no subtyping and no inheritance of data.
+There is no subtyping and no inheritance of data (apart from the specialized 
+case of `Deref` coercions.)
 
 The relationships between various data types in Rust are
 established using _traits_.  A large part of learning Rust is understanding how the
@@ -56,7 +57,7 @@ they know how to print out their innards.
 And this is how you get traditional dynamic dispatch in Rust, because that `fmt` method
 defined by the `Debug` trait is called as a virtual method.
 
-'virtual' method is a concept that only applies to statically-compiled languages; they are the
+'virtual methods' is a concept that only applies to statically-compiled languages; they are the
 _default_ in Java, unless you sternly say `final`. In a language like Python, the object has
 all of its class information attached, and the interpreter will look up `fmt` in the class
 object at runtime.
@@ -190,7 +191,8 @@ then that type satisfies `Quack` without any need for explicit definition. This 
 baked-into-definition Java model, and allows compile-time duck-typing, at the cost of some
 clarity and type-safety.
 
-But there is a problem with duck-typing. One of the signs of bad OOP is too many methods which have some
+But there is a problem with duck-typing.
+One of the signs of bad OOP is too many methods which have some
 generic name like `run`. "If it has run(), it must be Runnable" doesn't sound so catchy as
 the original!  So it is possible for a Go interface to be _accidentally_ valid. In Rust,
 both the `Debug` and `Display` traits define `fmt` methods, but they really mean different
@@ -215,6 +217,38 @@ Implementation inheritance has some serious problems. But it does feel so very
 _convenient_. There's this fat base class called `Animal` and it has loads of useful
 functionality (it may even expose its innards!) which our derived class `Cat` can use. That is,
 it is a form of code reuse. But code reuse is a separate concern.
+
+Getting the distinction between implementation and interface inheritance is important when
+understanding Rust.
+
+Note that traits may have _provided_ methods. Consider `Iterator` - you only _have_ to override
+`next`, but get a whole host of methods free.  This is similar to 'default' methods of modern
+Java interfaces. Here we only define `name` and `upper_case` is defined for us. We _could_
+override `upper_case` as well, but it isn't _required_.
+
+```rust
+trait Named {
+    fn name(&self) -> String;
+    
+    fn upper_case(&self) -> String {
+        self.name().to_uppercase()
+    }
+}
+
+struct Boo();
+
+impl Named for Boo {
+    fn name(&self) -> String {
+        "boo".to_string()
+    }
+}
+
+let f = Boo();
+
+assert_eq!(f.name(),"boo".to_string());
+assert_eq!(f.upper_case(),"BOO".to_string());
+```
+This is a _kind_ of code reuse, true, but note that it does not apply to data, only the interface!
 
 ## Ducks and Generics
 
@@ -283,10 +317,9 @@ Iterators in Rust aren't duck-typed but are types that must implement `Iterator`
 this case the iterator provides boxes of `Quack`.  There's no ambiguity about the types
 involved, and the values must satisfy `Quack`. Often the function signature is the most challenging
 thing about a generic Rust function, which is why I recommend reading the source - the
-implementation is often much simpler. Here the only type parameter is the actual iterator type,
+implementation is often much simpler! Here the only type parameter is the actual iterator type,
 which means that this will work with anything that can deliver a sequence of boxes, not just
 a vector iterator.
-
 
 ## Inheritance
 
@@ -308,9 +341,24 @@ you create based on one aspect ignores all other aspects. That is, there are mul
 classifications of vehicles!
 
 Composition is more important in Rust for the obvious reason that you can't inherit functionality
-in a lazy way from the base class.
+in a lazy way from a base class.
 
-But there is _trait inheritance_:
+Composition is also important because the borrow checker is smart enough
+to know that borrowing different struct fields are separate borrows. You can have
+a mutable borrow of one field while having an immutable borrow of another field,
+and so forth. Rust cannot tell that a method only accesses one field, so the
+fields should be structs with their own methods for implementation convenience.
+(The _external_ interface of the struct can be anything you like using suitable traits.)
+
+There is, however, a restricted but very important kind of
+'inheritance' with [Deref](https://rust-lang.github.io/book/second-edition/ch15-02-deref.html),
+which is the trait for the 'dereference' operator `*`.
+`String` implements `Deref<Target=str>` and so all the methods defined on `&str` are automatically
+available for `String` as well!  In a similar way, the methods of `Foo` can be directly 
+called on `Box<Foo>`.  Some find this a little ... magical, but it is tremendously convenient.
+There is a simpler language inside modern Rust, but it would not be half as pleasant to use.
+
+Generally, there is _trait inheritance_:
 
 ```rust
 trait Show {
@@ -324,7 +372,7 @@ trait Location {
 trait ShowTell: Show + Location {}
 ```
 
-The last trait simply combines our two distinct traits into one, although it can specify
+The last trait simply combines our two distinct traits into one, although it could specify
 other methods.
 
 Things now proceed as before:
@@ -420,13 +468,6 @@ dynamic cast to that type. It isn't really a good idea in general, and specifica
 cannot work in Rust because that `Show` reference has 'forgotten' that it was originally
 a `ShowTell` reference.
 
-Composition is also important in Rust because the borrow checker is smart enough
-to know that borrowing different struct fields are separate borrows. You can have
-a mutable borrow of one field while having an immutable borrow of another field,
-and so forth. Rust cannot tell that a method only accesses one field, so the
-fields should be structs with their own methods for implementation convenience.
-(The _external_ interface of the struct can be anything you like using suitable traits.)
-
 You always have a choice: polymorphic, via trait objects, or monomorphic, via generics
 constrainted by traits. Modern C++ and the Rust standard library tends to take the generic
 route, but the polymorphic route is not obselete. You do have to understand the different
@@ -434,10 +475,19 @@ trade-offs - generics generate the fastest code, which can be inlined. This may 
 to code bloat. But not everything needs to be as _fast as possible_ - it may only happen
 a 'few' times in the lifetime of a typical program fun.
 
+So, here's a summary:
+
+  - structs and enums are dumb, although you can define methods and do data hiding.
+  - a _limited_ form of subtyping is possible on data using `Deref`
+  - traits don't have any data, but can be implemented for any type (not just structs.)
+  - traits can inherit from other traits
+  - traits can have provided methods, allowing interface code re-use
+  - traits give you both virtual methods (polymorphism) and generic constraints (monomorphism)
+
 ## Example: Windows API
 
-One of the areas where traditional OOP is used extensively is GUI toolkits. An EditControl or a ListWindow
-is-a Window, and so forth. This makes writing Rust bindings to GUI toolkits more difficult
+One of the areas where traditional OOP is used extensively is GUI toolkits. An `EditControl` or a `ListWindow`
+is-a `Window`, and so forth. This makes writing Rust bindings to GUI toolkits more difficult
 than it needs to be.
 
 Win32 programming can be done [directly](https://www.codeproject.com/Tips/1053658/Win-GUI-Programming-In-Rust-Language)
