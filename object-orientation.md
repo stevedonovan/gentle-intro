@@ -20,7 +20,7 @@ There was a point in the old Star Trek series where the doctor would say to the 
 object-orientation: it comes as a shock, because Rust data aggregates (structs, enums
 and tuples) are dumb. You can define methods on them, and make the data itself private,
 all the usual tactics of encapsulation, but they are all _unrelated types_.
-There is no subtyping and no inheritance of data (apart from the specialized 
+There is no subtyping and no inheritance of data (apart from the specialized
 case of `Deref` coercions.)
 
 The relationships between various data types in Rust are
@@ -211,7 +211,7 @@ by Alan Holub. He says:
 > (the extends relationship). Interface inheritance (the implements relationship) is preferable.
 > You should avoid implementation inheritance whenever possible
 
-So even in Java, you've probably been doing it wrong!
+So even in Java, you've probably been overdoing classes!
 
 Implementation inheritance has some serious problems. But it does feel so very
 _convenient_. There's this fat base class called `Animal` and it has loads of useful
@@ -229,7 +229,7 @@ override `upper_case` as well, but it isn't _required_.
 ```rust
 trait Named {
     fn name(&self) -> String;
-    
+
     fn upper_case(&self) -> String {
         self.name().to_uppercase()
     }
@@ -350,15 +350,61 @@ and so forth. Rust cannot tell that a method only accesses one field, so the
 fields should be structs with their own methods for implementation convenience.
 (The _external_ interface of the struct can be anything you like using suitable traits.)
 
-There is, however, a restricted but very important kind of
+A concrete example of 'split borrrowing' will make this clearer. We have a struct that
+owns some strings, with a method for borrowing the first string mutably.
+
+```rust
+struct Foo {
+    one: String,
+    two: String
+}
+
+impl Foo {
+    fn borrow_one_mut(&mut self) -> &mut String {
+        &mut self.one
+    }
+    ....
+}
+```
+
+(This is an example of a Rust coding convention - such methods should end in `_mut`)
+
+Now, a method for borrowing both strings, reusing the first method:
+
+```rust
+    fn borrow_both(&self) -> (&str,&str) {
+        (self.borrow_one_mut(), &self.two)
+    }
+```
+
+Which can't work!  We've borrrowed mutably from `self` and _also_ borrowed immmutably from `self`.
+If Rust allowed situations like this, then that immmutable reference can't be guaranteed not to
+change.
+
+The solution is simple:
+
+```rust
+    fn borrow_both(&self) -> (&str,&str) {
+        (&self.one, &self.two)
+    }
+```
+
+And this is fine, because the borrow checker considers these to be independent borrows. So imagine
+that the fields were some arbitrary types, and you can see that methods called on these fields
+will not cause borrowing problems.
+
+
+There is a restricted but very important kind of
 'inheritance' with [Deref](https://rust-lang.github.io/book/second-edition/ch15-02-deref.html),
 which is the trait for the 'dereference' operator `*`.
 `String` implements `Deref<Target=str>` and so all the methods defined on `&str` are automatically
-available for `String` as well!  In a similar way, the methods of `Foo` can be directly 
+available for `String` as well!  In a similar way, the methods of `Foo` can be directly
 called on `Box<Foo>`.  Some find this a little ... magical, but it is tremendously convenient.
 There is a simpler language inside modern Rust, but it would not be half as pleasant to use.
+It really should be used for cases where there is an owned, mutable type and a simpler borrowed
+type.
 
-Generally, there is _trait inheritance_:
+Generally in Rust there is _trait inheritance_:
 
 ```rust
 trait Show {
@@ -477,9 +523,10 @@ a 'few' times in the lifetime of a typical program fun.
 
 So, here's a summary:
 
-  - structs and enums are dumb, although you can define methods and do data hiding.
-  - a _limited_ form of subtyping is possible on data using `Deref`
-  - traits don't have any data, but can be implemented for any type (not just structs.)
+  - the role played by `class` is shared between data and traits
+  - structs and enums are dumb, although you can define methods and do data hiding
+  - a _limited_ form of subtyping is possible on data using the `Deref` trait
+  - traits don't have any data, but can be implemented for any type (not just structs)
   - traits can inherit from other traits
   - traits can have provided methods, allowing interface code re-use
   - traits give you both virtual methods (polymorphism) and generic constraints (monomorphism)
