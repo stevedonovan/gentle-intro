@@ -20,8 +20,8 @@ the solutions make sense. To put it in flowery language, we are going for a hike
 in hilly country and I will point out some interesting rock formations on the way,
 with only a few geology lectures. There will be some uphill but the view will be
 inspiring; the community is unusually pleasant and happy to help.
-There is [Rust Users Forum](https://users.rust-lang.org/) and an active
-[subreddit](https://www.reddit.com/r/rust/).
+There is the [Rust Users Forum](https://users.rust-lang.org/) and an active
+[subreddit](https://www.reddit.com/r/rust/) which is unusually well-moderated.
 
 First, why learn a new programming language? It is an investment of time and energy
 and that needs some justification. Even if you do not immediately land
