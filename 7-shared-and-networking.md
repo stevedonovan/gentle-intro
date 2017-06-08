@@ -55,7 +55,7 @@ fn main() {
 ```
 The explicit dereference operator `*` can be a little bit confusing in Rust, because
 often you don't need it - for instance `greeting.borrow().len()` is fine since method
-calls will deference implicitly.  But you _do_ need `*` to pull out the underlying
+calls will dereference implicitly.  But you _do_ need `*` to pull out the underlying
 `&String` from `greeting.borrow()` or the `&mut String` from `greeting.borrow_mut()`.
 
 Using a `RefCell` isn't always safe, because any references returned from these
