@@ -31,8 +31,8 @@ write to a field `v.a` if `v` itself is writeable. `Cell` values relax this rule
 we can change the value contained within them with `set` even if the cell itself is
 not mutable.
 
-However, `Cell` only works with values that can be copied, that is, they implement `Copy`,
-like primitive types and structs containing them marked as 'derive(Copy)'.
+However, `Cell` only works with `Copy` types
+(e.g primitive types and user types deriving the `Copy` trait).
 
 For other values, we have to get a reference we can work on, either mutable or immutable.
 This is what `RefCell` provides - you ask it explicitly for a reference to the contained
@@ -53,14 +53,16 @@ fn main() {
     assert_eq!(*greeting.borrow(), "hola");
 }
 ```
-The explicit dereference operator `*` can be a little bit confusing in Rust, because
+
+Again, `greeting` was not declared as mutable!
+
+The explicit dereference operator `*` can be a bit confusing in Rust, because
 often you don't need it - for instance `greeting.borrow().len()` is fine since method
-calls will deference implicitly.  But you _do_ need `*` to pull out the underlying
+calls will dereference implicitly.  But you _do_ need `*` to pull out the underlying
 `&String` from `greeting.borrow()` or the `&mut String` from `greeting.borrow_mut()`.
 
 Using a `RefCell` isn't always safe, because any references returned from these
 methods must follow the usual rules.
-
 
 ```rust
     let mut gr = greeting.borrow_mut(); // gr is a mutable borrow
