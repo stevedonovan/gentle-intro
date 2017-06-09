@@ -304,7 +304,7 @@ fn main() {
         }
     }
 }
-// /home/steve/rust/gentle-intro/src
+// /home/steve/rust/gentle-intro/code
 // /home/steve/rust/gentle-intro
 // /home/steve/rust
 // /home/steve
@@ -314,7 +314,7 @@ fn main() {
 
 Here's a useful variation. I have a program which searches for a configuration file,
 and the rule is that it may appear in any subdirectory of the current directory.
-So I create `/home/steve/rust/config.txt` and start this program up in `/home/steve/rust/gentle-intro/src`:
+So I create `/home/steve/rust/config.txt` and start this program up in `/home/steve/rust/gentle-intro/code`:
 
 ```rust
 // file9.rs
