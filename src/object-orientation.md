@@ -40,7 +40,7 @@ stdlib types implement `Debug`:
 let question = "everything";
 let answer = 42;
 
-let debugables: Vec<&Debug> = vec![&question,&answer];
+let debugables: Vec<&Debug> = vec![&question, &answer];
 for d in &debugables {
     println!("{:?}",d);
 }
@@ -52,7 +52,7 @@ Now, we could just use `{:?}` to dump the innards of the vector directly, but I 
 to emphasize we are iterating over references that are all guaranteed to have the `fmt`
 method defined. A vector of references to values implementing `Debug` can be printed out.
 That's a clunky thing  to say often, so they are called `Debug` _trait objects_.
-Now integers and strings otherwise don't have much in common, but here we've found a common denominator;
+Now integers and strings otherwise don't have much in common, but here we've found a common denominator:
 they know how to print out their innards.
 And this is how you get traditional dynamic dispatch in Rust, because that `fmt` method
 defined by the `Debug` trait is called as a virtual method.
@@ -67,16 +67,17 @@ allocated on the heap, and acts very much like a reference - it's a _smart point
 go out of scope and `Drop` kicks in, then that memory is released.
 
 ```rust
-    let question = Box::new("everything");
-    let answer = Box::new(42);
+let question = Box::new("everything");
+let answer = Box::new(42);
 
-    let debugables: Vec<Box<Debug>> = vec![question,answer];
-    for d in &debugables {
-        println!("{:?}",d);
-    }
+let debugables: Vec<Box<Debug>> = vec![question,answer];
+for d in &debugables {
+    println!("{:?}",d);
+}
 ```
 
-The difference is that you can take this vector, pass it as a reference, give it away, without
+The difference is that you can take this vector, pass it as a
+reference, and give it away, without
 having to track any borrowed references. When the vector is dropped, the boxes will be dropped,
 and all memory is reclaimed.
 
