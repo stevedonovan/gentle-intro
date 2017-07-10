@@ -1374,7 +1374,7 @@ here - if we _did_ want to keep `name` alive - is to move a cloned copy into the
     let cname = name.to_string();
     let c = move || {
         println!("name {} age {}",cname,age);
-    }
+    };
 ```
 Why are moved closures needed? Because we might need to call them at a point where
 the original context no longer exists. A classic case is when creating a _thread_.
