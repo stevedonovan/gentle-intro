@@ -275,11 +275,11 @@ Rust goes back to an
 older style of argument declaration, where the type follows the name. This is
 how it was done in Algol-derived languages like Pascal.
 
-Again, no integer-to-float conversions - if you replace the `0.0` with `0` then we
+Again, no integer-to-float conversions - if you replace the `2.0` with `2` then we
 get a clear error:
 
 ```
-8 |     let res = sqr(0);
+8 |     let res = sqr(2);
   |                   ^ expected f64, found integral variable
   |
 ```
