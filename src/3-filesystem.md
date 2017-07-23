@@ -167,7 +167,7 @@ where Rust can't convert a line to UTF-8.  Fine for casual code, bad for product
 
 ## Writing To Files
 
-We met the `write!` macro when implementing `Display` - it also works with anything
+We met the `write!` macro when implementing `Debug` - it also works with anything
 that implements `Write`. So here's a another way of saying `print!`:
 
 ```rust
