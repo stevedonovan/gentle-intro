@@ -385,7 +385,7 @@ saved from creating confusion.
 
 Before congratulating ourselves on such a clever, convenient shortcut, you should be
 aware of the consequences. If `make_set` was written so, so that these are sets
-of owned strings, then the actual type of `intersect` could come as a sunrise:
+of owned strings, then the actual type of `intersect` could come as a surprise:
 
 ```rust
 fn make_set(words: &str) -> HashSet<String> {
