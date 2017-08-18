@@ -520,7 +520,7 @@ you have to use `&` to pass it to the function.
 
 ```rust
 // array2.rs
-// read as: slice of i32 array
+// read as: slice of i32
 fn sum(values: &[i32]) -> i32 {
     let mut res = 0;
     for i in 0..values.len() {
@@ -596,6 +596,7 @@ Here is the informative error:
   = note: expected type `()`
   = note:    found type `[{float}; 2]`
 ```
+(`{float}` means 'some floating-point type which is not fully specified yet')
 
 Slices give you different _views_ of the _same_ array:
 
@@ -653,7 +654,7 @@ fn main() {
 // last None
 ```
 
-`last` failed (forgot zero-based indexing), but returned something called `None`.
+`last` failed (we forgot about zero-based indexing), but returned something called `None`.
 `first` is fine, but appears as a value wrapped in `Some`.  Welcome to the `Option`
 type!  It may be _either_ `Some` or `None`.
 
@@ -682,15 +683,22 @@ If you were to _unwrap_ `last`, you would get a panic. But at least you can call
 Note the `*` - the precise type inside the `Some` is `&i32`, which is a reference. We need
 to dereference this to get back to a `i32` value.
 
-Which is long-winded, so there's a shortcut (the `&` is because `get` always
-returns a reference, and `*` is to get the value as `i32`):
+Which is long-winded, so there's a shortcut - `unwrap_or` will return the value it
+is given if the `Option` was `None`. The types must match up - `get` returns
+a referemce. so you have to make up a `&i32` with `&-1`. Finally, again use `*`
+to get the value as `i32`.
 
 ```rust
     let last = *slice.get(5).unwrap_or(&-1);
 ```
+
+It's easy to miss the `&`, but the compiler has your back here. If it was `-1`,
+`rustc` says 'expected &{integer}, found integral variable' and then 
+'help: try with `&-1`'.
+
 You can think of `Option` as a box which may contain a value, or nothing (`None`).
 (It is called `Maybe` in Haskell). It may contain _any_ kind of value, which is
-its _type parameter_. In this case, the full type is `Option<i32>`, using
+its _type parameter_. In this case, the full type is `Option<&i32>`, using
 C++-style notation for _generics_.  Unwrapping this box may cause an explosion,
 but unlike Schroedinger's Cat, we know if it contains a value up-front.
 
@@ -755,7 +763,7 @@ fn main() {
 }
 ```
 That little, so-important borrow operator `&` is _coercing_ the vector into a
-slice. And it makes complete sense, because the vector is looking after an array of
+slice. And it makes complete sense, because the vector is also looking after an array of
 values, with the difference that the array is allocated _dynamically_.
 
 If you come from a dynamic language, now is time for that little talk. In systems
@@ -776,7 +784,7 @@ in his Mom's basement in Minsk.
 The first C program I wrote (on an DOS PC)
 took out the whole computer. Unix systems always behaved better, and only the process died
 with a _segfault_. Why is this worse than a Rust (or Go) program panicking?
-Because the panic happens when the original problem happens, not when the program
+Because a panic happens when the original problem happens, not when the program
 has become hopelessly confused and eaten all your homework. Panics are _memory safe_
 because they happen before any illegal access to memory. This is a common cause of
 security problems in C, because all memory accesses are unsafe and a cunning attacker
@@ -796,7 +804,7 @@ dynamic languages ever) said that he would not like to fly on an airplane that
 relied on garbage-collected software.
 
 Back to vectors: when a vector is modified or created, it allocates from the heap and becomes
- the _owner_ of that memory. The slice _borrows_ the array from the vector.
+ the _owner_ of that memory. The slice _borrows_ the memory from the vector.
 When the vector dies or _drops_, it lets the memory go.
 
 ## Iterators
@@ -822,10 +830,7 @@ fn main() {
 And that is exactly what `for var in iter {}` does.
 
 This may seem an inefficient way to define a for-loop, but `rustc` does crazy-ass
-optimizations in release mode and it will be just as fast as a `while` loop. (Contrast
-with the situation on the JVM, where iterators always require allocation. The consequence
-is that funky functional stuff in Scala is _always_ going to be significantly slower
-than in Rust).
+optimizations in release mode and it will be just as fast as a `while` loop.
 
 Here is the first attempt to iterate over an array:
 
@@ -858,7 +863,7 @@ fn main() {
         println!("{}", i);
     }
 
-    // slices can be converted implicitly to iterators...
+    // slices will be converted implicitly to iterators...
     let slice = &arr;
     for i in slice {
         println!("{}", i);
@@ -889,10 +894,11 @@ Here we do sums with two different integer sizes, no problem. (It is also no
 problem to create a new variable of the same name if you run out of names to
 give things.)
 
-With this background, some more of the slice methods will make more sense.
-Another documentation tip; on the right-hand side of every page there's a '[-]' which you can
+With this background, some more of the [slice methods](https://doc.rust-lang.org/std/primitive.slice.html)
+will make more sense.
+(Another documentation tip; on the right-hand side of every doc page there's a '[-]' which you can
 click to collapse the method list. You can then expand the details of anything
-that looks interesting. (Anything that looks too weird, just ignore for now.)
+that looks interesting. Anything that looks too weird, just ignore for now.)
 
 The `windows` method gives you an iterator of slices - overlapping windows of
 values!
@@ -972,13 +978,14 @@ fn main() {
 
 ## Strings
 
-Strings in Rust are a little more involved than in dynamic languages; the `String` type,
+Strings in Rust are a little more involved than in otherlanguages; the `String` type,
 like `Vec`, allocates dynamically and is resizeable. (So it's like C++'s `std::string`
-but not like the immutable strings of Java and Python.) A program may contain a lot
+but not like the immutable strings of Java and Python.) But a program may contain a lot
 of _string literals_ (like "hello") and a system language should be able to store
 these statically in the executable itself. In embedded micros, that could mean putting
 them in cheap ROM rather than expensive RAM (for low-power devices, RAM is
-also expensive in terms of power consumption.)
+also expensive in terms of power consumption.) A _system_ language has to have
+two kinds of string, allocated or static.
 
 So "hello" is not of type `String`. It is of type `&str` (pronounced 'string slice').
 It's like the distinction between `const char*` and `std::string` in C++, except
@@ -1002,13 +1009,10 @@ fn main() {
 Again, the borrow operator can coerce `String` into `&str`, just as `Vec` could
 be coerced into `&[]`.
 
-In C++, char pointers can become strings implicitly through the constructor and
-through assignment,  but you need the ugly `c_str`
-method to get the owned char pointer of the string. And that's an important difference
-in emphasis; Rust is making the _allocation_ obvious, but makes it easier to borrow
-the characters as a string slice.
+Under the hood, `String` is basically a `Vec<u8>` and `&str` is `&[u8]`, but
+those bytes _must_ represent valid UTF-8 text. 
 
-Like a vector, you can `push` a character and `pop` one off the end.
+Like a vector, you can `push` a character and `pop` one off the end of `String`:
 
 ```rust
 // string5.rs
@@ -1026,7 +1030,7 @@ fn main() {
 }
 ```
 You can convert many types to strings using `to_string`
-(essentially, if you can display them with '{}' then they can be converted).
+(if you can display them with '{}' then they can be converted).
 The `format!` macro is a very useful way to build
 up more complicated strings using the same format strings as `println!`.
 
@@ -1068,9 +1072,6 @@ fn main() {
 }
 // slices "tatic" "na"
 ```
-
-Again, this is superior to the C++ approach, which is to use the `substr`
-method - which _makes a copy_. In the Rust case, it's just a borrow.
 
 But, you cannot index strings!  This is because they use the One True Encoding,
 UTF-8, where a 'character' may be a number of bytes.
@@ -1115,8 +1116,10 @@ careful to only slice strings using valid offsets that come from string methods.
 ```
 
 Breaking up strings is a popular and useful pastime. The string `split_whitespace`
-method returns an _iterator_, and we then choose what to do with it. `collect`
-is very general and so needs some clues about _what_ it is collecting - hence
+method returns an _iterator_, and we then choose what to do with it. A common need
+is to create a vector of the split substrings.
+
+`collect` is very general and so needs some clues about _what_ it is collecting - hence
 the explicit type.
 
 ```rust
@@ -1130,9 +1133,9 @@ You could also say it like this, passing the iterator into the `extend` method:
     let mut words = Vec::new();
     words.extend(text.split_whitespace());
 ```
-If written in C++, we would have to make these _allocated strings_, whereas
-here each slice in the vector is borrowing from the original string. All we
-allocate is the space to keep the slices.
+In most languages, we would have to make these _separately allocated strings_,
+whereas here each slice in the vector is borrowing from the original string.
+All we allocate is the space to keep the slices.
 
 Have a look at this cute two-liner; we get an iterator over the chars,
 and only take those characters which are not space. Again, `collect` needs
@@ -1140,10 +1143,10 @@ a clue (we may have wanted a vector of chars, say):
 
 ```rust
     let stripped: String = text.chars()
-        .filter(|ch| !ch.is_whitespace()).collect();
+        .filter(|ch| ! ch.is_whitespace()).collect();
     // theredfoxandthelazydog
 ```
-The `filter` method takes a _closure_, which is Rust-speak for what C++ calls
+The `filter` method takes a _closure_, which is Rust-speak for 
 lambdas or anonymous functions.  Here the argument type is clear from the
 context, so the explicit rule is relaxed.
 
@@ -1201,7 +1204,7 @@ fn main() {
     // do your magic
 }
 ```
-`nth(1)` gives you the second argument from the iterator, and `expect`
+`nth(1)` gives you the second value of the iterator, and `expect`
 is like an `unwrap` with a readable message.
 
 Converting a string into a number is straightforward, but you do need to specify
@@ -1258,7 +1261,8 @@ The `_` is like C `default` - it's a fall-back case. If you don't provide one th
 `rustc` will consider it an error. (In C++ the best you can expect is a warning, which
 says a lot about the respective languages).
 
-Rust `match` statements are more powerful than `switch`:
+Rust `match` statements can also match on ranges. Note that these ranges have
+_three_ dots and are inclusive ranges, so that the first condition would match 3.
 
 ```rust
     let text = match n {
@@ -1272,7 +1276,7 @@ Rust `match` statements are more powerful than `switch`:
 The next step to exposing our programs to the world is to _reading files_.
 
 Recall that `expect` is like `unwrap` but gives a custom error message. We are
-going to throw any a few errors here:
+going to throw away a few errors here:
 
 ```rust
 // file1.rs
@@ -1318,7 +1322,8 @@ want to put this code into a function, knowing that it could so easily crash
 the whole program.  So now we have to talk about exactly what `File::open` returns.
 If `Option` is a value that may contain something or nothing, then `Result` is a value
 that may contain something or an error. They both understand `unwrap` (and its cousin
-`expect`) but they are quite different.
+`expect`) but they are quite different. `Result` is defined by _two_ type parameters,
+for the `Ok` value and the `Err` value.
 
 This version defines a function that does not crash. It passes on a `Result` and
 it is the _caller_ who must decide how to handle the error.
@@ -1330,7 +1335,7 @@ use std::fs::File;
 use std::io::Read;
 use std::io;
 
-fn read_to_string(filename: &str) -> io::Result<String> {
+fn read_to_string(filename: &str) -> Result<String,io::Error> {
     let mut file = match File::open(&filename) {
         Ok(f) => f,
         Err(e) => return Err(e),
@@ -1364,7 +1369,10 @@ the 'happy path' gets lost. Go tends to have this problem, with lots of
 explicit early returns, or just _ignoring errors_.  (That is, by the way,
 the closest thing to evil in the Rust universe.)
 
-Fortunately, there is a shortcut:
+Fortunately, there is a shortcut.
+
+The `std::io` module defines a type alias `io::Result<T>` which is exactly
+the same as `Result<T,io::Error>` and easier to type.
 
 ```rust
 fn read_to_string(filename: &str) -> io::Result<String> {
@@ -1374,9 +1382,10 @@ fn read_to_string(filename: &str) -> io::Result<String> {
     Ok(text)
 }
 ```
-That `?` operator does almost exactly what the first match did; if the
-result was an error, then it will immediately return that error. At the end, we
-still need to wrap up the string as a result.
+That `?` operator does almost exactly what the match on `File::open` does;
+if the result was an error, then it will immediately return that error.
+Otherwise, it returns the `Ok` result.
+At the end, we still need to wrap up the string as a result.
 
 It's been a good year in Rust, and `?` was one of the cool things that
 became stable recently. You will still see the macro `try!` used in older code:
