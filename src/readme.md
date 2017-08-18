@@ -22,6 +22,8 @@ with only a few geology lectures. There will be some uphill but the view will be
 inspiring; the community is unusually pleasant and happy to help.
 There is the [Rust Users Forum](https://users.rust-lang.org/) and an active
 [subreddit](https://www.reddit.com/r/rust/) which is unusually well-moderated.
+The [FAQ](https://www.rust-lang.org/en-US/faq.html) is a good resource if
+you have specific questions.
 
 First, why learn a new programming language? It is an investment of time and energy
 and that needs some justification. Even if you do not immediately land
@@ -70,17 +72,16 @@ This tutorial assumes that you have Rust installed locally. Fortunately this is
 
 ```
 $ curl https://sh.rustup.rs -sSf | sh
-$ rustup component add rust-docs
 ```
-
-I would recommend getting the default stable version; it's easy to switch later.
-
-`rustup` is the command you use to manage your Rust installation - this 'component add' command
-downloads the Rust documentation so you can view it locally. When a new stable release
-appears, you just have to say `rustup update` to upgrade.
+I would recommend getting the default stable version; it's easy to download
+unstable versions later and to switch between.
 
 This gets the compiler, the Cargo package manager, the API documentation, and the Rust Book.
 The journey of a thousand miles starts with one step, and this first step is painless.
+
+`rustup` is the command you use to manage your Rust installation. When a new stable release
+appears, you just have to say `rustup update` to upgrade. `rustup doc` will open
+the offline documentation in your browser.
 
 You will probably already have an editor you like, and [basic Rust support](https://areweideyet.com/)
 is good. I'd suggest you start out with basic syntax highlighting at first, and
