@@ -424,7 +424,7 @@ other methods.
 
 Things now proceed as before:
 
-```
+```rust
 #[derive(Debug)]
 struct Foo {
     name: String,
