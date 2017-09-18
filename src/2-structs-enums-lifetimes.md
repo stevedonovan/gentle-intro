@@ -122,7 +122,8 @@ block:
     {
         let c = "hello".to_string();
         // a,b and c are visible
-    } // the string c is dropped
+    }
+    // the string c is dropped
     // a,b are visible
     for i in 0..a {
         let b = &b[1..];
@@ -160,7 +161,7 @@ of its block:
 10 }
 ```
 We borrow the value of `s1` and then borrow the value of `tmp`. But `tmp`'s value
-does not exist outside that block:
+does not exist outside that block!
 
 ```
 error: `tmp` does not live long enough
@@ -181,7 +182,7 @@ a reference that points to stale data.
 ## Tuples
 
 It's sometimes very useful to return multiple values from a function. Tuples are
-the solution:
+a convenient solution:
 
 ```rust
 // tuple1.rs
@@ -315,8 +316,8 @@ impl Person {
     println!("fullname {}", p.full_name());
 // fullname John Smith
 ```
-The `self` is used explicitly (unlike the `this` of C++) and is passed as a reference.
-(You can think of `&self` as `self: &Person`.)
+The `self` is used explicitly (like Python, but unlike the `this` of C++ or Java)
+and is passed as a reference. (You can think of `&self` as `self: &Person`.)
 
 The keyword `Self` refers to the struct type - you can mentally substitute `Person`
 for `Self` here:
@@ -342,6 +343,15 @@ And the data will _move_ into the method when a plain self argument is used:
     }
 ```
 (Try that with `&self` - structs will not let go of their data without a fight!)
+
+Note that after `v.to_tuple()` is called, then `v` has moved and is no longer
+available.
+
+To summarize:
+  -  no `self` argument: you can associate functions with structs, like the `new` "constructor".
+  - `&self` argument: can use the values of the struct, but not change them
+  - `&mut self` argument: can modify the values
+  - `self` argument: will consume the value, which will move.
 
 If you try to do a debug dump of a `Person`, you will get an informative error:
 
@@ -503,14 +513,17 @@ struct A <'a> {
 }
 
 fn main() {
-    let string = "I'm a little string".to_string();
-    let a = A { s: &string };
+    let s = "I'm a little string".to_string();
+    let a = A { s: &s };
 
     println!("{:?}", a);
 }
 ```
 Lifetimes are conventionally called 'a','b',etc but you could just as well called it
 'me' here.
+
+After this point, our `a` struct and the `s` string are bound by a strict contract:
+`a` borrows from `s`, and cannot outlive it.
 
 Sometimes it seems like a good idea for a struct to contain a value _and_ a reference
 that borrows from that value.
@@ -623,7 +636,7 @@ can _force_ this but you'll end up with a step of 1.0 which is uninteresting.)
 Recall the informal definition of an iterator; it is an struct with a `next` method
 which may return `Some`-thing or `None`. In the process, the iterator itself gets modified,
 it keeps the state for the iteration (like next index and so forth.) The data that
-is being iterated over doesn't change usually, (But see `std::vec::Vec::drain` for an
+is being iterated over doesn't change usually, (But see `Vec::drain` for an
 interesting iterator that does modify its data.)
 
 And here is the formal definition: the [Iterator trait](https://doc.rust-lang.org/std/iter/trait.Iterator.html).
@@ -775,10 +788,10 @@ The  `match` expression is the basic way to handle `enum` values.
 impl Direction {
     fn as_str(&self) -> &'static str {
         match *self {
-        Direction::Up => "Up",
-        Direction::Down => "Down",
-        Direction::Left => "Left",
-        Direction::Right => "Right"
+            Direction::Up => "Up",
+            Direction::Down => "Down",
+            Direction::Left => "Left",
+            Direction::Right => "Right"
         }
     }
 }
