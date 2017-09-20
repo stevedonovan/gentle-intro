@@ -215,41 +215,6 @@ note: Run with `RUST_BACKTRACE=1` for a backtrace.
 wait Err(Any)
 ```
 
-## Threads Don't Borrow
-
-It's possible for the thread closure to capture values, but by _moving_,  not by _borrowing_!
-
-```rust
-// thread3.rs
-use std::thread;
-
-fn main() {
-    let name = "dolly".to_string();
-    let t = thread::spawn(|| {
-        println!("hello {}", name);
-    });
-    println!("wait {:?}", t.join());
-}
-```
-
-And here's the helpful error message:
-
-```
-error[E0373]: closure may outlive the current function, but it borrows `name`, which is owned by the current function
- --> thread3.rs:6:27
-  |
-6 |     let t = thread::spawn(|| {
-  |                           ^^ may outlive borrowed value `name`
-7 |         println!("hello {}", name);
-  |                             ---- `name` is borrowed here
-  |
-help: to force the closure to take ownership of `name` (and any other referenced variables), use the `move` keyword, as shown:
-  |     let t = thread::spawn(move || {
-```
-That's fair enough! Imagine spawning this thread from a function - it will exist
-after the function call has finished and `name` gets dropped.  So adding `move` solves our
-problem.
-
 The returned objects can be used to keep track of multiple threads:
 
 ```rust
@@ -286,12 +251,65 @@ for different runs), and this is key - they really are _independent threads of e
 Multithreading is easy; what's hard is _concurrency_ - managing and synchronizing multiple
 threads of execution.
 
+## Threads Don't Borrow
+
+It's possible for the thread closure to capture values, but by _moving_,  not by _borrowing_!
+
+```rust
+// thread3.rs
+use std::thread;
+
+fn main() {
+    let name = "dolly".to_string();
+    let t = thread::spawn(|| {
+        println!("hello {}", name);
+    });
+    println!("wait {:?}", t.join());
+}
+```
+
+And here's the helpful error message:
+
+```
+error[E0373]: closure may outlive the current function, but it borrows `name`, which is owned by the current function
+ --> thread3.rs:6:27
+  |
+6 |     let t = thread::spawn(|| {
+  |                           ^^ may outlive borrowed value `name`
+7 |         println!("hello {}", name);
+  |                             ---- `name` is borrowed here
+  |
+help: to force the closure to take ownership of `name` (and any other referenced variables), use the `move` keyword, as shown:
+  |     let t = thread::spawn(move || {
+```
+That's fair enough! Imagine spawning this thread from a function - it will exist
+after the function call has finished and `name` gets dropped.  So adding `move` solves our
+problem.
+
+But this is a _move_, so `name` may only appear in one thread! I'd like to emphasize
+that it _is_ possible to share references, but they need to have `static` lifetime:
+
+```rust
+let name = "dolly";
+let t1 = thread::spawn(move || {
+    println!("hello {}", name);
+});
+let t2 = thread::spawn(move || {
+    println!("goodbye {}", name);
+});
+```
+`name` exists for the whole duration of the program (`static`), so
+`rustc` is satisfied that the closure will never outlive `name`. However, most interesting
+references do not have `static` lifetimes!
+
 Threads can't share the same environment - by _design_ in Rust. In particular,
 they cannot share regular references because the closures move their captured variables.
 
-_shared references_ are fine however - but you cannot use `Rc` for this. This is because
+_shared references_ are fine however, because their lifetime is 'as long as needed' -
+  but you cannot use `Rc` for this. This is because
 `Rc` is not _thread safe_ - it's optimized to be fast for the non-threaded case.
-Fortunately it is a compile error to use `Rc` here!
+Fortunately it is a compile error to use `Rc` here; the compiler is watching your
+back as always.
 
 For threads, you need `std::sync::Arc` - 'Arc' stands for 'Atomic Reference Counting'.
 That is, it guarantees that the reference count will be modified in one logical operation.
@@ -330,7 +348,7 @@ fn main() {
 ```
 
 I"ve deliberately created a wrapper type for `String` here (a 'newtype') since
-our `MyString` does not implement `Clone`. But the shared reference can be cloned!
+our `MyString` does not implement `Clone`. But the _shared reference_ can be cloned!
 
 The shared reference `name` is passed to each new thread by making a new reference
 with `clone` and moving it into the closure. It's a little verbose, but this is a safe
@@ -346,6 +364,9 @@ is done in Rust using _channels_. `std::sync::mpsc::channel()` returns a tuple c
 of the _receiver_ channel and the _sender_ channel. Each thread is passed a copy
 of the sender with `clone`, and calls `send`. Meanwhile the main thread calls
 `recv` on the receiver.
+
+'MPSC' stands for 'Multiple Producer Single Consumer'. We create multiple threads
+which attempt to send to the channel, and the main thread 'consumes' the channel.
 
 ```rust
 // thread9.rs
@@ -467,12 +488,11 @@ The threads do their semi-random thing, all meet up, and then continue. It's lik
 of resumable `join` and useful when you need to farm off pieces of a job to
 different threads and want to take some action when all the pieces are finished.
 
-
 ## Shared State
 
-But how can threads _modify_ shared state?
+How can threads _modify_ shared state?
 
-Recall the `Rc<RefCell>` strategy for _dynamically_ doing a
+Recall the `Rc<RefCell<T>>` strategy for _dynamically_ doing a
 mutable borrow on shared references.  The threading equivalent to `RefCell` is
 `Mutex` - you may get your mutable reference by calling `lock`. While this reference
 exists, no other thread can access it. `mutex` stands for 'Mutual Exclusion' - we lock
@@ -532,14 +552,24 @@ extern crate pipeliner;
 use pipeliner::Pipeline;
 
 fn main() {
-    for result in (0..50).with_threads(10).map(|x| x + 1) {
+    for result in (0..10).with_threads(4).map(|x| x + 1) {
         println!("result: {}", result);
     }
 }
+// result: 1
+// result: 2
+// result: 5
+// result: 3
+// result: 6
+// result: 7
+// result: 8
+// result: 9
+// result: 10
+// result: 4
 ```
 
-It's silly of course, because the operation is so cheap to calculate, but shows how simple it is
-to collect parallel results.
+It's a silly example of course, because the operation is so cheap to calculate, but shows how easy it is
+to run code in parallel.
 
 Here's something more useful. Doing network operations in parallel is very useful, because they can
 take time, and you don't want to wait for them _all_ to finish before starting to do work.
@@ -662,7 +692,8 @@ it a list of actual domain names the DNS lookup could take some time, hence the 
 
 Suprisingly, it sort-of Just Works. The fact that everything in the standard library implements `Debug`
 is great for exploration as well as debugging.  The iterator is returning `Result` (hence `Ok`) and
-in that `Result` is an `IntoIter` into a `SocketAddr` which is an enum with either a IPV4 or a IPV6 address.
+in that `Result` is an `IntoIter` into a `SocketAddr` which is an enum with either a ipv4 or a ipv6 address.
+Why `IntoIter`? Because a socket may have multiple addresses (e.g. both ipv4 and ipv6).
 
 ```rust
     for result in addresses.with_threads(n)
@@ -683,7 +714,7 @@ bad typically when we give a nonsense address (like an address name without a po
 Rust provides a straightforward interface to the most commonly used network protocol, TCP.
 It is very fault-resistant and is the base on which our networked world is built - _packets_ of
 data are sent and received, with acknowledgement. By contrast, UDP sends packets out into the wild
-without much error correction - there's a joke that goes "I could tell you a joke about UDP but you
+without acknowledgement - there's a joke that goes "I could tell you a joke about UDP but you
 might not get it."
 (Jokes about networking are only funny for a specialized meaning of the word 'funny')
 
@@ -793,7 +824,7 @@ One-way communications like this are certainly useful - for instance. a set of s
 network which want to collect their status reports together in one central place. But it's
 reasonable to expect a polite reply, even if just 'ok'!
 
-A simple example is an 'echo' server. The client writes some text ending in a newline to the
+A simple example is a basic 'echo' server. The client writes some text ending in a newline to the
 server, and receives the same text back with a newline - the stream is readable and writeable.
 
 ```rust
