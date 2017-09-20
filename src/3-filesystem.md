@@ -530,13 +530,14 @@ A more sloppy function is `String::from_utf8_lossy` which will make a good attem
 conversion and insert the invalid Unicode mark � where it failed.
 
 Here is a useful function which runs a program using the shell. This uses the usual
-shell mechanism for joining stderr to stdout:
+shell mechanism for joining stderr to stdout. The name of the shell is different 
+on Windows, but otherwise things work as expected.
 
 ```rust
 fn shell(cmd: &str) -> (String,bool) {
     let cmd = format!("{} 2>&1",cmd);
-    let output = Command::new("/bin/sh")
-        .arg("-c")
+    let output = Command::new(if cfg!(windows) {"cmd.exe"} else {"/bin/sh"})
+        .arg(if cfg!(windows) {"/c"} else {"-c"})
         .arg(&cmd)
         .output()
         .expect("no shell?");
@@ -545,6 +546,7 @@ fn shell(cmd: &str) -> (String,bool) {
         output.status.success()
     )
 }
+
 
 fn shell_success(cmd: &str) -> Option<String> {
     let (output,success) = shell(cmd);
@@ -555,7 +557,8 @@ fn shell_success(cmd: &str) -> Option<String> {
 I'm trimming any whitespace from the right so that if you said `shell("which rustc")`
 you will get the path without any extra linefeed.
 
-You can control the execution of a program by specifying the directory it will run
+You can control the execution of a program launched by `Process` 
+by specifying the directory it will run
 in using the `current_dir` method and the environment variables it sees using `env`.
 
 Up to now, our program simply waits for the child process to finish. If you use
@@ -587,10 +590,13 @@ Now, it's possible to do these things using the shell (`sh` or `cmd`) in Rust, a
 But this way you get full programmatic control of process creation.
 
 For example, if we just had `.stdout(Stdio::piped())` then the child's standard output
-is redirected to a pipe. If we then use `wait_with_output` instead of `wait` then
+is redirected to a pipe. Then `child.stdout` is something you can use to directly
+read the output (i.e. implements `Read`). Likewise, you can use the `.stdout(Stdio::piped())`
+method so you can write to `child.stdin`.
+
+But we use `wait_with_output` instead of `wait` then
 it returns a `Result<Output>` and the child's output is captured into the `stdout`
-field of that `Output` just as before. Alternatively, the _child_'s `stdout` field is readable and
-you can manually read the child's output in the usual way.
+field of that `Output` as a `Vec<u8>` just as before.
 
 The `Child` struct also gives you an explicit `kill` method.
 
