@@ -431,12 +431,8 @@ code to be as efficient as possible.
 
 You can be forgiven for feeling 'error fatigue' at this point. But please note that
 the _errors always existed_ - it's not that Rust is inventing new ones. It's just
-trying its darnedest to make it hard for you to ignore them.  Any call to an
-operating system may fail, but C makes getting errors awkward. You check the return
-code, and if it's not zero you then have to inspect `errno`
-to find out what the actual error was.
-Quite apart from memory safety, this makes robust C programming harder than most
-C programmers think!
+trying hard to make it impossible for you to ignore them.  Any operating system call
+may fail.
 
 Languages like Java and Python throw exceptions; languages like Go and Lua return two
 values, where the first is the result and the second is the error: like Rust it is
