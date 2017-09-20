@@ -8,11 +8,13 @@ The Rust solution for both of these is _modules_.
 
 C does the first, and not
 the second, so you end up with awful names like `primitive_display_set_width` and
-so forth. In Rust the full name would look like `primitive::display::set_width`,
+so forth. The actual filenames can be named arbitrarily.
+
+In Rust the full name would look like `primitive::display::set_width`,
 and after saying `use primitive::display` you can then refer to it as `display::set_width`.
 You can even say `use primitive::display::set_width` and then just say `set_width`, but
 it's not a good idea to get carried away with this. `rustc` will not be confused, but _you_
-may get confused later.
+may get confused later. But for this to work, filenames must follow some simple rule.
 
 A new keyword `mod` is used to define a module as a block
 where Rust types or functions can be written:
@@ -140,9 +142,11 @@ So far, there's `mod3.rs`, containing `main`, a module `foo.rs` and a directory 
 `mod.rs`.  The usual convention is that the file containing `main` is just called `main.rs`.
 
 Why two ways to do the same thing? Because `boo/mod.rs` can refer to other modules defined in `boo`,
-Update `boo/mod.rs` and add a new module - note that this is explicitly exported.
+Update `boo/mod.rs` and add a new module - note that this is explicitly exported. (Without the `pub`,
+`bar` can only be seen inside the `boo` module.)
 
 ```rust
+// boo/mod.rs
 pub fn answer()->u32 {
 	42
 }
@@ -153,13 +157,30 @@ pub mod bar {
     }
 }
 ```
-and then we have the question corresponding to the answer:
+and then we have the question corresponding to the answer (the `bar` module is inside `boo`):
 
 ```rust
 let q = boo::bar::question();
 ```
 
-That module block can be pulled out as `boo/bar.rs` and so on.
+That module block can be pulled out as `boo/bar.rs`:
+
+```rust
+// boo/bar.rs
+pub fn question() -> &'static str {
+    "the meaning of everything"
+}
+```
+And `boo/mod.rs` becomes:
+
+```rust
+// boo/mod.rs
+pub fn answer()->u32 {
+	42
+}
+
+pub mod bar;
+```
 
 In summary, modules are about organization and visibility,
 and this may or may not involve separate files.
@@ -486,7 +507,10 @@ code, mostly error handling. Tedious, easy to mess up, and not where you want to
 
 This is clearly the best solution if you are processing well-structured JSON from outside sources (it's
 possible to remap field names if needed) and provides a robust way for Rust programs to share data
-with other programs over the network (since everything understands JSON these days.)
+with other programs over the network (since everything understands JSON these days.) The cool thing
+about `serde` (for SERialization DEserialization) is that other file formats are also supported, such
+as `toml`, which is the popular configuration-friendly format used in Cargo. So your program can read .toml
+files into structs, and write those structs out as .json.
 
 Serialization is an important technique and similar solutions exist for Java and Go - but with a big
 difference. In those languages the structure of the data is found at _run-time_ using _reflection_, but
@@ -500,7 +524,7 @@ C++ is somewhat unique in its painfullness here, so we should compare this with
 other languages' package managers. npm (for JavaScript) and pip (for Python) manage dependencies
 and downloads for you, but the distribution story is harder, since the user of your program
 needs NodeJS or Python installed.
-But these programs are statically linked against their dependencies, so again it can be handed
+But Rust programs are statically linked against their dependencies, so again they can be handed
 out to your buddies without external dependencies.
 
 ## More Gems
@@ -570,7 +594,7 @@ fn main() {
 // date was 2010-03-14+02:00
 ```
 
-However, this isn't recommended because feeding it bad dates will cause a panic! (try the bogus date
+However, this isn't recommended because feeding it bad dates will cause a panic! (try a bogus date
 to see this.) The method you need here is `ymd_opt` which returns `LocalResult<Date>`
 
 ```rust
