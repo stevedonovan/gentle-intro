@@ -279,9 +279,11 @@ People have trouble at this point because they have become too attached to 'stri
 has to be as simple as possible, but no simpler. A systems language _needs_ a
 `String/&str` distinction (owned versus borrowed: this is also very _convenient_)
 and if it wishes to standardize on Unicode strings then it needs another type to handle
-text which isn't valid Unicode - hence `OsString/&OsStr`.
+text which isn't valid Unicode - hence `OsString/&OsStr`. Notice that there aren't
+any interesting string-like methods for these types, precisely because we don't know the
+encoding.
 
-People are also very used to processing filenames as if they were text, which is why
+But, people are used to processing filenames as if they were strings, which is why
 Rust makes it easier to manipulate file paths using `PathBuf` methods.
 
 You can `pop` to successively remove path components. Here we start with the
@@ -450,7 +452,7 @@ A fundamental need is for programs to run programs, or to _launch processes_.
 Your program can _spawn_ as many child processes it likes, and as the name
 suggests they have a special relationship with their parent.
 
-To run a program is straightforward using the `Command` struct, which _builds_ up
+To run a program is straightforward using the `Command` struct, which builds up
 arguments to pass to the program:
 
 ```rust
