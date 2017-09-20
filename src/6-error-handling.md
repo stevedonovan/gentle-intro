@@ -82,7 +82,7 @@ fn raises_my_error(yes: bool) -> Result<(),MyError> {
 ```
 
 Typing `Result<T,MyError>` gets tedious and many Rust modules define their own
-`Result` - e.g. `io::Result<T>` is short for `io::Result<T,io::Error>`.
+`Result` - e.g. `io::Result<T>` is short for `Result<T,io::Error>`.
 
 In this next example we need to handle the specific error when a string can't be parsed
 as a floating-point number.
@@ -135,7 +135,7 @@ fn main() {
 Not too complicated, although a little long-winded. The tedious bit is having to
 write `From` conversions for all the other error types that need to play nice
 with `MyError` - or you simply lean on `Box<Error>`. Newcomers get confused
-by the multitude of ways to do the same thing in Rust; there always is another
+by the multitude of ways to do the same thing in Rust; there is always another
 way to peel the avocado (or skin the cat, if you're feeling bloodthirsty). The price
 of flexibility is having many options. Error-handling for a 200 line program can afford
 to be simpler than for a large application. And if you ever want to package your precious
