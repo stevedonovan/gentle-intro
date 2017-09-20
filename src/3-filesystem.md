@@ -20,7 +20,6 @@ This is a 'raw' read, with no buffering. For buffered reading there is the
 
 The easiest way to make sure all these traits are visible is `use std::io::prelude::*`.
 
-
 ```rust
 use std::fs::File;
 use std::io;
@@ -73,7 +72,7 @@ This is one of those cases where we use a block to control a borrow. `line` is
 borrowed from `buf`, and this borrow must finish before we modify `buf`.  Again,
 Rust is trying to stop us doing something stupid, which is to access `line` _after_
 we've cleared the buffer. (The borrow checker can be restrictive sometimes.
-Rust is due to get 'non-lexical lifetimes' this year, where
+Rust is due to get 'non-lexical lifetimes', where
 it will analyze the code and see that `line` isn't used after `buf.clear()`.)
 
 This isn't very pretty. I cannot give you a proper iterator that returns references
@@ -133,8 +132,8 @@ And this signature, with the lifetime, is incompatible with the interface of `It
 But it's easy to see problems if it were compatible; consider `collect` trying to make
 a vector of these string slices. There's no way this could work, since they're all
 borrowed from the same mutable string! (If you had read _all_ the file into a string, then
-the string's `lines` iterator works fine because the string slices are all borrowed from
-the original string.)
+the string's `lines` iterator can return string slices because they are all borrowed from
+_distinct_ parts of the original string.)
 
 The resulting loop is much cleaner, and the file buffering is invisible to the user.
 
@@ -180,9 +179,14 @@ If an error is _possible_, you must handle it. It may not be
 very _likely_ but it can happen. It's usually fine, because if you
 are doing file i/o you should be in a context where `?` works.
 
-`print!` works fine as it is, but for arbitrary files we need `write!`. The
+But there is a difference: `print!` locks stdout for each write. This is usually
+what you want for output, because without that locking multithreaded
+programs can mix up that output in interesting ways. But if you are pumping out
+a lot of text, then `write!` is going to be faster.
+
+For arbitrary files we need `write!`. The
 file is closed when `out` is dropped at the end of `write_out`, which is
-convenient and often important.
+both convenient and important.
 
 ```rust
 // file6.rs
@@ -200,21 +204,13 @@ fn main() {
   write_out("test.txt").expect("write failed");
 }
 ```
-
-Another place we need it is writing to 'standard error'. There is one input stream
-`io::stdin()` and _two_ output streams `io::stderr()` and `io::stdout()`. If a program
-needs to complain bitterly, the convention is that this output should go to the
-error stream. If the program wants then to stop running, the convention is also to
-return a non-zero exit code.
-
-```rust
-fn quit(msg: &str) -> ! {
-    write!(io::stderr(),"error: {}\n", msg).expect("write?");
-    std::process::exit(1);
-}
-```
-(The `!` means that function never returns, so you can call `quit` anywhere
-and there will be no type mismatch complaints)
+If you care about performance, you need to know that Rust files are unbuffered
+by default. So each little write request goes straight to the OS, and this is
+going to be significantly slower. I mention this because this default is different
+from other programming languages, and could lead to the shocking discovery that Rust
+can be left in the dust by scripting languages!
+Just as with `Read` and `io::BufReader`, there is `io::BufWriter` for 
+buffering any `Write`.
 
 ## Files, Paths and Directories
 
