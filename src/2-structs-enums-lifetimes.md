@@ -640,6 +640,13 @@ impl fmt::Debug for Person {
 `write!` is a very useful macro - here `f` is anything that implements `Write`.
 (This would also work with a `File` - or even a `String`.)
 
+`Display` controls how values are printed out with "{}" and is implemented
+just like `Debug`. As a useful side-effect, `ToString` is automatically
+implemented for anything implementing `Display`. So if we implement
+`Display` for `Person`, then `p.to_string()` also works.
+
+`Clone` defines the method `clone`, and can simply be defined with
+"#[derive(Clone)]" if all the fields themselves implement `Clone`.
 
 ## Example: iterator over floating-point range
 
@@ -731,11 +738,189 @@ And we get cleaner output (this [format](https://doc.rust-lang.org/std/fmt/index
  means 'one decimal after dot'.)
 
 All of the default iterator methods are available, so we can collect these values into
-a vector:
+a vector, map them, and so forth.
 
 ```rust
-    let v: Vec<f64> = range(0.0, 1.0, 0.1).collect();
+    let v: Vec<f64> = range(0.0, 1.0, 0.1).map(|x| x.sin()).collect();
 ```
+
+## Generic Functions
+
+We want a function which will dump out any value that implements `Debug`. Here is
+a first attempt at a generic function, where we can pass a reference to _any_ type
+of value. `T` is a type parameter, which needs to be declared just after the
+function name:
+
+```rust
+fn dump<T> (value: &T) {
+    println!("value is {:?}",value);
+}
+
+let n = 42;
+dump(&n);
+```
+However, Rust clearly knows nothing about this generic type `T`:
+
+```
+error[E0277]: the trait bound `T: std::fmt::Debug` is not satisfied
+...
+   = help: the trait `std::fmt::Debug` is not implemented for `T`
+   = help: consider adding a `where T: std::fmt::Debug` bound
+```
+For this to work, Rust needs to be told that `T` does in fact implement `Debug`!
+
+```rust
+fn dump<T> (value: &T)
+where T: std::fmt::Debug {
+    println!("value is {:?}",value);
+}
+
+let n = 42;
+dump(&n);
+// value is 42
+```
+Rust generic functions need _trait bounds_ on types - we are saying here that 
+"T is any type that implements Debug". `rustc` is being very helpful, and
+suggests exactly what bound needs to be provided.
+
+Now that Rust knows the trait bounds for `T`, it can give you sensible compiler messages:
+
+```rust
+struct Foo {
+    name: String
+}
+
+let foo = Foo{name: "hello".to_string()};
+
+dump(&foo)
+```
+And the error is "the trait `std::fmt::Debug` is not implemented for `Foo`".
+
+Functions are already generic in dynamic languages because values carry their actual type around,
+and the type checking happens at run-time - or fails miserably. For larger programs, we really
+do want to know about problems at compile-time rather! Rather than sitting down calmly with
+compiler errors, a programmer in these languages has to deal with problems that only
+show up when the program is running. Murphy's Law then implies that these problems
+will tend to happen at the most inconvenient/disastrous time.
+
+The operation of squaring a number is generic:  `x*x` will work for integers,
+floats and generally for anything that knows about the multiplication operator `*`.
+But what are the type bounds?
+
+```rust
+// gen1.rs
+
+fn sqr<T> (x: T) -> T {
+    x * x
+}
+
+fn main() {
+    let res = sqr(10.0);
+    println!("res {}",res);
+}
+```
+The first problem is that Rust does not know that `T` can be multiplied:
+
+```
+error[E0369]: binary operation `*` cannot be applied to type `T`
+ --> gen1.rs:4:5
+  |
+4 |     x * x
+  |     ^
+  |
+note: an implementation of `std::ops::Mul` might be missing for `T`
+ --> gen1.rs:4:5
+  |
+4 |     x * x
+  |     ^
+```
+Following the advice of the compiler, let's constrain that type parameter using
+[that trait](https://doc.rust-lang.org/std/ops/trait.Mul.html), which is used to implement the multiplication operator `*`:
+
+```rust
+fn sqr<T> (x: T) -> T
+where T: std::ops::Mul {
+    x * x
+}
+```
+
+Which still doesn't work:
+
+```
+rror[E0308]: mismatched types
+ --> gen2.rs:6:5
+  |
+6 |     x * x
+  |     ^^^ expected type parameter, found associated type
+  |
+  = note: expected type `T`
+  = note:    found type `<T as std::ops::Mul>::Output`
+```
+What `rustc` is saying that the type of `x*x` is the associated type `T::Output`, not `T`.
+There's actually no reason that the type of `x*x` is the same as the type of `x`, e.g. the dot product
+of two vectors is a scalar.
+
+```rust
+fn sqr<T> (x: T) -> T::Output
+where T: std::ops::Mul {
+    x * x
+}
+```
+
+and now the error is:
+
+```
+error[E0382]: use of moved value: `x`
+ --> gen2.rs:6:7
+  |
+6 |     x * x
+  |     - ^ value used here after move
+  |     |
+  |     value moved here
+  |
+  = note: move occurs because `x` has type `T`, which does not implement the `Copy` trait
+```
+
+So, we need to constrain the type even further!
+
+```rust
+fn sqr<T> (x: T) -> T::Output
+where T: std::ops::Mul + Copy {
+    x * x
+}
+```
+And that (finally) works. Calmly listening to the compiler will often get you closer
+to the magic point when ... things compile cleanly.
+
+It _is_ a bit simpler in C++:
+
+```cpp
+template <typename T>
+T sqr(x: T) {
+    return x * x;
+}
+```
+but (to be honest) C++ is adopting cowboy tactics here. C++ template errors are famously
+bad, because all the compiler knows (ultimately) is that some operator or method is
+not defined. The C++ committee knows this is a problem and so they are working
+toward [concepts](https://en.wikipedia.org/wiki/Concepts_(C%2B%2B)), which are pretty
+much like trait-constrained type parameters in Rust.
+
+Rust generic functions may look a bit overwhelming at first, but being explicit means
+you will know exactly what kind of values you can safely feed it, just by looking at the
+definition.
+
+These functions are called _monomorphic_, in constrast to _polymorphic_. The body of
+the function is compiled separately for each unique type.  With polymorphic functions,
+the same machine code works with each matching type, dynamically _dispatching_
+the correct method.
+
+ Monomorphic produces faster code,
+specialized for the particular type, and can often be _inlined_.  So when `sqr(x)` is
+seen, it's effectively replaced with `x*x`.  The downside is that large generic
+functions produce a lot of code, for each type used, which can result in _code bloat_.
+As always, there are trade-offs; an experienced person learns to make the right choice
+for the job.
 
 ## Simple Enums
 
@@ -759,7 +944,7 @@ The  `match` expression is the basic way to handle `enum` values.
 ```rust
 impl Direction {
     fn as_str(&self) -> &'static str {
-        match *self {
+        match *self { // *self has type Direction
             Direction::Up => "Up",
             Direction::Down => "Down",
             Direction::Left => "Left",
@@ -938,7 +1123,7 @@ eat_and_dump(b);
 //boolean is true
 ```
 
-We like this `eat_and_dump` function, but we want to pass it as a reference, because currently
+We like this `eat_and_dump` function, but we want to pass the value as a reference, because currently
 a move takes place and the value is 'eaten':
 
 ```rust
@@ -1051,7 +1236,8 @@ This is a special case of _destructuring_; we have some
 data and wish to either pull it apart (like here) or just borrow its values.
 Either way, we get the parts of a structure.
 
-The syntax used for borrowing is just like that used in `match`.
+The syntax is like that used in `match`. Here
+we are explicitly borrowing the values.
 
 ```rust
     let (ref n,ref s) = t;
@@ -1077,11 +1263,10 @@ Destructuring works with structs as well:
 Time to revisit `match` with some new patterns. The first two patterns are exactly like `let`
 destructuring - it only matches tuples with first element zero, but _any_ string;
 the second adds an `if` so that it only matches `(1,"hello")`.
-
 Finally, just a variable matches _anything_. This is useful if the `match` applies
 to an expression and you don't want to bind a variable to that expression. `_` works
-like a variable but is ignored (`_` behaves rather like it does in Go.) It's a common
-way to finish off a `match`, like `default` in C `switch` statements.
+like a variable but is ignored. It's a common
+way to finish off a `match`.
 
 ```rust
 fn match_tuple(t: (i32,String)) {
@@ -1217,34 +1402,27 @@ Here we evaluate a linear function:
 You cannot do this with the explicit `fn` form - it does not know about variables
 in the enclosing scope. The closure has _borrowed_ `m` and `c` from its context.
 
-The usual Rules of Borrowing apply. This example works fine - our little closure is borrowing
-`answer` mutably. Note here that the mutable borrow of `answer` by `set` has to take
-place in a block, so it ends before we do an _immutable_ borrow of `answer` in
-the assert statement. (The borrow checker can be a little ... picky, and using blocks
-to control scopes of borrows is common.)
-
+Now, what's the type of `lin`? Only `rustc` knows. 
+Under the hood, a closure is a _struct_ that is callable ('implements the call operator').
+It behaves as if it was written out like this:
+ 
 ```rust
-let mut answer = 42;
-
-{
-    let mut set = |v| answer = v;
-
-    //let get = || answer;
-
-    set(58);
+struct MyAnonymousClosure1<'a> {
+    m: &'a f64,
+    c: &'a f64
 }
 
-assert_eq!(answer, 58);
+impl MyAnonymousClosure1 {
+    fn call(&self, x: f64) {
+        self.m * x  + self.c
+    }
+}
 ```
+The compiler is certainly being helpful, turning simple closure syntax into all
+that code! You do need to know that a closure is a _struct_ and it _borrows_ values
+from its environment. And that therefore it has a _lifetime_.
 
-But uncomment `let get ...` and you get a borrowing error:
-"cannot borrow `answer` as immutable because it is also borrowed as mutable"
-
-Now, what's the type of `lin`? Only `rustc` knows. Exactly the same situation applies
-to C++ lambdas, and for exactly the same version. Under the hood, a closure is a _struct_
-that implements the call operator. All closures are unique types,
- but they have traits in common.
-
+All closures are unique types, but they have traits in common.
 So even though we don't know the exact type, we know the generic constraint:
 
 ```rust
@@ -1280,11 +1458,10 @@ error[E0382]: use of moved value: `lin`
 ```
 
 That's it, `apply` ate our closure. And there's the actual type of the struct that
-`rustc` made up to implement it. Thinking of closures as structs is useful because they
-are _values_ and it's important to know what happens when values move.
+`rustc` made up to implement it. Always thinking of closures as structs is helpful.
 
-Thinking of calling a closure as a _method call_ makes it easy to understand the
-three kinds of function traits - they are the three kinds of methods:
+Calling a closure is a _method call_:  the three kinds of function traits
+correspond to the three kinds of methods:
 
   - `Fn` struct passed as `&self`
   - `FnMut` struct passed as `&mut self`
@@ -1304,53 +1481,39 @@ So it's possible for a closure to mutate its _captured_ references:
 
 Note that `mut` - `f` needs to be mutable for this to work.
 
+However, you cannot escape the rules for borrowing. Consider this:
+
+```rust
+let mut s = "world";
+
+// closure does a mutable borrow of s
+let mut changer = || s = "world";
+
+changer();
+// does an immutable borrow of s
+assert_eq!(s, "world");
+```
+
+Can't be done! The error is that we cannot borrow `s`
+in the assert statement, because it has been previously borrowed by the
+closure `changer` as mutable. As long as that closure lives, no other
+code can access `s`, so the solution is to control that lifetime by
+putting the closure in a limited scope:
+
+```rust
+let mut s = "world";
+{
+    let mut changer = || s = "world";
+    changer();
+}
+assert_eq!(s, "world");
+```
+
 At this point, if you are used to languages like JavaScript or Lua, you may wonder at the
-apparent complexity of closures compared with how straightforward they are in those languages.
+complexity of Rust closures compared with how straightforward they are in those languages.
 This is the necessary cost of Rust's promise to not sneakily make any allocations. In JavaScript,
 the equivalent `mutate(function() {s = "hello";})` will always result in a dynamically
 allocated closure.
-
-You can of course explicitly create a dynamically allocated closure in Rust using `Box::new`.
-This solves the problem of keeping a collection of different closures that implement the
-same trait.  The `Box` struct is fed a
-value, allocates enough memory for it on the heap, and moves that value to the heap.
-A `Box` always has the same size (it's basically a smart pointer.) so we're good to go.
-
-Here's a first try:
-
-```rust
-    let mut v = Vec::new();
-    v.push(Box::new(|x| x * x));
-    v.push(Box::new(|x| x / 2.0));
-
-    for f in v.iter() {
-        let res = f(1.0);
-        println!("res {}", res);
-    }
-```
-
-We get a very definite error on the second push:
-
-```
-  = note: expected type `[closure@closure4.rs:4:21: 4:28]`
-  = note:    found type `[closure@closure4.rs:5:21: 5:28]`
-note: no two closures, even if identical, have the same type
-```
-
-`rustc` has deduced a type which is too specific, so it's necessary to force that
-vector to have the _boxed trait type_ before things just work:
-
-```rust
-    let mut v: Vec<Box<Fn(f64)->f64>> = Vec::new();
-```
-
-You can use these boxed closures to implement callbacks and so forth. If you want to keep
-these boxed closures in a struct, then you will need a lifetime annotation, because
-_closures borrow variables_ and so their lifetime is tied to the lifetime of those
-variables.
-
-(Unfortunately, you can't use `type` to declare a shorthand for function trait types; it's definitely a
-place where I miss a `typedef` statement.)
 
 Sometimes you don't want a closure to borrow those variables, but instead _move_ them.
 
@@ -1377,7 +1540,9 @@ here - if we _did_ want to keep `name` alive - is to move a cloned copy into the
     };
 ```
 Why are moved closures needed? Because we might need to call them at a point where
-the original context no longer exists. A classic case is when creating a _thread_.
+the original context no longer exists. 
+A classic case is when creating a _thread_.
+A moved closure does not borrow, so does not have a lifetime.
 
 A major use of closures is within iterator methods. Recall the `range` iterator we
 defined to go over a range of floating-point numbers. It's straightforward to operate
@@ -1395,7 +1560,9 @@ sum, no temporary objects are created:
  let sum: f64 = range(0.0,1.0,0.1).map(|x| x.sin()).sum();
 ```
 
-It will (in fact) be as fast as writing it out as an explicit loop!
+It will (in fact) be as fast as writing it out as an explicit loop! That performance
+guarantee would be impossible if Rust closures were as 'frictionless' 
+as Javascript closures.
 
 `filter` is another useful iterator method - it only lets through values that match
 a condition:
@@ -1450,7 +1617,9 @@ the iterator item type is `&String`. Note that `filter` receives a reference to 
 
 ```rust
 for n in vec.iter().map(|x: &String| x.len()) {...} // n is usize
-for s in vec.iter().filter(|x: &&String| x.len() > 2) {...}
+for s in vec.iter().filter(|x: &&String| x.len() > 2) { // s is &String
+...
+}
 ```
 
 When calling methods, Rust will derefence automatically, so the problem isn't obvious.
@@ -1572,7 +1741,7 @@ Now, what happens when `root` is dropped? All fields are dropped; if the 'branch
 the tree are dropped, they drop _their_ fields and so on. `Box::new` may be the
 closest you will get to a `new` keyword, but we have no need for `delete` or `free`.
 
-We must now work out what use such a tree is. Note that strings can be ordered:
+We must now work out a use for this tree. Note that strings can be ordered:
 'bar' < 'foo', 'abba' > 'aardvark'; so-called 'alphabetical order'. (Strictly speaking, this
 is _lexical order_, since human languages are very diverse and have strange rules.)
 
@@ -1665,141 +1834,12 @@ the node, and then visit the right.
 So we're visiting the strings in order! Please note the reappearance of `ref` - `if let`
 uses exactly the same rules as `match`.
 
-## Generic Functions
-
-The operation of squaring a number is _generic_ in that `x*x` will work for integers,
-floats and generally for anything that knows about the multiplication operator `*`.
-
-This Just Happens in dynamic languages because the arguments carry their type, and the
-runtime will then call the appropriate multiply operator - or fail miserably.
-(Which is always the painful thing about dynamic languages.)
-
-The Rust solution is a _generic function_, which has _type parameters_.
-
-```rust
-// gen1.rs
-
-fn sqr<T> (x: T) -> T {
-    x * x
-}
-
-fn main() {
-    let res = sqr(10.0);
-    println!("res {}",res);
-}
-```
-However, Rust is not C++ - it's not going to let you do this without knowing _something_
-about `T`:
-
-```
-error[E0369]: binary operation `*` cannot be applied to type `T`
- --> gen1.rs:4:5
-  |
-4 |     x * x
-  |     ^
-  |
-note: an implementation of `std::ops::Mul` might be missing for `T`
- --> gen1.rs:4:5
-  |
-4 |     x * x
-  |     ^
-```
-Following the advice of the compiler, let's _constrain_ that type parameter using
-[that trait](https://doc.rust-lang.org/std/ops/trait.Mul.html), which is used to implement the multiplication operator `*`:
- (`T: Mul` means 'any type T that implements Mul')
-
-```rust
-use std::ops::Mul;
-
-fn sqr<T: Mul> (x: T) -> T {
-    x * x
-}
-```
-
-Which still doesn't work:
-
-```
-rror[E0308]: mismatched types
- --> gen2.rs:6:5
-  |
-6 |     x * x
-  |     ^^^ expected type parameter, found associated type
-  |
-  = note: expected type `T`
-  = note:    found type `<T as std::ops::Mul>::Output`
-```
-What `rustc` is saying that the type of `x*x` is the associated type `T::Output`, not `T`.
-There's actually no reason that the type of `x*x` is the same as the type of `x`, e.g. the dot product
-of two vectors is a scalar.
-
-```rust
-fn sqr<T: Mul> (x: T) -> T::Output {
-    x * x
-}
-```
-
-and now the error is:
-
-```
-error[E0382]: use of moved value: `x`
- --> gen2.rs:6:7
-  |
-6 |     x * x
-  |     - ^ value used here after move
-  |     |
-  |     value moved here
-  |
-  = note: move occurs because `x` has type `T`, which does not implement the `Copy` trait
-```
-
-So, we need to constrain the type even further!
-
-```rust
-fn sqr<T: Mul + Copy> (x: T) -> T::Output {
-    x * x
-}
-```
-And that (finally) works. Calmly listening to the compiler will often get you closer
-to the magic point when ... things compile cleanly.
-
-It _is_ a bit simpler in C++:
-
-```cpp
-template <typename T>
-T sqr(x: T) {
-    return x * x;
-}
-```
-but (to be honest) C++ is adopting cowboy tactics here. C++ template errors are famously
-bad, because all the compiler knows (ultimately) is that some operator or method is
-not defined. The C++ committee knows this is a problem and so they are working
-toward [concepts](https://en.wikipedia.org/wiki/Concepts_(C%2B%2B)), which are pretty
-much like trait-constrained type parameters in Rust.
-
-Rust generic functions may look a bit overwhelming at first, but being explicit means
-you will know exactly what kind of values you can safely feed it, just by looking at the
-definition.
-
-These functions are called _monomorphic_, in constrast to _polymorphic_. The body of
-the function is compiled separately for each unique type.  With polymorphic functions,
-the same machine code works with each matching type, dynamically _dispatching_
-the correct method.
-
- Monomorphic produces faster code,
-specialized for the particular type, and can often be _inlined_.  So when `sqr(x)` is
-seen, it's effectively replaced with `x*x`.  The downside is that large generic
-functions produce a lot of code, for each type used, which can result in _code bloat_.
-As always, there are trade-offs; an experienced person learns to make the right choice
-for the job.
 
 ## Generic Structs
 
-Consider the example of a binary tree. It would be _seriously irritating_ to
-have to rewrite it for all possible kinds of payload. Before C++ templates, people
-would do truly awful things with the C preprocessor to write 'generic' classes.
-
-So here's our generic `Node` with its _type parameter_ `T`. It's fairly similar to
-a C++ template struct.
+Consider the previous example of a binary tree. It would be _seriously irritating_ to
+have to rewrite it for all possible kinds of payload. 
+So here's our generic `Node` with its type parameter `T`.
 
 ```rust
 type NodeBox<T> = Option<Box<Node<T>>>;
@@ -1838,13 +1878,13 @@ impl <T: PartialOrd> Node<T> {
     fn insert(&mut self, data: T) {
         if data < self.payload {
             match self.left {
-            Some(ref mut n) => n.insert(data),
-            None => self.set_left(Self::new(data)),
+                Some(ref mut n) => n.insert(data),
+                None => self.set_left(Self::new(data)),
             }
         } else {
             match self.right {
-            Some(ref mut n) => n.insert(data),
-            None => self.set_right(Self::new(data)),
+                Some(ref mut n) => n.insert(data),
+                None => self.set_right(Self::new(data)),
             }
         }
     }
@@ -1862,5 +1902,10 @@ fn main() {
 ```
 
 So generic structs need their type parameter(s) specified
-in angle brackets, like C++. Unlike C++, Rust is usually smart enough to work out
-that type parameter from context. But you do need to constrain that type appropriately!
+in angle brackets, like C++. Rust is usually smart enough to work out
+that type parameter from context - it knows it has a `Node<T>`, and knows
+that its `insert` method is passed `T`. The first call of `insert` nails
+down `T` to be `String`. If any further calls are inconsistent it will complain.
+
+But you do need to constrain that type appropriately!
+
