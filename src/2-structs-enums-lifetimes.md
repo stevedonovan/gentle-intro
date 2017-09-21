@@ -70,7 +70,7 @@ fn dump(s: String) {
 fn main() {
     let s1 = "hello dolly".to_string();
     dump(s1);
-    println!("s1 {}", s1);
+    println!("s1 {}", s1); // <---error: 'value used here after move'
 }
 ```
 Here, you have a choice. You may pass a reference to that string, or
@@ -103,13 +103,14 @@ fn dump(s: &str) {
 }
 ```
 
-And then both `dump(&s1)` and `dump("hello world")` work properly.
+And then both `dump(&s1)` and `dump("hello world")` work properly. (Here `Deref`
+coercion kicks in and Rust will convert `&String` to `&str` for you.)
 
 To summarise, assignment of a non-trivial value moves the value from one location
 to another. Otherwise, Rust would be forced to _implicitly_ do a copy and break its
 promise to make allocations explicit.
 
-## Lifetimes
+## Scope of Variables
 
 So, the rule of thumb is to prefer to keep references to the original data - to 'borrow'
 it.
@@ -230,14 +231,14 @@ of the same name:
     }
     //  0 zero; 1 one; 2 two;
 ```
-`zip` is specifically for combining two iterators into a single iterator of
-tuples containing the values:
+`zip` combines two iterators into a single iterator of
+tuples containing the values from both:
 
 ```rust
     let names = ["ten","hundred","thousand"];
     let nums = [10,100,1000];
-    for (name,num) in names.iter().zip(nums.iter()) {
-        print!(" {} {};", name,num);
+    for p in names.iter().zip(nums.iter()) {
+        print!(" {} {};", p.0,p.1);
     }
     //  ten 10; hundred 100; thousand 1000;
 ```
@@ -267,9 +268,8 @@ fn main() {
 ```
 
 The values of a struct will be placed next to each other in memory, although you should
-not assume any particular memory layout - the compiler will organize the memory for
-efficiency, not size, and so there will be padding. A `struct` should be familiar to C or
-C++ programmers.
+not assume any particular memory layout, since the compiler will organize the memory for
+efficiency, not size, and there may be padding. 
 
 Initializing this struct is a bit clumsy, so we want to move the construction of a `Person`
 into its own function. This function can be made into a _method_ of `Person` by putting
@@ -318,7 +318,7 @@ impl Person {
 // fullname John Smith
 ```
 The `self` is used explicitly and is passed as a reference.
-(You can think of `&self` as `self: &Person`.)
+(You can think of `&self` as short for `self: &Person`.)
 
 The keyword `Self` refers to the struct type - you can mentally substitute `Person`
 for `Self` here:
@@ -564,8 +564,6 @@ function ends, and no reference to `string` can outlast it.
 
 You can usefully think of lifetime parameters as being part of the type of a value.
 
-
-
 Sometimes it seems like a good idea for a struct to contain a value _and_ a reference
 that borrows from that value.
 It's basically impossible because structs must be _moveable_, and any move will
@@ -597,7 +595,7 @@ trait Show {
 
 impl Show for i32 {
     fn show(&self) -> String {
-        format!("four-byte unsigned {}", self)
+        format!("four-byte signed {}", self)
     }
 }
 
@@ -642,32 +640,6 @@ impl fmt::Debug for Person {
 `write!` is a very useful macro - here `f` is anything that implements `Write`.
 (This would also work with a `File` - or even a `String`.)
 
-Now, with the implementations of `Show` in `trait1.rs`, here's a
-little main program with big implications:
-
-```rust
-fn main() {
-    let answer = 42;
-    let maybe_pi = 3.14;
-    let v: Vec<&Show> = vec![&answer,&maybe_pi];
-    for d in v.iter() {
-        println!("show {}",d.show());
-    }
-}
-// show four-byte signed 42
-// show eight-byte float 3.14
-```
-This is a case where Rust needs some type guidance - I specifically want a vector
-of references to anything that implements `Show`.  Now note that `i32` and `f64`
-have no relationship to each other, but they both understand the `show` method
-because they both implement the same trait. This method is _virtual_, because
-the actual method has different code for different types, and yet the correct
-method is invoked based on _runtime_ information. These references
-are called [trait objects](https://doc.rust-lang.org/stable/book/trait-objects.html).
-
-And _that_ is how you can put objects of different types in the same vector. If
-you come from a Java background, you can think of `Show` as an interface; the
-nearest C++ equivalent is "abstract base class".
 
 ## Example: iterator over floating-point range
 
@@ -764,47 +736,6 @@ a vector:
 ```rust
     let v: Vec<f64> = range(0.0, 1.0, 0.1).collect();
 ```
-This is a common pattern and it gets irritating. Fortunately, it's easy to
-add new 'consumers' of iterators. These are those methods that end the chain and
-'pull' all the values of the iterator, like `count` - or `collect`.
-
-We will define a new trait `ToVec` which has an associated type, just like an `Iterator`.
-It will be the type contained in the returned vector.
-
-```rust
-trait ToVec {
-    type Item;
-
-    fn to_vec(self) -> Vec<Self::Item>;
-}
-```
-
-And now we'll implement `ToVec` for `Iterator`. All that `Vec` requires of its elements is that they
-have a size. (Traits, being abstract, have no size.) The actual iterator type `I`
-must implement `Iterator` with its associated type `Item` set to `T`, the element
-type. There is only one free type parameter `T` since `I` is defined in terms of `T`.
-
-Alternatively: This implementation of `ToVec` has type parameters `T` and `I`. `T` must implement `Size` to
-make `Vec` happy. `I` is any concrete type that implements an iterator for values of the type `T`.
-
-The actual implementation is delegated to the `FromIterator` trait, which is
-defined for vectors and constructs a vector by consuming an iterator (it's exactly how `collect` is
-implemented)
-
-```rust
-impl <T,I> ToVec for I
-where T: Sized, I: Iterator<Item=T> {
-    type Item = T;
-
-    fn to_vec(self) -> Vec<Self::Item> {
-        FromIterator::from_iter(self)
-    }
-}
-    ....
-    let v = range(0.0, 1.0, 0.1).to_vec();
-```
-Et voilà! No more awkwardness! The implementation was a little scary, but familiarity
-breeds acceptance.
 
 ## Simple Enums
 
@@ -867,7 +798,7 @@ Here's a method which defines the 'successor' of each `Direction` value. The
 very handy _wildcard use_ temporarily puts the enum names into the method context:
 
 ```rust
-    fn inc(&self) -> Direction {
+    fn next(&self) -> Direction {
         use Direction::*;
         match *self {
             Up => Right,
@@ -881,7 +812,7 @@ very handy _wildcard use_ temporarily puts the enum names into the method contex
     let mut d = start;
     for _ in 0..8 {
         println!("d {:?}", d);
-        d = d.inc();
+        d = d.next();
     }
     // d Left
     // d Up
@@ -895,7 +826,7 @@ very handy _wildcard use_ temporarily puts the enum names into the method contex
 So this will cycle endlessly through the various directions in this particular, arbitrary,
 order. It is (in fact) a very simple _state machine_.
 
-Out of the box, these values can't be compared:
+These enum values can't be compared:
 
 ```
 assert_eq!(start, Direction::Left);
@@ -945,8 +876,8 @@ value goes up by one each time:
 ```rust
 enum Difficulty {
     Easy = 1,
-    Medium,
-    Hard
+    Medium,  // is 2
+    Hard   // is 3
 }
 ```
 
@@ -990,7 +921,7 @@ out. But they also know how _what kind_ of value they contain, and _that_ is the
 superpower of `match`:
 
 ```rust
-fn dump(v: Value) {
+fn eat_and_dump(v: Value) {
     use Value::*;
     match v {
         Number(n) => println!("number is {}", n),
@@ -999,16 +930,16 @@ fn dump(v: Value) {
     }
 }
 ....
-dump(n);
-dump(s);
-dump(b);
+eat_and_dump(n);
+eat_and_dump(s);
+eat_and_dump(b);
 //number is 2.3
 //string is 'hello'
 //boolean is true
 ```
 
-We like this `dump` function, but we want to pass it as a reference, because otherwise
-a move would take place and the value would be eaten:
+We like this `eat_and_dump` function, but we want to pass it as a reference, because currently
+a move takes place and the value is 'eaten':
 
 ```rust
 fn dump(v: &Value) {
@@ -1071,14 +1002,8 @@ As for `match`, you can see `Str(s) =>` as short for `Str(s: String) =>`. A loca
 eat up a value and extract its contents. But here we really needed is `s: &String`, and the
 `ref` is a hint that ensures this: we just want to borrow that string.
 
-Here is a method that really does eat up a `Value`. It's a classic use of `Option`,
-because either that value contained a string, or it didn't.
-
-Look carefully (punctuation matters!) - the method signature is now plain `self`, and
-the `*` has dropped. The `self` argument is _moved_ into the method.
-
 Here we do want to extract that string, and don't care about
-the enum value afterwards.
+the enum value afterwards. `_` as usual will match anything.
 
 ```rust
 impl Value {
@@ -1094,7 +1019,7 @@ impl Value {
     // s? Some("hello")
     // println!("{:?}", s) // error! s has moved...
 ```
-Naming also matters - this is called `to_str`, not `as_str`. You can write a
+Naming matters - this is called `to_str`, not `as_str`. You can write a
 method that just borrows that string as an `Option<&String>` (The reference will need
 the same lifetime as the enum value.)  But you would not call it `to_str`.
 
