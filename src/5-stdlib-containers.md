@@ -414,29 +414,47 @@ It's often useful to have an interactive session with a program. Each line is re
 split into words; the command is looked up on the first word, and the rest of the words
 are passed as an argument to that command.
 
-A natural implementation is a map from command names to closures. It's tempting as
-first to make them `FnMut` - that is, they can modify any captured variables. But we will
-have more than one command, each with its own closure, and you cannot then mutably borrow
-the same variables.
+A natural implementation is a map from command names to closures. But how do we store
+closures, given that they will all have different sizes? Boxing them will copy them
+onto the heap:
+
+Here's a first try:
 
 ```rust
-// this is a no-no
-let mut a = 10;
-let set = |n| a = n;
-let get = || a;  // can't borrow `a` again!
+    let mut v = Vec::new();
+    v.push(Box::new(|x| x * x));
+    v.push(Box::new(|x| x / 2.0));
+
+    for f in v.iter() {
+        let res = f(1.0);
+        println!("res {}", res);
+    }
 ```
+
+We get a very definite error on the second push:
+
+```
+  = note: expected type `[closure@closure4.rs:4:21: 4:28]`
+  = note:    found type `[closure@closure4.rs:5:21: 5:28]`
+note: no two closures, even if identical, have the same type
+```
+
+`rustc` has deduced a type which is too specific, so it's necessary to force that
+vector to have the _boxed trait type_ before things just work:
+
+```rust
+    let mut v: Vec<Box<Fn(f64)->f64>> = Vec::new();
+```
+We can now use the same trick and keep these boxed closures in a `HashMap`. We still 
+have to watch out for lifetimes, since closures can borrow from their environment.
+
+ It's tempting as first to make them `FnMut` - that is, they can modify any captured variables. But we will
+have more than one command, each with its own closure, and you cannot then mutably borrow
+the same variables.
 
 So the closures are passed a _mutable reference_ as an argument, plus
 a slice of string slices (`&[&str]`) representing the command arguments.
 They will return some `Result` - We'll use `String` errors at first.
-
-Recall that all closures
-implementing a particular function signature are all distinct types, and are (in fact)
-compiler-generated structs that _borrow_ variables from the environment of the closure.
-They are different types and may well have different sizes, so we put them in a `Box`.
-
-Any struct that borrows references needs an explicit lifetime, since Rust needs
-assurance that these references outlive our `Cli` struct - so closures have lifetimes.
 
 `D` is the data type, which can be anything with a size.
 
@@ -471,7 +489,9 @@ Now for reading and running commands:
 ```rust
     fn process(&mut self,line: &str) -> CliResult {
         let parts: Vec<_> = line.split_whitespace().collect();
-        if parts.len() == 0 { return Ok("".to_string()); }
+        if parts.len() == 0 {
+            return Ok("".to_string());
+        }
         match self.callbacks.get(parts[0]) {
             Some(callback) => callback(&mut self.data,&parts[1..]),
             None => Err("no such command".to_string())
@@ -544,8 +564,8 @@ fn main() {
 The error handling is a bit clunky here, and we'll later see how to use the question
 mark operator in cases like this.
 Basically, the particular error `std::num::ParseIntError` implements
-the trait `std::error::Error`, which we must bring into scope - Rust doesn't let traits
-operate unless they're visible.
+the trait `std::error::Error`, which we must bring into scope to use the `description`
+method - Rust doesn't let traits operate unless they're visible.
 
 And in action:
 
