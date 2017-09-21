@@ -32,54 +32,69 @@ Traits are interesting because there's no one-to-one correspondence between them
 from mainstream languages. It depends if you're thinking dynamically or statically. In the
 dynamic case, they're rather like Java or Go interfaces.
 
-For instance,  it becomes automatic to slap a `#[derive(Debug)]`
-on any new types, because the innards of those types can be printed out using `{:?}`. All
-stdlib types implement `Debug`:
+### Trait Objects
+
+Consider the example first used to introduce traits:
 
 ```rust
-let question = "everything";
-let answer = 42;
-
-let debugables: Vec<&Debug> = vec![&question, &answer];
-for d in &debugables {
-    println!("{:?}",d);
+trait Show {
+    fn show(&self) -> String;
 }
-// "everything"
-// 42
+
+impl Show for i32 {
+    fn show(&self) -> String {
+        format!("four-byte signed {}", self)
+    }
+}
+
+impl Show for f64 {
+    fn show(&self) -> String {
+        format!("eight-byte float {}", self)
+    }
+}
 ```
+Here's a little program with big implications:
 
-Now, we could just use `{:?}` to dump the innards of the vector directly, but I want
-to emphasize we are iterating over references that are all guaranteed to have the `fmt`
-method defined. A vector of references to values implementing `Debug` can be printed out.
-That's a clunky thing  to say often, so they are called `Debug` _trait objects_.
-Now integers and strings otherwise don't have much in common, but here we've found a common denominator:
-they know how to print out their innards.
-And this is how you get traditional dynamic dispatch in Rust, because that `fmt` method
-defined by the `Debug` trait is called as a virtual method.
+```rust
+fn main() {
+    let answer = 42;
+    let maybe_pi = 3.14;
+    let v: Vec<&Show> = vec![&answer,&maybe_pi];
+    for d in v.iter() {
+        println!("show {}",d.show());
+    }
+}
+// show four-byte signed 42
+// show eight-byte float 3.14
+```
+This is a case where Rust needs some type guidance - I specifically want a vector
+of references to anything that implements `Show`.  Now note that `i32` and `f64`
+have no relationship to each other, but they both understand the `show` method
+because they both implement the same trait. This method is _virtual_, because
+the actual method has different code for different types, and yet the correct
+method is invoked based on _runtime_ information. These references
+are called [trait objects](https://doc.rust-lang.org/stable/book/trait-objects.html).
 
-'virtual methods' is a concept that only applies to statically-compiled languages; they are the
-_default_ in Java, unless you sternly say `final`. In a language like Python, the object has
-all of its class information attached, and the interpreter will look up `fmt` in the class
-object at runtime.
+And _that_ is how you can put objects of different types in the same vector. If
+you come from a Java or Go background, you can think of `Show` as acting like an interface.
 
 A little refinement of this example - we _box_ the values. A box contains a reference to data
 allocated on the heap, and acts very much like a reference - it's a _smart pointer_. When boxes
 go out of scope and `Drop` kicks in, then that memory is released.
 
 ```rust
-let question = Box::new("everything");
 let answer = Box::new(42);
+let maybe_pi = Box::new(3.14);
 
-let debugables: Vec<Box<Debug>> = vec![question,answer];
-for d in &debugables {
-    println!("{:?}",d);
+let show_list: Vec<Box<Show>> = vec![question,answer];
+for d in &show_list {
+    println!("show {}",d.show());
 }
 ```
 
-The difference is that you can take this vector, pass it as a
-reference, and give it away, without
-having to track any borrowed references. When the vector is dropped, the boxes will be dropped,
-and all memory is reclaimed.
+The difference is that you can now take this vector, pass it as a
+reference or give it away without having to track any borrowed references.
+When the vector is dropped, the boxes will be dropped, and all memory is reclaimed.
 
 ## Animals
 
@@ -134,8 +149,7 @@ Here we have two completely different types (one is so dumb it doesn't even have
 they all `quack()`. One is behaving a little odd (for a duck) but they share the same method name
 and Rust can keep a collection of such objects in a type-safe way.
 
-Rust is a little over-obsessed with memory safety (since that's the _big thing_ it brings to
-system languages) but type safety is a fantastic thing.  Without static typing, you might insert
+Type safety is a fantastic thing.  Without static typing, you could insert
 a _cat_ into that collection of Quackers, resulting in run-time chaos.
 
 Here's a funny one:
@@ -155,7 +169,9 @@ let int = 4;
 
 let ducks: Vec<&Quack> = vec![&duck1,&duck2,&parrot,&int];
 ...
-// ...
+// quack!
+// quack!
+// squawk!
 // quack 0 quack 1 quack 2 quack 3
 ```
 
@@ -249,7 +265,7 @@ let f = Boo();
 assert_eq!(f.name(),"boo".to_string());
 assert_eq!(f.upper_case(),"BOO".to_string());
 ```
-This is a _kind_ of code reuse, true, but note that it does not apply to data, only the interface!
+This is a _kind_ of code reuse, true, but note that it does not apply to the data, only the interface!
 
 ## Ducks and Generics
 
@@ -266,7 +282,8 @@ quack(&d);
 ```
 
 The type parameter is _any_ type which implements `Quack`. There's an important difference
-between `quack` and `quack_ref`.  The body of this function is compiled for _each_ of the calling
+between `quack` and the `quack_ref` defined in the last section.
+The body of this function is compiled for _each_ of the calling
 types and no virtual method is needed; such functions can be completely inlined. It
 uses the trait `Quack` in a different way, as a _constraint_ on generic types.
 
@@ -317,8 +334,9 @@ quack_everyone(ducks.into_iter());
 Iterators in Rust aren't duck-typed but are types that must implement `Iterator`, and in
 this case the iterator provides boxes of `Quack`.  There's no ambiguity about the types
 involved, and the values must satisfy `Quack`. Often the function signature is the most challenging
-thing about a generic Rust function, which is why I recommend reading the source - the
-implementation is often much simpler! Here the only type parameter is the actual iterator type,
+thing about a generic Rust function, which is why I recommend reading 
+the source of the standard library - the implementation is often much simpler than the declaration!
+Here the only type parameter is the actual iterator type,
 which means that this will work with anything that can deliver a sequence of boxes, not just
 a vector iterator.
 
@@ -368,7 +386,7 @@ impl Foo {
 }
 ```
 
-(This is an example of a Rust coding convention - such methods should end in `_mut`)
+(This is an example of a Rust naming convention - such methods should end in `_mut`)
 
 Now, a method for borrowing both strings, reusing the first method:
 
