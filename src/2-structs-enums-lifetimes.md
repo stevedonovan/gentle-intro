@@ -105,6 +105,10 @@ fn dump(s: &str) {
 
 And then both `dump(&s1)` and `dump("hello world")` work properly.
 
+To summarise, assignment of a non-trivial value moves the value from one location
+to another. Otherwise, Rust would be forced to _implicitly_ do a copy and break its
+promise to make allocations explicit.
+
 ## Lifetimes
 
 So, the rule of thumb is to prefer to keep references to the original data - to 'borrow'
@@ -208,9 +212,6 @@ fn main() {
 // add 12 mul 20
 // add 12 mul 20
 ```
-The `let (add,mul) = t` construct is similar to that found in Python, except it only works
-with tuple values, not any source of values.
-
 Tuples may contain _different_ types, which is the main difference from arrays.
 
 ```rust
@@ -220,7 +221,7 @@ assert_eq!(tuple.0, "hello");
 assert_eq!(tuple.1, 5);
 assert_eq!(tuple.2, 'c');
 ```
-They appear in some `Iterator` methods. This is like the Python generator
+They appear in some `Iterator` methods. `enumerate` is like the Python generator
 of the same name:
 
 ```rust
@@ -316,8 +317,8 @@ impl Person {
     println!("fullname {}", p.full_name());
 // fullname John Smith
 ```
-The `self` is used explicitly (like Python, but unlike the `this` of C++ or Java)
-and is passed as a reference. (You can think of `&self` as `self: &Person`.)
+The `self` is used explicitly and is passed as a reference.
+(You can think of `&self` as `self: &Person`.)
 
 The keyword `Self` refers to the struct type - you can mentally substitute `Person`
 for `Self` here:
@@ -524,6 +525,46 @@ Lifetimes are conventionally called 'a','b',etc but you could just as well calle
 
 After this point, our `a` struct and the `s` string are bound by a strict contract:
 `a` borrows from `s`, and cannot outlive it.
+
+With this struct definition, we would like to write a function that returns an `A` value:
+
+```rust
+fn makes_a() -> A {
+    let string = "I'm a little string".to_string();
+    A { s: &string }
+}
+```
+
+But `A` needs a lifetime - "expected lifetime parameter":
+
+```
+  = help: this function's return type contains a borrowed value,
+   but there is no value for it to be borrowed from
+  = help: consider giving it a 'static lifetime
+```
+`rustc` is giving advice, so we follow it:
+
+```rust
+fn makes_a() -> A<'static> {
+    let string = "I'm a little string".to_string();
+    A { s: &string }
+}
+```
+And now the error is
+
+```
+8 |      A { s: &string }
+  |              ^^^^^^ does not live long enough
+9 | }
+  | - borrowed value only lives until here
+```
+
+There is no way that this could safely work, because `string` will be dropped when the
+function ends, and no reference to `string` can outlast it.
+
+You can usefully think of lifetime parameters as being part of the type of a value.
+
+
 
 Sometimes it seems like a good idea for a struct to contain a value _and_ a reference
 that borrows from that value.
@@ -796,9 +837,6 @@ impl Direction {
     }
 }
 ```
-Both the typename and `self` are explicit in Rust, unlike C++. This is generally a
-good idea, because the baroque way C++ resolves names is a little too clever for normal
-humans. (And there is a shortcut, as we will see.)
 
 Punctuation matters. Note that `*` before `self`. It's easy to forget, because often
 Rust will assume it (we said `self.first_name`, not `(*self).first_name`). However,
@@ -832,10 +870,10 @@ very handy _wildcard use_ temporarily puts the enum names into the method contex
     fn inc(&self) -> Direction {
         use Direction::*;
         match *self {
-        Up => Right,
-        Right => Down,
-        Down => Left,
-        Left => Up
+            Up => Right,
+            Right => Down,
+            Down => Left,
+            Left => Up
         }
     }
     ...
@@ -899,10 +937,18 @@ fn main() {
 }
 ```
 They are initialized with an integer value, and can be converted into that integer
-with a type cast. It's essentially a convenient way to create a set of constants.
+with a type cast.
 
-Like with C enums, you only need to give the first name a value, and thereafter the
-value goes up by one each time.
+You only need to give the first name a value, and thereafter the
+value goes up by one each time:
+
+```rust
+enum Difficulty {
+    Easy = 1,
+    Medium,
+    Hard
+}
+```
 
 By the way, 'name' is too vague, like saying 'thingy' all the time. The proper term here
 is _variant_ - `Speed` has variants `Slow`,`Medium` and `Fast`.
@@ -939,25 +985,41 @@ fn main() {
 Again, this enum can only contain _one_ of these values; its size will be the size of
 the largest variant.
 
-So far, not really a supercar, although it's cool that they know how to print themselves
+So far, not really a supercar, although it's cool that enums know how to print themselves
 out. But they also know how _what kind_ of value they contain, and _that_ is the
-superpower of `match`.
-
-Let me give you a function with a mistake. We want to print out a custom string based
-on the _Value_'s contained type, and we want to pass it as a reference, because otherwise
-a move would take place and the value would be eaten:
+superpower of `match`:
 
 ```rust
-fn dump(v: &Value) {
+fn dump(v: Value) {
     use Value::*;
-    match *v {
+    match v {
         Number(n) => println!("number is {}", n),
         Str(s) => println!("string is '{}'", s),
         Bool(b) => println!("boolean is {}", b)
     }
 }
+....
+dump(n);
+dump(s);
+dump(b);
+//number is 2.3
+//string is 'hello'
+//boolean is true
 ```
-```
+
+We like this `dump` function, but we want to pass it as a reference, because otherwise
+a move would take place and the value would be eaten:
+
+```rust
+fn dump(v: &Value) {
+    use Value::*;
+    match *v {  // type of *v is Value
+        Number(n) => println!("number is {}", n),
+        Str(s) => println!("string is '{}'", s),
+        Bool(b) => println!("boolean is {}", b)
+    }
+}
+
 error[E0507]: cannot move out of borrowed content
   --> enum3.rs:12:11
    |
@@ -1102,7 +1164,7 @@ fn match_tuple(t: (i32,String)) {
         (0, s) => format!("zero {}", s),
         (1, ref s) if s == "hello" => format!("hello one!"),
         tt => format!("no match {:?}", tt),
-        // or say _ => format!("no match") if you're not interested in the value  
+        // or say _ => format!("no match") if you're not interested in the value
      };
     println!("{}", text);
 }
@@ -1362,7 +1424,7 @@ these boxed closures in a struct, then you will need a lifetime annotation, beca
 _closures borrow variables_ and so their lifetime is tied to the lifetime of those
 variables.
 
-(Unfortunately, you can't use `type` to declare a shorthand for function trait types; it's definitely a 
+(Unfortunately, you can't use `type` to declare a shorthand for function trait types; it's definitely a
 place where I miss a `typedef` statement.)
 
 Sometimes you don't want a closure to borrow those variables, but instead _move_ them.
