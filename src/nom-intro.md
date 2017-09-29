@@ -1,6 +1,6 @@
 ## Parsing Text with Nom
 
-[nom](https://github.com/Geal/nom), [documented here](https://docs.rs/nom) is a parser library
+[Nom](https://github.com/Geal/nom), [(documented here)](https://docs.rs/nom) is a parser library
 for Rust which is well worth the initial time investment.
 
 If you have to parse a known data format, like CSV or JSON, then
@@ -10,7 +10,7 @@ the JSON libraries discussed in [Section 4](4-modules.html#cargo).
 Likewise, for configuration files
 use dedicated parsers like [ini](https://docs.rs/rust-ini/0.10.0/ini/) or
 [toml](http://alexcrichton.com/toml-rs/toml/index.html). (The last one is particularly cool since
-it integrates with the Serde framework, just as we saw with __serde-json__).
+it integrates with the Serde framework, just as we saw with [serde_json](https://docs.rs/serde_json).
 
 But if the text is not regular, or some made-up format, then you need to scan that text without
 writing a lot of tedious string-processing code. The suggested go-to is often [regex](https://github.com/rust-lang/regex),
@@ -232,8 +232,8 @@ but here we need to tell Nom that the input is complete.
 ## Parsing Numbers
 
 Nom provides a function `digit` which matches a series of numerical digits.
-So we use `map!`, to convert the string into an integer, 
-and return the full `Result` type.  
+So we use `map!`, to convert the string into an integer,
+and return the full `Result` type.
 
 ```rust
 use nom::digit;
@@ -263,7 +263,7 @@ So what we get is a parser `IResult` containing a conversion `Result` - and sure
 is more than one way to fail here. Note that the body of our converting function has exactly
 the same code; the actual conversion depends on the return type of the function.
 
-Integers may have a sign. We can capture them as a pair, where the first
+Integers may have a sign. We can capture integers as a pair, where the first
 value may be a sign, and the second value would be any digits following.
 
 Consider:

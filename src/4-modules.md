@@ -14,7 +14,7 @@ In Rust the full name would look like `primitive::display::set_width`,
 and after saying `use primitive::display` you can then refer to it as `display::set_width`.
 You can even say `use primitive::display::set_width` and then just say `set_width`, but
 it's not a good idea to get carried away with this. `rustc` will not be confused, but _you_
-may get confused later. But for this to work, filenames must follow some simple rule.
+may get confused later. But for this to work, filenames must follow some simple rules.
 
 A new keyword `mod` is used to define a module as a block
 where Rust types or functions can be written:
@@ -437,7 +437,7 @@ There is a downside to using this crate, because of the mismatch between the amo
 nature of JSON and the structured, static nature of Rust. (The readme explicitly speaks of 'friction')
 So if you _did_ want to map JSON to Rust data structures, you would end up doing a lot of checking,
 because you can not assume that the received structure matches your structs! For that, a better
-solution is [serde-json](https://github.com/serde-rs/json) where you _serialize_ Rust data structures
+solution is [serde_json](https://github.com/serde-rs/json) where you _serialize_ Rust data structures
 into JSON and _deserialize_ JSON into Rust.
 
 For this, create a another Cargo binary project with `cargo new --bin test-serde-json`, go into

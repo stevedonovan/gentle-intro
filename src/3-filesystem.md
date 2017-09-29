@@ -209,7 +209,7 @@ by default. So each little write request goes straight to the OS, and this is
 going to be significantly slower. I mention this because this default is different
 from other programming languages, and could lead to the shocking discovery that Rust
 can be left in the dust by scripting languages!
-Just as with `Read` and `io::BufReader`, there is `io::BufWriter` for 
+Just as with `Read` and `io::BufReader`, there is `io::BufWriter` for
 buffering any `Write`.
 
 ## Files, Paths and Directories
@@ -267,7 +267,7 @@ particularly see the answer to 'Why are they so hard?'.  To summarize, first the
 years of ASCII legacy coding, and multiple special encodings for other languages. Second,
 human languages are complicated. For instance 'noël' is _five_ Unicode code points!
 
-It's true that _most_ of the time
+It's true that most of the time
 with modern operating systems file names will be Unicode (UTF-8 on the Unix side, UTF-16
 for Windows), except when they're not. And Rust must handle that possibility
 rigorously. For instance,
@@ -277,7 +277,7 @@ returns an `Option<&str>`. Not always possible!
 People have trouble at this point because they have become too attached to 'string' and
 'character' as the only necessary abstractions.  As Einstein could have said, a programming language
 has to be as simple as possible, but no simpler. A systems language _needs_ a
-`String/&str` distinction (owned versus borrowed: this is also very _convenient_)
+`String/&str` distinction (owned versus borrowed: this is also very convenient)
 and if it wishes to standardize on Unicode strings then it needs another type to handle
 text which isn't valid Unicode - hence `OsString/&OsStr`. Notice that there aren't
 any interesting string-like methods for these types, precisely because we don't know the
@@ -439,7 +439,7 @@ values, where the first is the result and the second is the error: like Rust it 
 considered bad manners for library functions to raise errors. So there is a lot
 of error checking and early-returns from functions.
 
-Rust uses `Result` because it's either-or: you cannot get a result _and_ an error.
+Rust uses `Result` because it's either-or: you cannot get both a result and an error.
 And the question-mark operator makes handling errors much cleaner.
 
 ## Processes
@@ -486,8 +486,8 @@ So there are three possibilities:
   - program ran, but was not successful - non-zero exit code
   - program ran, with zero exit code. Success!
 
-By default, we get the program's output, since its standard output and standard error is
-still going to the terminal.
+By default, the program's standard output and standard error streams
+go to the terminal.
 
 Often we are very interested in capturing that output, so there's the `output`
 method.
@@ -526,7 +526,7 @@ A more sloppy function is `String::from_utf8_lossy` which will make a good attem
 conversion and insert the invalid Unicode mark � where it failed.
 
 Here is a useful function which runs a program using the shell. This uses the usual
-shell mechanism for joining stderr to stdout. The name of the shell is different 
+shell mechanism for joining stderr to stdout. The name of the shell is different
 on Windows, but otherwise things work as expected.
 
 ```rust
@@ -553,7 +553,7 @@ fn shell_success(cmd: &str) -> Option<String> {
 I'm trimming any whitespace from the right so that if you said `shell("which rustc")`
 you will get the path without any extra linefeed.
 
-You can control the execution of a program launched by `Process` 
+You can control the execution of a program launched by `Process`
 by specifying the directory it will run
 in using the `current_dir` method and the environment variables it sees using `env`.
 
