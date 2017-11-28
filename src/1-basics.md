@@ -709,7 +709,7 @@ how to [use them](https://doc.rust-lang.org/std/option/enum.Option.html) comfort
 
 We'll return to slice methods again, but first: vectors. These are _re-sizeable_
 arrays and behave much like Python `List` and C++ `std::vector`. The Rust type
-`Vec` (pronounced 'vector') behaves very much like an slice in fact; the
+`Vec` (pronounced 'vector') behaves very much like a slice in fact; the
 difference is that you can append extra values to a vector - note that it must
 be declared as mutable.
 
