@@ -26,8 +26,8 @@ But most computers in the world - the ones that handle really important
 things like throttle control on cars - don't have the massive resources
 that even a cheap laptop has, and they need to respond to events
 in _real time_. Likewise, basic software infrastructure needs to be
-correct, robust and fast (the old engineering trinity). Much of this is
-done in C and C++ which are unsafe by default - the _total cost_ of
+correct, robust, and fast (the old engineering trinity). Much of this is
+done in C and C++ which are inherently unsafe - the _total cost_ of
 this unsafety is the thing to look at here. Maybe you knock the program
 together quicker, but _then_ the real development starts.
 
@@ -116,6 +116,7 @@ let v: Vec<_> = "hello".chars().collect();
 // a string "doy"
 let m: String = "dolly".chars().filter(|&c| c != 'l').collect();
 ```
+
 When feeling uncertain about the type of a variable, there's always this
 trick, which forces `rustc` to reveal the actual type name in an
 error message:
@@ -123,6 +124,7 @@ error message:
 ```rust
 let x: () = var;
 ```
+
 `rustc` may pick an over-specific type. Here we want to put different
 references into a vector as `&Debug`:
 
@@ -133,10 +135,10 @@ let answer = 42;
 let message = "hello";
 let float = 2.7212;
     
-let display: Vec<&Debug> = vec![&message,&answer,&float];
+let display: Vec<&Debug> = vec![&message, &answer, &float];
 
 for d in display {
-    println!("got {:?}",d);
+    println!("got {:?}", d);
 }
 ```
 
@@ -165,15 +167,16 @@ could be.
 
 ```rust
 let mut m = HashMap::new();
-m.insert("one",1);
-m.insert("two",2);
+m.insert("one", 1);
+m.insert("two", 2);
 
 if let Some(r) = m.get_mut("one") { // <-- mutable borrow of m
     *r = 10;
 } else {
-    m.insert("one",1); // can't borrow mutably again!
+    m.insert("one", 1); // can't borrow mutably again!
 }
 ```
+
 Clearly this does not violate the Rules since if we got `None` we
 haven't actually borrowed anything from the map.
 
@@ -186,9 +189,10 @@ if let Some(r) = m.get_mut("one") {
     found = true;
 }
 if ! found {
-    m.insert("one",1);        
+    m.insert("one", 1);
 }
 ```
+
 Which is yucky, but it works because the bothersome borrow is kept to
 the first if-statement.
 
@@ -208,7 +212,7 @@ match m.entry("one") {
 ```
 
 The borrow checker will get less frustrating when _non-lexical lifetimes_
-arrive sometime this year. 
+arrive sometime this year.
 
 The borrow checker _does_ understand some important cases, however.
 If you have a struct, fields can be independently borrowed. So
@@ -231,19 +235,20 @@ a segfault is inevitable.
 `rustc` can often make sensible assumptions about lifetimes in functions:
 
 ```rust
-fn pair(s: &str, ch: char) -> (&str,&str) {
+fn pair(s: &str, ch: char) -> (&str, &str) {
     if let Some(idx) = s.find(ch) {
         (&s[0..idx], &s[idx+1..])
     } else {
-        (s,"")
+        (s, "")
     }
 }
 fn main() {
-    let p = pair("hello:dolly",':');
-    println!("{:?}",p);
+    let p = pair("hello:dolly", ':');
+    println!("{:?}", p);
 }
-// ("hello","dolly")
+// ("hello", "dolly")
 ```
+
 This is quite safe because we cope with the case where the delimiter isn't found.
 `rustc` is here assuming that both strings in the tuple are borrowed from the
 string passed as an argument to the function.
@@ -278,7 +283,7 @@ like a type parameter.
 Closures are very convenient and a powerful feature - a lot of the power
 of Rust iterators comes from them. But if you store them, you have
 to specify a lifetime. This is because basically a closure is a generated
-struct that can called, that by default borrows its environment.
+struct that can be called, and that by default borrows its environment.
 Here the `linear` closure has immutable references to `m` and `c`.
 
 ```rust
@@ -289,6 +294,7 @@ let linear = |x| m*x + c;
 let sc = |x| m*x.cos()
 ...
 ```
+
 Both `linear` and `sc` implement `Fn(x: f64)->f64` but they are _not_
 the same animal - they have different types and sizes!  So to store
 them you have to make a `Box<Fn(x: f64)->f64 + 'a>`.
@@ -299,10 +305,9 @@ to store different closures, taking a little penalty for the virtual
 call. 
 
 
-
 ## Strings
 
-It is common to feel irritated with Rust strings in the begining. There are different
+It is common to feel irritated with Rust strings in the beginning. There are different
 ways to create them, and they all feel verbose:
 
 ```rust
@@ -319,7 +324,7 @@ a little bit of RAM and rather more ROM. Literal strings will get stored in ROM
 But (you may say) it's so simple in C++:
 
 ```C
-string s = "hello";
+std::string s = "hello";
 ```
 Which is shorter yes, but hides the implicit creation of a string object.
 Rust likes to be explicit about memory allocations, hence `to_string`.
@@ -373,6 +378,7 @@ you can _then_ collect into a vector.
 ```rust
 let parts: Vec<_> = s.split(',').collect();
 ```
+
 This is a bit clumsy if you are in a hurry to get a vector. But it's great
 if you want to do operations on the parts _without_ allocating a vector!
 For instance, length of largest string in the split?
@@ -398,6 +404,7 @@ _value_, then the semi-colons are dropped:
 ```rust
     let msg = if ok {"ok"} else {"error"};
 ```
+
 Note that there must be a semi-colon after this `let` statement!
 
 If there were semicolons after these string literals then the returned
@@ -409,6 +416,7 @@ fn sqr(x: f64) -> f64 {
     x * x;
 }
 ```
+
 `rustc` will give you a clear error in this case.
 
 ## C++-specific Issues
@@ -448,6 +456,7 @@ fn split_whitespace(s: &str) -> Vec<&str> {
     s.split_whitespace().collect()
 }
 ```
+
 Likewise, a C++ `s.substr(0,2)` call will always copy the string, but a slice
 will just borrow: `&s[0..2]`.
 
@@ -458,7 +467,7 @@ There is an equivalent relationship between `Vec<T>` and `&[T]`.
 Rust has _smart pointers_ like C++ - for instance, the equivalent of
 `std::unique_ptr` is `Box`. There's no need for `delete`, since any
 memory or other resources will be reclaimed when the box goes out of 
-scope (Rust very much embraces RAII.)
+scope (Rust very much embraces RAII).
 
 ```rust
 let mut answer = Box::new("hello".to_string());
@@ -479,9 +488,9 @@ In C++, this is where `std::shared_ptr` is used; copying just involves
 modifying a reference count on the common data. This is not without
 cost, however:
 
-  - even if the data is read-only, constantly modifying the reference
-  count can cause cache invalidation.
-  - `std::shared_ptr` is designed to be thread-safe and carries locking
+- even if the data is read-only, constantly modifying the reference
+  count can cause cache invalidation
+- `std::shared_ptr` is designed to be thread-safe and carries locking
   overhead as well
 
 In Rust, `std::rc::Rc` also acts like a shared smart pointer using
@@ -522,6 +531,7 @@ let answer = Arc::new(Mutex::new(10));
   *answer_ref = 42;
 }
 ```
+
 Why the `unwrap`? If the previous holding thread panicked, then
 this `lock` fails. (It's one place in the documentation where `unwrap`
 is considered a reasonable thing to do, since clearly things have
@@ -530,7 +540,7 @@ gone seriously wrong. Panics can always be caught on threads.)
 It's important (as always with mutexes) that this exclusive lock is
 held for as little time as possible. So it's common for them to
 happen in a limited scope - then the lock ends when the mutable
-reference goes out of scope)
+reference goes out of scope.
 
 Compared with the apparently simpler situation in C++ ("use shared_ptr dude")
 this seems awkward. But now any _modifications_ of shared state become obvious,
@@ -553,7 +563,7 @@ of not finding is `None`) and here the `if let` statement is convenient for
 extracting the non-`None` case:
 
 ```rust
-let arr = [10,2,30,5];
+let arr = [10, 2, 30, 5];
 if let Some(res) = arr.find(|x| x == 2) {
     // res is 2
 }
@@ -573,6 +583,4 @@ I mention this, because there appears to be a pattern:
 an experienced C++ person tries to implement a linked list or a tree structure,
 and gets frustrated. Well, a double-linked list _is_ possible in safe Rust,
 with `Rc` references going forward, and `Weak` references going back. But the 
-standard library gets more performance out of using ... pointers.
-
-
+standard library gets more performance out of using... pointers.
