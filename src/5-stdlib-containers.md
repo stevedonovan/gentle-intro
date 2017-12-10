@@ -2,8 +2,8 @@
 
 ## Reading the Documentation
 
-In this section I'll briefly introduce some very useful parts of the Rust standard
-library. The documentation (as always) is excellent but a little context and a few examples is
+In this section I'll briefly introduce some common parts of the Rust standard
+library. The documentation is excellent but a little context and a few examples is
 always useful.
 
 Initially, reading the Rust documentation can be challenging, so I'll go through `Vec` as an
@@ -102,7 +102,8 @@ fn main() {
 
 Fair enough, but now you have to unwrap these errors - carefully!.
 But Rust already knows how to do the Right Thing,
-if you ask for the vector to be _contained_ in a `Result`:
+if you ask for the vector to be _contained_ in a `Result` - that is,
+either is a vector or an error:
 
 ```rust
     let converted: Result<Vec<_>,_> = iter.collect();
@@ -111,6 +112,9 @@ if you ask for the vector to be _contained_ in a `Result`:
 
 And if there was a bad conversion? Then you would just get `Err` with the first
 error encountered. It's a good example of how extremely flexible `convert` is.
+(The notation here can be intimidating - `Vec<_>` means "this is a vector, work
+out the actual type for me` and `Result<Vec<_>,_>` is furthermore asking
+Rust to work out the error type as well.)
 
 So there's a _lot_ of detail in the documentation.
 But it's certainly clearer than what the C++ docs say about `std::vector`
@@ -119,10 +123,10 @@ But it's certainly clearer than what the C++ docs say about `std::vector`
 > on the container. Generally, it is required that element type is a complete type and meets
 > the requirements of Erasable, but many member functions impose stricter requirements.
 
-Clearly, you're on your own! The explicitness of Rust is daunting at first, but as you learn to
+With C++, you're on your own. The explicitness of Rust is daunting at first, but as you learn to
 read the constraints you will know exactly what any particular method of `Vec` requires.
 
-I would suggest that you do get the source using `rustup component add rust-src`, since the
+I would suggest that you get the source using `rustup component add rust-src`, since the
 standard library source is very readable and the method implementations are usually less scary than the
 method declarations.
 
