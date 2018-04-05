@@ -23,7 +23,7 @@ This relationship is expressed by `Deref<Target=[T]>`. This also kicks in when y
 reference to something that expects a slice - this is one of the few places where
 a conversion between types happens automatically. So slice methods like `first`, which maybe-returns
 a reference to the first element, or `last`, work for vectors as well. Many of the methods are similar
-to the corresponding string methods, so there's `split_at` for getting a pair of slices spit at an index,
+to the corresponding string methods, so there's `split_at` for getting a pair of slices split at an index,
 `starts_with` to check whether a vector starts with sequence of values, and `contains` to check whether
 a vector contains a particular value.
 
