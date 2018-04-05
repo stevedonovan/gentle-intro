@@ -10,5 +10,7 @@
 - [Threads, Networking and Sharing](./7-shared-and-networking.md)
 - [Object-Oriented Programming](./object-orientation.md)
 - [Parsing with Nom](./nom-intro.md)
+- [Pain Points](./pain-points.md)
+
 
 

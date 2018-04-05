@@ -1,9 +1,9 @@
 ## Pain Points
 
-It is true to say that Rust is a harder language to learn than most other
-'mainstream' languages. There are exceptional people who don't find it so,
-but note the strict meaning of 'exceptional' - they are _exceptions_. Many 
-struggle at first, and then succeed. Initial difficulties aren't predictive 
+It is true to say that Rust is a harder language to learn than most
+'mainstream' languages. There are exceptional people who don't find it so
+difficult, but note the strict meaning of 'exceptional' - they are _exceptions_.
+Many struggle at first, and then succeed. Initial difficulties aren't predictive
 of later competency!
 
 We all come from somewhere, and in the case of programming languages this
@@ -14,11 +14,11 @@ people with experience jump in and are disappointed that their
 cleverness is not immediately rewarded; people with less self-worth
 think they aren't 'clever' enough.
 
-For those with dynamic language experience (in which I would include 
+For those with dynamic language experience (in which I would include
 Java) everything is a reference, and all references are mutable by default.
-And garbage collection _does_ make it easier to write memory-safe 
+And garbage collection _does_ make it easier to write memory-safe
 programs. A lot has gone into making the JVM pretty fast, at the cost
-of memory use and predicability. Often that cost is considered worth it - 
+of memory use and predicability. Often that cost is considered worth it -
 the old new idea that programmer productivity is more important than
 computer performance.
 
@@ -35,8 +35,8 @@ System languages can't afford garbage collection, because they
 are the bedrock on which everything rests. They allow you to be free
 to waste resources as you see fit.
 
-If there is no garbage collection, then memory must be managed in 
-other ways. Manual memory management - I grab memory, use it, and 
+If there is no garbage collection, then memory must be managed in
+other ways. Manual memory management - I grab memory, use it, and
 explicitly give it back - is hard to get right. You can learn enough
 C to be productive and dangerous in a few weeks - but it takes years
 to become a good safe C programmer, checking every possible error condition.
@@ -48,14 +48,15 @@ memory is reclaimed. So there is something like `new` but nothing like
 `delete`. You create a `File` and at the end, the file handle (a precious
 resource) is closed. In Rust this is called _dropping_.
 
-You need to share resources - it's very inefficient to make copies of 
+You need to share resources - it's very inefficient to make copies of
 everything - and that's where things get interesting. C++ also has
 references, although Rust references are rather more like C pointers -
 you need to say `*r` to refer to the value, you need to say `&` to
 pass a value as a reference.
 
-Rust's _borrow checker_ makes sure that is impossible in _safe_ mode
+Rust's _borrow checker_ makes sure that is impossible
 for a reference to exist after the original value is destroyed.
+
 
 ## Type Inference
 
@@ -75,15 +76,15 @@ default, it would be `i32` - a four-byte signed integer. Everyone agrees
 by now that C's unspecified integer types (like `int` and `long`) are
 a bad idea; better to be explicit. You can always spell out the type,
 as in `let n: u32 = 100` or let the literal force the type, as in
-`let n = 100u32`.  But type inference goes much further than that! 
+`let n = 100u32`.  But type inference goes much further than that!
 If you declare `let n = 100` then all `rustc` knows that `n` must be
 _some_ integer type. If you then passed `n` to a function expecting
-a `u64` then that must be the type of `n`!  
+a `u64` then that must be the type of `n`!
 
 After that, you try to pass `n` to a function expecting `u32`.
 `rustc` will not let you do this, because `n` has been tied down to
 `u64` and it _will not_ take the easy way out and convert that
-integer for you!  This is strong typing in action - there are none
+integer for you.  This is strong typing in action - there are none
 of those little conversions and promotions which make your life
 smoother until integer overflow bites your ass suddenly. You would have
 to explicitly pass `n` as `n as u32` - a Rust typecast. Fortunately,
@@ -105,8 +106,8 @@ not a bug. The flexibility of dynamic typing is also a curse.
 (If you _do_ need to put integers and strings into the same vector, then
 Rust `enum` types are the way to do it safely.)
 
-Sometimes you need to at least give a type _hint_. `collect` is a 
-fantastic iterator method, but it needs a hint. Say I have a 
+Sometimes you need to at least give a type _hint_. `collect` is a
+fantastic iterator method, but it needs a hint. Say I have a
 iterator returning `char`. Then `collect`
 can swing two ways:
 
@@ -126,7 +127,8 @@ let x: () = var;
 ```
 
 `rustc` may pick an over-specific type. Here we want to put different
-references into a vector as `&Debug`:
+references into a vector as `&Debug` but need to declare the type
+explicitly.
 
 ```rust
 use std::fmt::Debug;
@@ -134,7 +136,7 @@ use std::fmt::Debug;
 let answer = 42;
 let message = "hello";
 let float = 2.7212;
-    
+
 let display: Vec<&Debug> = vec![&message, &answer, &float];
 
 for d in display {
@@ -147,10 +149,10 @@ for d in display {
 The rule is: only one mutable reference at a time. The reason is
 that tracking mutability is hard when it can happen _all over the place_.
 Not obvious in dinky little programs, but things can get bad in big
-codebases. 
+codebases.
 
 The further constraint is that you can't have immutable references while
-there's a mutable reference out. Otherwise, anybody who has those 
+there's a mutable reference out. Otherwise, anybody who has those
 references doesn't have a guarantee that they won't change. C++ also
 has immutable references (e.g. `const string&`) but does _not_ give
 you this guarantee that someone can't keep a `string&` reference and modify it
@@ -177,7 +179,7 @@ if let Some(r) = m.get_mut("one") { // <-- mutable borrow of m
 }
 ```
 
-Clearly this does not violate the Rules since if we got `None` we
+Clearly this does not _really_ violate the Rules since if we got `None` we
 haven't actually borrowed anything from the map.
 
 There are various ugly workarounds:
@@ -262,7 +264,7 @@ What the notation says is that the output strings live _at least as long_ as the
 input string. It's not saying that the lifetimes are the same, we could drop them
 at any time, just that they cannot outlive `s`.
 
-So, `rustc` can make common cases prettier with _lifetime ellision_.
+So, `rustc` makes common cases prettier with _lifetime ellision_.
 
 Now, if that function received _two_ strings, then you would need to
 explicitly do lifetime annotation to tell Rust what output string is
@@ -276,7 +278,7 @@ struct Container<'a> {
 }
 ```
 
-Which is again insisting that the struct cannot outlive the reference. 
+Which is again insisting that the struct cannot outlive the reference.
 For both structs and functions, the lifetime needs to be declared in `<>`
 like a type parameter.
 
@@ -302,7 +304,7 @@ them you have to make a `Box<Fn(x: f64)->f64 + 'a>`.
 Very irritating if you're used to how fluent closures are in Javascript
 or Lua, but C++ does a similar thing to Rust and needs `std::function`
 to store different closures, taking a little penalty for the virtual
-call. 
+call.
 
 
 ## Strings
@@ -314,7 +316,7 @@ ways to create them, and they all feel verbose:
 let s1 = "hello".to_string();
 let s2 = String::from("dolly");
 ```
-Isn't "hello" _already_ a string? Well, in a way. `String` is an _owned_ string, 
+Isn't "hello" _already_ a string? Well, in a way. `String` is an _owned_ string,
 allocated on the heap; a string literal "hello" is of type `&str` ("string slice")
 and might be either baked into the executable ("static") or borrowed from a `String`.
 System languages need this distinction - consider a tiny microcontroller, which has
@@ -341,8 +343,8 @@ why you rarely see `&String` in function definitions.
 There are a number of ways to convert `&str` to `String`, corresponding
 to various traits. Rust needs these traits to work with types generically.
 As a rule of thumb, anything that implements `Display` also knows `to_string`,
-like `42.to_string()`. 
- 
+like `42.to_string()`.
+
 Some operators may not behave according to intuition:
 
 ```rust
@@ -379,8 +381,8 @@ you can _then_ collect into a vector.
 let parts: Vec<_> = s.split(',').collect();
 ```
 
-This is a bit clumsy if you are in a hurry to get a vector. But it's great
-if you want to do operations on the parts _without_ allocating a vector!
+This is a bit clumsy if you are in a hurry to get a vector. But
+you can do operations on the parts _without_ allocating a vector!
 For instance, length of largest string in the split?
 
 ```rust
@@ -390,9 +392,11 @@ let max = s.split(',').map(|s| s.len()).max().unwrap();
 (The `unwrap` is because an empty iterator has no maximum and we must
 cover this case.)
 
-The `collect` method returns a `Vec<&str>`, where the parts are 
+The `collect` method returns a `Vec<&str>`, where the parts are
 borrowed from the original string - we only need allocate space
-for the references.
+for the references.  There is no method like this in C++, but until
+recently it would have to individually allocate each substring. (C++ 17
+has `std::string_view` which behaves like a Rust string slice.)
 
 ## A Note on Semicolons
 
@@ -442,7 +446,7 @@ and this _consumes_ `s1`!  So, when you really want a copy, use `clone`.
 Borrowing is often better than copying, but then you must follow the
 rules of borrowing. Fortunately, borrowing _is_ an overridable behaviour.
 For instance, `String` can be borrowed as `&str`, and shares all the
-immutable methods of `&str`. _String slices_ are very powerful compared 
+immutable methods of `&str`. _String slices_ are very powerful compared
 to the analogous C++ 'borrowing' operation, which is to extract a `const char*`
 using `c_str`. `&str` consists of a pointer to some owned bytes (or a string
 literal) and a _size_. This leads to some very memory-efficient patterns.
@@ -466,7 +470,7 @@ There is an equivalent relationship between `Vec<T>` and `&[T]`.
 
 Rust has _smart pointers_ like C++ - for instance, the equivalent of
 `std::unique_ptr` is `Box`. There's no need for `delete`, since any
-memory or other resources will be reclaimed when the box goes out of 
+memory or other resources will be reclaimed when the box goes out of
 scope (Rust very much embraces RAII).
 
 ```rust
@@ -484,7 +488,7 @@ don't need any special notation (we do not say `(*answer).push('!')`)
 Obviously, borrowing only works if there is a clearly defined owner of
 the original content. In many designs this isn't possible.
 
-In C++, this is where `std::shared_ptr` is used; copying just involves 
+In C++, this is where `std::shared_ptr` is used; copying just involves
 modifying a reference count on the common data. This is not without
 cost, however:
 
@@ -495,20 +499,20 @@ cost, however:
 
 In Rust, `std::rc::Rc` also acts like a shared smart pointer using
 reference-counting. However, it is for immutable references only! If you
-want a thread-safe variant, use `std::sync::Arc` (for 'Atomic Rc'). 
+want a thread-safe variant, use `std::sync::Arc` (for 'Atomic Rc').
 So Rust is being a little awkward here in providing two variants, but you
 get to avoid the locking overhead for non-threaded operations.
 
 These must be immutable references because that is fundamental to Rust's
-memory model. However, there's a get-out card: `std::cell::RefCell`. 
-If you have a shared reference defined as `Rc<RefCell<T>>` then you 
+memory model. However, there's a get-out card: `std::cell::RefCell`.
+If you have a shared reference defined as `Rc<RefCell<T>>` then you
 can mutably borrow using its `borrow_mut` method. This applies the
 Rust borrowing rules _dynamically_ - so e.g. any attempt to call
 `borrow_mut` when a borrow was already happening will cause a panic.
 
 This is still _safe_. Panics will happen
 _before_ any memory has been touched inappropriately! Like exceptions,
-they unroll the call stack. So it's an unfortunate word for such 
+they unroll the call stack. So it's an unfortunate word for such
 a structured process - it's an ordered withdrawal rather than a
 panicked retreat.
 
@@ -518,15 +522,15 @@ unpleasant. Here Rust (again) is prefering to be explicit.
 If you wanted thread-safe access to shared state, then `Arc<T>` is the
 only _safe_ way to go. If you need mutable access, then `Arc<Mutex<T>>`
 is the equivalent of `Rc<RefCell<T>>`. `Mutex` works a little differently
-than how it's usually defined: it is a container for a value. You get 
+than how it's usually defined: it is a container for a value. You get
 a _lock_ on the value and can then modify it.
 
 ```rust
 let answer = Arc::new(Mutex::new(10));
 
 // in another thread
-..  
-{  
+..
+{
   let mut answer_ref = answer.lock().unwrap();
   *answer_ref = 42;
 }
@@ -550,7 +554,7 @@ Like everything, use shared references with [caution](https://news.ycombinator.c
 
 ### Iterators
 
-Iterators in C++ are defined fairly informally; they generate smart pointers,
+Iterators in C++ are defined fairly informally; they involve smart pointers,
 usually starting with `c.begin()` and ending with `c.end()`. Operations on
 iterators are then implemented as stand-alone template functions, like `std::find_if`.
 
@@ -582,5 +586,5 @@ checking 100Kloc+ of code.
 I mention this, because there appears to be a pattern:
 an experienced C++ person tries to implement a linked list or a tree structure,
 and gets frustrated. Well, a double-linked list _is_ possible in safe Rust,
-with `Rc` references going forward, and `Weak` references going back. But the 
+with `Rc` references going forward, and `Weak` references going back. But the
 standard library gets more performance out of using... pointers.
