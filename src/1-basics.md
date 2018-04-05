@@ -21,7 +21,7 @@ Hello, World!
 Rust is a curly-braces language with semicolons, C++-style comments and a `main`
 function - so far, so familiar.  The exclamation mark indicates that this is a
 _macro_ call. For C++ programmers, this can be a turn-off, since they are used to
-seriously stupid C macros - but I can ensure you that these are altogether more
+seriously stupid C macros - but I can ensure you that these macros are more
 capable and sane.
 
 For anybody else,
@@ -202,7 +202,7 @@ It is also how the word is used in mathematics, like when we say
 There is a reason for declaring variables to be _read-only_ by default. In a larger
 program, it gets hard to track where writes are taking place. So Rust makes things
 like mutability ('write-ability') explicit. There's a lot of cleverness in the
-language, but it never hides anything.
+language, but it tries not to anything.
 
 Rust is both statically-typed and strongly-typed - these are often confused, but
 think of C (statically but weakly typed) and Python (dynamically but strongly typed).
@@ -252,9 +252,8 @@ fn main() {
 _Functions_ are one place where the compiler will not work out types for you.
 And this in fact was a deliberate decision, since languages like Haskell have
 such powerful type inference that there are hardly any explicit type names. It's
-a case of the language being somewhat more intelligent than its users, since
-it's good Haskell style to put in a comment giving the function argument types. This feels
-self-defeating.
+actually good Haskell style to put in explicit type signatures for functions.
+Rust requires this always.
 
 Here is a simple user-defined function:
 
@@ -400,7 +399,7 @@ too easy to miss compared to C.)
 Basically, Rust is introducing some _friction_ here, and not-so-subtly pushing
 you towards returning values from functions directly.  Fortunately, Rust has
 powerful ways to express things like "operation succeeded and here's the result"
-so `&mut` isn't needed that often. Passing by reference is important when we have a 
+so `&mut` isn't needed that often. Passing by reference is important when we have a
 large object and don't wish to copy it.
 
 The type-after-variable style applies to `let` as well, when you really want to nail
@@ -424,12 +423,15 @@ single and double-precision floating point numbers.  It is defined on the
 _value itself_ as a method, like so:
 
 ```rust
-let pi = 3.1416;
+let pi: f64 = 3.1416;
 let x = pi/2.0;
 let cosine = x.cos();
 ```
 And the result will be sort-of zero; we obviously need a more authoritative source
 of pi-ness!
+
+(Why do we need an explicit `f64` type? Because without it, the constant could
+be either `f32` or `f64`, and these are very different.)
 
 Let me quote the example given for `cos`, but written as a complete program
 ( `assert!` is a cousin of `assert_eq!`; the expression must be true):
@@ -464,7 +466,7 @@ fn main() {
 ```
 Why haven't we needed to do this up to now?
 This is because Rust helpfully makes a lot of basic functionality visible without
-explicit `use` statements.
+explicit `use` statements through the Rust _prelude_.
 
 ## Arrays and Slices
 
@@ -508,7 +510,7 @@ cannot add new elements.
 Arrays are not used that often in Rust, because the type of an array includes its
 size.  The type of the array in the example is
 `[i32; 4]`; the type of `[10, 20]` would be `[i32; 2]` and so forth: they
-have _different types_.  So they are basically bastards to pass around as
+have _different types_.  So they are bastards to pass around as
 function arguments.
 
 What _are_ used often are _slices_. You can think of these as _views_ into
@@ -693,14 +695,14 @@ to get the value as `i32`.
 ```
 
 It's easy to miss the `&`, but the compiler has your back here. If it was `-1`,
-`rustc` says 'expected &{integer}, found integral variable' and then 
+`rustc` says 'expected &{integer}, found integral variable' and then
 'help: try with `&-1`'.
 
 You can think of `Option` as a box which may contain a value, or nothing (`None`).
 (It is called `Maybe` in Haskell). It may contain _any_ kind of value, which is
 its _type parameter_. In this case, the full type is `Option<&i32>`, using
 C++-style notation for _generics_.  Unwrapping this box may cause an explosion,
-but unlike Schroedinger's Cat, we know if it contains a value up-front.
+but unlike Schroedinger's Cat, we can know in advance if it contains a value.
 
 It is very common for Rust functions/methods to return such maybe-boxes, so learn
 how to [use them](https://doc.rust-lang.org/std/option/enum.Option.html) comfortably.
@@ -978,7 +980,7 @@ fn main() {
 
 ## Strings
 
-Strings in Rust are a little more involved than in otherlanguages; the `String` type,
+Strings in Rust are a little more involved than in other languages; the `String` type,
 like `Vec`, allocates dynamically and is resizeable. (So it's like C++'s `std::string`
 but not like the immutable strings of Java and Python.) But a program may contain a lot
 of _string literals_ (like "hello") and a system language should be able to store
@@ -1006,11 +1008,11 @@ fn main() {
     dump(&s);
 }
 ```
-Again, the borrow operator can coerce `String` into `&str`, just as `Vec` could
-be coerced into `&[]`.
+Again, the borrow operator can coerce `String` into `&str`, just as `Vec<T>` could
+be coerced into `&[T]`.
 
 Under the hood, `String` is basically a `Vec<u8>` and `&str` is `&[u8]`, but
-those bytes _must_ represent valid UTF-8 text. 
+those bytes _must_ represent valid UTF-8 text.
 
 Like a vector, you can `push` a character and `pop` one off the end of `String`:
 
@@ -1146,7 +1148,7 @@ a clue (we may have wanted a vector of chars, say):
         .filter(|ch| ! ch.is_whitespace()).collect();
     // theredfoxandthelazydog
 ```
-The `filter` method takes a _closure_, which is Rust-speak for 
+The `filter` method takes a _closure_, which is Rust-speak for
 lambdas or anonymous functions.  Here the argument type is clear from the
 context, so the explicit rule is relaxed.
 
@@ -1167,7 +1169,7 @@ over the arguments as strings, including the program name.
 // args0.rs
 fn main() {
     for arg in std::env::args() {
-        println!("'{}", arg);
+        println!("'{}'", arg);
     }
 }
 ```
@@ -1324,8 +1326,36 @@ If `Option` is a value that may contain something or nothing, then `Result` is a
 that may contain something or an error. They both understand `unwrap` (and its cousin
 `expect`) but they are quite different. `Result` is defined by _two_ type parameters,
 for the `Ok` value and the `Err` value.
+The `Result` 'box' has two compartments, one labelled `Ok` and the other `Err`.
 
-This version defines a function that does not crash. It passes on a `Result` and
+```
+fn good_or_bad(good: bool) -> Result<i32,String> {
+    if good {
+        Ok(42)
+    } else {
+        Err("bad".to_string())
+    }
+}
+
+fn main() {
+    println!("{:?}",good_or_bad(true));
+    //Ok(42)
+    println!("{:?}",good_or_bad(false));
+    //Err("bad")
+
+    match good_or_bad(true) {
+        Ok(n) => println!("Cool, I got {}",n),
+        Err(e) => println!("Huh, I just got {}",e)
+    }
+    // Cool, I got 42
+
+}
+```
+(The actual 'error' type is arbitrary - a lot of people use strings until
+they are comfortable with Rust error types.) It's a convenient way to _either_
+return one value _or_ another.
+
+This version of the file reading function does not crash. It returns a `Result` and
 it is the _caller_ who must decide how to handle the error.
 
 ```rust
@@ -1355,11 +1385,11 @@ fn main() {
     println!("file had {} bytes", text.len());
 }
 ```
-The `Result` 'box' has two compartments, one labelled `Ok`
-and the other `Err`.
 
 The first match safely extracts the value from `Ok`, which
-becomes the value of the match. If it's `Err` it just returns the error.
+becomes the value of the match. If it's `Err` it returns the error,
+rewrapped as an `Err`.
+
 The second match returns the string, wrapped up as an `Ok`, otherwise
 (again) the error. The actual value in the `Ok` is unimportant, so we ignore
 it with `_`.
@@ -1387,8 +1417,8 @@ if the result was an error, then it will immediately return that error.
 Otherwise, it returns the `Ok` result.
 At the end, we still need to wrap up the string as a result.
 
-It's been a good year in Rust, and `?` was one of the cool things that
-became stable recently. You will still see the macro `try!` used in older code:
+2017 was a good year for Rust, and `?` was one of the cool things that
+became stable. You will still see the macro `try!` used in older code:
 
 ```rust
 fn read_to_string(filename: &str) -> io::Result<String> {
