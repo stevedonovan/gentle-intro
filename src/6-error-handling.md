@@ -5,7 +5,7 @@
 Error handling in Rust can be clumsy if you can't use the question-mark operator.
 To achieve happiness, we need to return a `Result` which can accept any error.
 All errors implement the trait `std::error::Error`, and
- _any_ error can convert into a `Box<Error>`.
+so _any_ error can convert into a `Box<Error>`.
 
 Say we needed to handle _both_ i/o errors and errors from converting
 strings into numbers:

@@ -403,7 +403,7 @@ for a given time period, and may return a timeout error as well.
 
 `send` never blocks, which is useful because threads can push out data without waiting
 for the receiver to process. In addition, the channel is buffered so multiple
-send` operations can take place, which will be received in order.
+send operations can take place, which will be received in order.
 
 However, not blocking means that `Ok` does not automatically mean 'successfully delivered message'!
 

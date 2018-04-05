@@ -532,8 +532,10 @@ on Windows, but otherwise things work as expected.
 ```rust
 fn shell(cmd: &str) -> (String,bool) {
     let cmd = format!("{} 2>&1",cmd);
-    let output = Command::new(if cfg!(windows) {"cmd.exe"} else {"/bin/sh"})
-        .arg(if cfg!(windows) {"/c"} else {"-c"})
+    let shell = if cfg!(windows) {"cmd.exe"} else {"/bin/sh"};
+    let flag = if cfg!(windows) {"/c"} else {"-c"};
+    let output = Command::new(shell)
+        .arg(flag)
         .arg(&cmd)
         .output()
         .expect("no shell?");
@@ -580,9 +582,9 @@ fn main() {
 
 By default, the child 'inherits' the standard input and output of the parent. In this case,
 we redirect the child's output handles into 'nowhere'. It's equivalent to saying
-`> /dev/null > /dev/null 2> /dev/null` in the Unix shell.
+`> /dev/null 2> /dev/null` in the Unix shell.
 
-Now, it's possible to do these things using the shell (`sh` or `cmd`) in Rust, although not in a portable way.
+Now, it's possible to do these things using the shell (`sh` or `cmd`) in Rust.
 But this way you get full programmatic control of process creation.
 
 For example, if we just had `.stdout(Stdio::piped())` then the child's standard output
@@ -590,7 +592,7 @@ is redirected to a pipe. Then `child.stdout` is something you can use to directl
 read the output (i.e. implements `Read`). Likewise, you can use the `.stdout(Stdio::piped())`
 method so you can write to `child.stdin`.
 
-But we use `wait_with_output` instead of `wait` then
+But if we used `wait_with_output` instead of `wait` then
 it returns a `Result<Output>` and the child's output is captured into the `stdout`
 field of that `Output` as a `Vec<u8>` just as before.
 

@@ -43,13 +43,16 @@ Copying this is going to be expensive, because that memory is allocated on the h
 the copy will need its own allocated block.
 
 ```
+    String
     | addr | ---------> Call me Ishmael.....
     | size |                    |
     | cap  |                    |
                                 |
+    &str                        |
     | addr | -------------------|
     | size |
 
+    f64
     | 8 bytes |
 ```
 The second value is a string slice (`&str`) which refers to the same memory as the string,
@@ -57,6 +60,10 @@ with a size - just the guy's name. Cheap to copy!
 
 The third value is an `f64` - just 8 bytes. It does not refer to any other memory, so
 it's just as cheap to copy as to move.
+
+`Copy` values are only defined by their representation in memory, and when
+Rust copies, it just copies those bytes elsewhere. Similarly, a non-`Copy` value
+is also _just moved_.  There is no cleverness in copying and moving, unlike in C++.
 
 Re-writing with a function call reveals exactly the same error:
 
@@ -106,7 +113,7 @@ fn dump(s: &str) {
 And then both `dump(&s1)` and `dump("hello world")` work properly. (Here `Deref`
 coercion kicks in and Rust will convert `&String` to `&str` for you.)
 
-To summarise, assignment of a non-trivial value moves the value from one location
+To summarise, assignment of a non-Copy value moves the value from one location
 to another. Otherwise, Rust would be forced to _implicitly_ do a copy and break its
 promise to make allocations explicit.
 
@@ -226,8 +233,8 @@ They appear in some `Iterator` methods. `enumerate` is like the Python generator
 of the same name:
 
 ```rust
-    for (i,s) in ["zero","one","two"].iter().enumerate() {
-        print!(" {} {};",i,s);
+    for t in ["zero","one","two"].iter().enumerate() {
+        print!(" {} {};",t.0,t.1);
     }
     //  0 zero; 1 one; 2 two;
 ```
@@ -269,10 +276,10 @@ fn main() {
 
 The values of a struct will be placed next to each other in memory, although you should
 not assume any particular memory layout, since the compiler will organize the memory for
-efficiency, not size, and there may be padding. 
+efficiency, not size, and there may be padding.
 
 Initializing this struct is a bit clumsy, so we want to move the construction of a `Person`
-into its own function. This function can be made into a _method_ of `Person` by putting
+into its own function. This function can be made into an _associated function_ of `Person` by putting
 it into a `impl` block:
 
 ```rust
@@ -302,7 +309,7 @@ fn main() {
 There is nothing magic or reserved about the name `new` here. Note that it's accessed
 using a C++-like notation using double-colon `::`.
 
-Here's a another `Person` method, but with a _reference self_ argument:
+Here's a `Person` _method_ , that takes a _reference self_ argument:
 
 ```rust
 impl Person {
@@ -779,7 +786,7 @@ let n = 42;
 dump(&n);
 // value is 42
 ```
-Rust generic functions need _trait bounds_ on types - we are saying here that 
+Rust generic functions need _trait bounds_ on types - we are saying here that
 "T is any type that implements Debug". `rustc` is being very helpful, and
 suggests exactly what bound needs to be provided.
 
@@ -1123,6 +1130,8 @@ eat_and_dump(b);
 //boolean is true
 ```
 
+(And that's what `Option` and `Result` are - enums.)
+
 We like this `eat_and_dump` function, but we want to pass the value as a reference, because currently
 a move takes place and the value is 'eaten':
 
@@ -1402,18 +1411,18 @@ Here we evaluate a linear function:
 You cannot do this with the explicit `fn` form - it does not know about variables
 in the enclosing scope. The closure has _borrowed_ `m` and `c` from its context.
 
-Now, what's the type of `lin`? Only `rustc` knows. 
+Now, what's the type of `lin`? Only `rustc` knows.
 Under the hood, a closure is a _struct_ that is callable ('implements the call operator').
 It behaves as if it was written out like this:
- 
+
 ```rust
 struct MyAnonymousClosure1<'a> {
     m: &'a f64,
     c: &'a f64
 }
 
-impl MyAnonymousClosure1 {
-    fn call(&self, x: f64) {
+impl <'a>MyAnonymousClosure1<'a> {
+    fn call(&self, x: f64) -> f64 {
         self.m * x  + self.c
     }
 }
@@ -1540,7 +1549,7 @@ here - if we _did_ want to keep `name` alive - is to move a cloned copy into the
     };
 ```
 Why are moved closures needed? Because we might need to call them at a point where
-the original context no longer exists. 
+the original context no longer exists.
 A classic case is when creating a _thread_.
 A moved closure does not borrow, so does not have a lifetime.
 
@@ -1561,7 +1570,7 @@ sum, no temporary objects are created:
 ```
 
 It will (in fact) be as fast as writing it out as an explicit loop! That performance
-guarantee would be impossible if Rust closures were as 'frictionless' 
+guarantee would be impossible if Rust closures were as 'frictionless'
 as Javascript closures.
 
 `filter` is another useful iterator method - it only lets through values that match
@@ -1617,6 +1626,9 @@ the iterator item type is `&String`. Note that `filter` receives a reference to 
 
 ```rust
 for n in vec.iter().map(|x: &String| x.len()) {...} // n is usize
+....
+}
+
 for s in vec.iter().filter(|x: &&String| x.len() > 2) { // s is &String
 ...
 }
@@ -1630,7 +1642,7 @@ into a `&String` which _does_ match.
 
 ```rust
 for s in vec.iter().filter(|x: &&String| *x == "one") {...}
-// same as
+// same as implicit form:
 for s in vec.iter().filter(|x| *x == "one") {...}
 ```
 
@@ -1838,7 +1850,7 @@ uses exactly the same rules as `match`.
 ## Generic Structs
 
 Consider the previous example of a binary tree. It would be _seriously irritating_ to
-have to rewrite it for all possible kinds of payload. 
+have to rewrite it for all possible kinds of payload.
 So here's our generic `Node` with its type parameter `T`.
 
 ```rust

@@ -334,10 +334,10 @@ quack_everyone(ducks.into_iter());
 Iterators in Rust aren't duck-typed but are types that must implement `Iterator`, and in
 this case the iterator provides boxes of `Quack`.  There's no ambiguity about the types
 involved, and the values must satisfy `Quack`. Often the function signature is the most challenging
-thing about a generic Rust function, which is why I recommend reading 
+thing about a generic Rust function, which is why I recommend reading
 the source of the standard library - the implementation is often much simpler than the declaration!
 Here the only type parameter is the actual iterator type,
-which means that this will work with anything that can deliver a sequence of boxes, not just
+which means that this will work with anything that can deliver a sequence of `Box<Duck>`, not just
 a vector iterator.
 
 ## Inheritance
