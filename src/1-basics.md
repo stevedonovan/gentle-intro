@@ -202,7 +202,7 @@ It is also how the word is used in mathematics, like when we say
 There is a reason for declaring variables to be _read-only_ by default. In a larger
 program, it gets hard to track where writes are taking place. So Rust makes things
 like mutability ('write-ability') explicit. There's a lot of cleverness in the
-language, but it tries not to anything.
+language, but it tries not to hide anything.
 
 Rust is both statically-typed and strongly-typed - these are often confused, but
 think of C (statically but weakly typed) and Python (dynamically but strongly typed).
