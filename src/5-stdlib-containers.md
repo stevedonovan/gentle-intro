@@ -232,7 +232,7 @@ values respectively, which makes creating vectors of values easy.
 
 ## Example: Counting Words
 
-An entertaining thing to do with text is count word length frequency. It is straightforward
+An entertaining thing to do with text is count word frequency. It is straightforward
 to break text into words with `split_whitespace`, but really we must respect punctuation.
 So the words should be defined as consisting only of alphabetic characters.
 And the words need to be compared as lower-case as well.
