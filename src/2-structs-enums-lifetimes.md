@@ -509,7 +509,7 @@ fn how(i: u32) -> &'static str {
 ```
 That works for the special case of static strings, but this is very restrictive.
 
-However we can specify that the lifetime of the reference is _as least as long_ as that of
+However we can specify that the lifetime of the reference is _at least as long_ as that of
 the struct itself.
 
 ```rust
