@@ -1328,7 +1328,7 @@ that may contain something or an error. They both understand `unwrap` (and its c
 for the `Ok` value and the `Err` value.
 The `Result` 'box' has two compartments, one labelled `Ok` and the other `Err`.
 
-```
+```rust
 fn good_or_bad(good: bool) -> Result<i32,String> {
     if good {
         Ok(42)
