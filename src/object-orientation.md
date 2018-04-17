@@ -535,10 +535,10 @@ a `ShowTell` reference.
 
 You always have a choice: polymorphic, via trait objects, or monomorphic, via generics
 constrainted by traits. Modern C++ and the Rust standard library tends to take the generic
-route, but the polymorphic route is not obselete. You do have to understand the different
+route, but the polymorphic route is not obsolete. You do have to understand the different
 trade-offs - generics generate the fastest code, which can be inlined. This may lead
 to code bloat. But not everything needs to be as _fast as possible_ - it may only happen
-a 'few' times in the lifetime of a typical program fun.
+a 'few' times in the lifetime of a typical program run.
 
 So, here's a summary:
 
