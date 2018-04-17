@@ -1,6 +1,7 @@
 # A Gentle Introduction To Rust
 
 ![Rust](PPrustS.png)
+
 [thanks to David Marino](http://leftoversalad.com/c/015_programmingpeople/)
 
 ## Why learn a new Programming Language?
@@ -107,5 +108,5 @@ I'd like to thank the many contributors who caught bad English or bad Rust for m
 and thanks to David Marino for his cool characterization
 of Rust as a friendly-but-hardcore no-nonsense knight in shining armour.
 
-Steve Donovan © 2017 MIT license version 0.3.0
+Steve Donovan © 2017-2018 MIT license version 0.4.0
 

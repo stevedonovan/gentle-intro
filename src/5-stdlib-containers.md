@@ -111,7 +111,7 @@ either is a vector or an error:
 ```
 
 And if there was a bad conversion? Then you would just get `Err` with the first
-error encountered. It's a good example of how extremely flexible `convert` is.
+error encountered. It's a good example of how extremely flexible `collect` is.
 (The notation here can be intimidating - `Vec<_>` means "this is a vector, work
 out the actual type for me` and `Result<Vec<_>,_>` is furthermore asking
 Rust to work out the error type as well.)
@@ -449,7 +449,7 @@ vector to have the _boxed trait type_ before things just work:
 ```rust
     let mut v: Vec<Box<Fn(f64)->f64>> = Vec::new();
 ```
-We can now use the same trick and keep these boxed closures in a `HashMap`. We still 
+We can now use the same trick and keep these boxed closures in a `HashMap`. We still
 have to watch out for lifetimes, since closures can borrow from their environment.
 
  It's tempting as first to make them `FnMut` - that is, they can modify any captured variables. But we will
