@@ -219,7 +219,7 @@ simplest case is that it's '~/.cargo'. This is a Unix shell expansion,
 so we use `env::home_dir` because it's cross-platform. (It might fail, but a
 computer without a home directory isn't going to be hosting Rust tools anyway.)
 
-We then create a [PathBuf](https://doc.rust-lang.org/std/ops/trait.Mul.html)
+We then create a [PathBuf](https://doc.rust-lang.org/std/path/struct.PathBuf.html)
 and use its `push` method to build up the full file path from its _components_.
 (This is much easier than fooling around with '/','\\' or whatever, depending on
 the system.)
