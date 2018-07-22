@@ -1496,11 +1496,11 @@ However, you cannot escape the rules for borrowing. Consider this:
 let mut s = "world";
 
 // closure does a mutable borrow of s
-let mut changer = || s = "world";
+let mut changer = || s = "hello";
 
 changer();
 // does an immutable borrow of s
-assert_eq!(s, "world");
+assert_eq!(s, "hello");
 ```
 
 Can't be done! The error is that we cannot borrow `s`
@@ -1512,10 +1512,10 @@ putting the closure in a limited scope:
 ```rust
 let mut s = "world";
 {
-    let mut changer = || s = "world";
+    let mut changer = || s = "hello";
     changer();
 }
-assert_eq!(s, "world");
+assert_eq!(s, "hello");
 ```
 
 At this point, if you are used to languages like JavaScript or Lua, you may wonder at the
