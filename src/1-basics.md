@@ -783,7 +783,7 @@ because if you make one mistake you can override the return address of the curre
 function, and you die an ignominious death or (worse) got pwned by some guy living
 in his Mom's basement in Minsk.
 
-The first C program I wrote (on an DOS PC)
+The first C program I wrote (on a DOS PC)
 took out the whole computer. Unix systems always behaved better, and only the process died
 with a _segfault_. Why is this worse than a Rust (or Go) program panicking?
 Because a panic happens when the original problem happens, not when the program
