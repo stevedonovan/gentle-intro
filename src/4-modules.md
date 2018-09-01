@@ -443,7 +443,7 @@ because you can not assume that the received structure matches your structs! For
 solution is [serde_json](https://github.com/serde-rs/json) where you _serialize_ Rust data structures
 into JSON and _deserialize_ JSON into Rust.
 
-For this, create a another Cargo binary project with `cargo new --bin test-serde-json`, go into
+For this, create a another Cargo binary project with `cargo new test-serde-json`, go into
 the `test-serde-json` directory and edit `Cargo.toml`. Edit it like so:
 
 ```
