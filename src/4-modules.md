@@ -297,8 +297,7 @@ using __Cargo__.  Cargo will look up the correct version and download the source
 ensures that any other needed crates are downloaded as well.
 
 Let's create a simple program which needs to read JSON. This data format is very widely used,
-but is too specialized for inclusion in the standard library. So we initialize a Cargo project,
-using '--bin' because the default is to create a library project.
+but is too specialized for inclusion in the standard library. So we initialize a Cargo project.
 
 ```
 test$ cargo init --bin test-json
@@ -312,6 +311,10 @@ authors = ["Your Name <you@example.org>"]
 
 [dependencies]
 ```
+
+The default is to create a binary (appication) project, so `--bin` is optional, use `--lib` for a
+libray project.
+
 To make the project depend on the [JSON crate](http://json.rs/doc/json/), edit the
 'Cargo.toml' file so:
 
