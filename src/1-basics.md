@@ -1390,8 +1390,9 @@ The first match safely extracts the value from `Ok`, which
 becomes the value of the match. If it's `Err` it returns the error,
 rewrapped as an `Err`.
 
-The second match returns the string, wrapped up as an `Ok`, otherwise
-(again) the error. The actual value in the `Ok` is unimportant, so we ignore
+If successful, the second match returns the number of bytes which were
+read and appended to `text`, wrapped up as an `Ok`, otherwise (again)
+the error. The actual value in the `Ok` is unimportant, so we ignore
 it with `_`.
 
 This is not so pretty; when most of a function is error handling, then
