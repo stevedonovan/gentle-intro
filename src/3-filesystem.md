@@ -56,10 +56,8 @@ can be removed using `trim_right`.
     let mut reader = io::BufReader::new(file);
     let mut buf = String::new();
     while reader.read_line(&mut buf)? > 0 {
-        {
-            let line = buf.trim_right();
-            println!("{}", line);
-        }
+        let line = buf.trim_right();
+        println!("{}", line);
         buf.clear();
     }
 ```
@@ -68,15 +66,18 @@ This results in far less allocations, because _clearing_ that string does not fr
 allocated memory; once the string has enough capacity, no more allocations will take
 place.
 
-This is one of those cases where we use a block to control a borrow. `line` is
-borrowed from `buf`, and this borrow must finish before we modify `buf`.  Again,
-Rust is trying to stop us doing something stupid, which is to access `line` _after_
-we've cleared the buffer. (The borrow checker can be restrictive sometimes.
-Rust is due to get 'non-lexical lifetimes', where
-it will analyze the code and see that `line` isn't used after `buf.clear()`.)
+The `line` binding is borrowed from `buf`, and this borrow must finish before
+we modify `buf`. The borrow checker must ensure that we do not access the `line`
+binding after we've cleared the buffer.
 
-This isn't very pretty. I cannot give you a proper iterator that returns references
-to a buffer, but I can give you something that _looks_ like an iterator.
+This is one of those cases where _non-lexical lifetimes_ help us out. In Rust
+versions prior to the 2018 edition, an additional block was necessary to
+control the scope of the `line` binding. Since `line` isn't used after
+`buf.clear()`, the code is accepted.
+
+This still isn't very pretty, because we have to manage the buffer manually. I
+cannot give you a proper iterator that returns references to a buffer, but I
+can give you something that _looks_ like an iterator.
 
 First define a generic struct;
 the type parameter `R` is 'any type that implements Read'. It contains the reader
