@@ -86,7 +86,7 @@ go out of scope and `Drop` kicks in, then that memory is released.
 let answer = Box::new(42);
 let maybe_pi = Box::new(3.14);
 
-let show_list: Vec<Box<Show>> = vec![question,answer];
+let show_list: Vec<Box<Show>> = vec![answer,maybe_pi];
 for d in &show_list {
     println!("show {}",d.show());
 }
