@@ -122,6 +122,8 @@ let show_list: Vec<Box<Show>> = vec![answer,maybe_pi];
 for d in &show_list {
     println!("show {}",d.show());
 }
+// show four-byte signed 42
+// show eight-byte float 3.14
 ```
 
 The difference is that you can now take this vector, pass it as a
