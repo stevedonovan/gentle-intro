@@ -133,15 +133,15 @@ block:
     let b = "hello";
     {
         let c = "hello".to_string();
-        // a,b and c are visible
+        // a, b and c are visible
     }
     // the string c is dropped
-    // a,b are visible
+    // a, b are visible
     for i in 0..a {
         let b = &b[1..];
         // original b is no longer visible - it is shadowed.
     }
-    // the slice b is dropped
+    // the slice b is dropped, original b is visible again
     // i is _not_ visible!
 }
 ```
@@ -161,16 +161,16 @@ Here a reference `rs1` is made to a value `tmp` which only lives for the duratio
 of its block:
 
 ```rust
-01 // ref1.rs
-02 fn main() {
-03    let s1 = "hello dolly".to_string();
-04    let mut rs1 = &s1;
-05    {
-06        let tmp = "hello world".to_string();
-07        rs1 = &tmp;
-08    }
-09    println!("ref {}", rs1);
-10 }
+// ref1.rs
+fn main() {
+    let s1 = "hello dolly".to_string();
+    let mut rs1 = &s1;
+    {
+        let tmp = "hello world".to_string();
+        rs1 = &tmp;
+    }
+    println!("ref {}", rs1);
+}
 ```
 We borrow the value of `s1` and then borrow the value of `tmp`. But `tmp`'s value
 does not exist outside that block!
@@ -527,7 +527,7 @@ fn main() {
     println!("{:?}", a);
 }
 ```
-Lifetimes are conventionally called 'a','b',etc but you could just as well called it
+Lifetimes are conventionally called 'a', 'b', etc but you could just as well call it
 'me' here.
 
 After this point, our `a` struct and the `s` string are bound by a strict contract:
