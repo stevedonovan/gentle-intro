@@ -527,7 +527,7 @@ fn main() {
     println!("{:?}", a);
 }
 ```
-Lifetimes are conventionally called 'a','b',etc but you could just as well called it
+Lifetimes are conventionally called 'a', 'b', etc but you could just as well call it
 'me' here.
 
 After this point, our `a` struct and the `s` string are bound by a strict contract:
