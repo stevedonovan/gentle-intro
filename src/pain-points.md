@@ -260,7 +260,7 @@ Explicitly, the function definition looks like this:
 ```rust
 fn pair<'a>(s: &'a str, ch: char) -> (&'a str, &'a str) {...}
 ```
-What the notation says is that the output strings live _at least as long_ as the
+What the notation says is that the output strings live _at most as long_ as the
 input string. It's not saying that the lifetimes are the same, we could drop them
 at any time, just that they cannot outlive `s`.
 
