@@ -1056,7 +1056,7 @@ fn main() {
     assert_eq!(res, "hello [10,20,30]");
 }
 ```
-Note the `&` in front of `v.to_string()` - the operator is defined on a string
+Note the `&` in front of `v.to_string()` - the `+=` operator is defined on a string
 slice, not a `String` itself, so it needs a little persuasion to match.
 
 The notation used for slices works with strings as well:
