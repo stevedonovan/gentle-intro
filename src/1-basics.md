@@ -21,7 +21,7 @@ Hello, World!
 Rust is a curly-braces language with semicolons, C++-style comments and a `main`
 function - so far, so familiar.  The exclamation mark indicates that this is a
 _macro_ call. For C++ programmers, this can be a turn-off, since they are used to
-seriously stupid C macros - but I can ensure you that these macros are more
+seriously stupid C macros - but I can assure you that these macros are more
 capable and sane.
 
 For anybody else,
@@ -711,7 +711,7 @@ how to [use them](https://doc.rust-lang.org/std/option/enum.Option.html) comfort
 
 We'll return to slice methods again, but first: vectors. These are _re-sizeable_
 arrays and behave much like Python `List` and C++ `std::vector`. The Rust type
-`Vec` (pronounced 'vector') behaves very much like an slice in fact; the
+`Vec` (pronounced 'vector') behaves very much like a slice in fact; the
 difference is that you can append extra values to a vector - note that it must
 be declared as mutable.
 
@@ -783,7 +783,7 @@ because if you make one mistake you can override the return address of the curre
 function, and you die an ignominious death or (worse) got pwned by some guy living
 in his Mom's basement in Minsk.
 
-The first C program I wrote (on an DOS PC)
+The first C program I wrote (on a DOS PC)
 took out the whole computer. Unix systems always behaved better, and only the process died
 with a _segfault_. Why is this worse than a Rust (or Go) program panicking?
 Because a panic happens when the original problem happens, not when the program
@@ -1390,8 +1390,9 @@ The first match safely extracts the value from `Ok`, which
 becomes the value of the match. If it's `Err` it returns the error,
 rewrapped as an `Err`.
 
-The second match returns the string, wrapped up as an `Ok`, otherwise
-(again) the error. The actual value in the `Ok` is unimportant, so we ignore
+If successful, the second match returns the number of bytes which were
+read and appended to `text`, wrapped up as an `Ok`, otherwise (again)
+the error. The actual value in the `Ok` is unimportant, so we ignore
 it with `_`.
 
 This is not so pretty; when most of a function is error handling, then
