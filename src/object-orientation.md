@@ -179,9 +179,10 @@ What can I say? It quacks, it must be a duck. What's interesting is that you can
 to any Rust value, not just 'objects'. (Since `quack` is passed a reference, there's an explicit
 dereference `*` to get the integer.)
 
-However, you can only do this with a trait and a type from the same crate, so the standard library
-cannot be 'monkey patched', which is another piece of Ruby folk practice (and not the most wildly
-admired either.)
+However, you can only do this if you have defined the trait or the type in the same crate,
+That is, you can implement our trait `Quack` for the external type `i32`, but you cannot
+re-implement `ToString` (external trait) for `i32` (external trait).  So the standard library
+cannot be 'monkey patched'.  
 
 Up to this point, the trait `Quack` was behaving very much like a Java interface, and like
 modern Java interfaces you can have _provided_ methods which supply a default implementation
