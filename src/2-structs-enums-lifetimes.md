@@ -133,15 +133,15 @@ block:
     let b = "hello";
     {
         let c = "hello".to_string();
-        // a,b and c are visible
+        // a, b and c are visible
     }
     // the string c is dropped
-    // a,b are visible
+    // a, b are visible
     for i in 0..a {
         let b = &b[1..];
         // original b is no longer visible - it is shadowed.
     }
-    // the slice b is dropped
+    // the slice b is dropped, original b is visible again
     // i is _not_ visible!
 }
 ```
