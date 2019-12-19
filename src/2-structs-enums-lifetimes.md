@@ -1490,6 +1490,8 @@ So it's possible for a closure to mutate its _captured_ references:
 
 Note that `mut` - `f` needs to be mutable for this to work.
 
+[#71: NLL makes this work]
+
 However, you cannot escape the rules for borrowing. Consider this:
 
 ```rust
