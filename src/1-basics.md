@@ -21,7 +21,7 @@ Hello, World!
 Rust is a curly-braces language with semicolons, C++-style comments and a `main`
 function - so far, so familiar.  The exclamation mark indicates that this is a
 _macro_ call. For C++ programmers, this can be a turn-off, since they are used to
-seriously stupid C macros - but I can ensure you that these macros are more
+seriously stupid C macros - but I can assure you that these macros are more
 capable and sane.
 
 For anybody else,
