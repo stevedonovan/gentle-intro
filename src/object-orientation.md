@@ -404,7 +404,7 @@ and so forth. Rust cannot tell that a method only accesses one field, so the
 fields should be structs with their own methods for implementation convenience.
 (The _external_ interface of the struct can be anything you like using suitable traits.)
 
-A concrete example of 'split borrrowing' will make this clearer. We have a struct that
+A concrete example of 'split borrowing' will make this clearer. We have a struct that
 owns some strings, with a method for borrowing the first string mutably.
 
 ```rust
@@ -431,7 +431,7 @@ Now, a method for borrowing both strings, reusing the first method:
     }
 ```
 
-Which can't work!  We've borrrowed mutably from `self` and _also_ borrowed immmutably from `self`.
+Which can't work!  We've borrowed mutably from `self` and _also_ borrowed immmutably from `self`.
 If Rust allowed situations like this, then that immmutable reference can't be guaranteed not to
 change.
 
