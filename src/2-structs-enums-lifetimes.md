@@ -161,16 +161,16 @@ Here a reference `rs1` is made to a value `tmp` which only lives for the duratio
 of its block:
 
 ```rust
-01 // ref1.rs
-02 fn main() {
-03    let s1 = "hello dolly".to_string();
-04    let mut rs1 = &s1;
-05    {
-06        let tmp = "hello world".to_string();
-07        rs1 = &tmp;
-08    }
-09    println!("ref {}", rs1);
-10 }
+// ref1.rs
+fn main() {
+    let s1 = "hello dolly".to_string();
+    let mut rs1 = &s1;
+    {
+        let tmp = "hello world".to_string();
+        rs1 = &tmp;
+    }
+    println!("ref {}", rs1);
+}
 ```
 We borrow the value of `s1` and then borrow the value of `tmp`. But `tmp`'s value
 does not exist outside that block!
