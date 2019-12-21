@@ -163,8 +163,8 @@ fn main() {
 
     println!("result {:?}", get_greeting(" bye  ").to_result());
 }
-// Done Ok("") "hi"
-// Done Ok("hi") "bye"
+// Done "" "hi"
+// Done "hi" "bye"
 // Err Alt
 // result Ok("bye")
 ```
