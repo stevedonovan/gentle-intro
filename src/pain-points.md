@@ -164,8 +164,8 @@ their own programs and nobly deciding not to do Bad Things. But
 big programs are written by more than one person and are beyond the
 power of a single individual to understand in detail.
 
-The _irritating_ thing is that the borrow checker is not as smart as it
-could be.
+In Rust versions before 1.31, the borrow checker was less smart about lifetimes
+and used to reject this program:
 
 ```rust
 let mut m = HashMap::new();
@@ -181,8 +181,10 @@ if let Some(r) = m.get_mut("one") { // <-- mutable borrow of m
 
 Clearly this does not _really_ violate the Rules since if we got `None` we
 haven't actually borrowed anything from the map.
+Accordingly, recent versions of Rust have enabled _non-lexical lifetimes_, with
+which the program above compiles without complaint.
 
-There are various ugly workarounds:
+In older Rust code, you might see various ugly workarounds:
 
 ```rust
 let mut found = false;
@@ -213,10 +215,7 @@ match m.entry("one") {
 };
 ```
 
-The borrow checker will get less frustrating when _non-lexical lifetimes_
-arrive sometime this year.
-
-The borrow checker _does_ understand some important cases, however.
+The borrow checker understands a few more important cases.
 If you have a struct, fields can be independently borrowed. So
 composition is your friend; a big struct should contain smaller
 structs, which have their own methods. Defining all the mutable methods
