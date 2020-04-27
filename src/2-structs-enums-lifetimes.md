@@ -1444,7 +1444,7 @@ where F: Fn(f64)->f64  {
     let res2 = apply(3.14, |x| x.sin());
 ```
 
-In English: `apply` works for _any_ type `T` such that `T` implements `Fn(f64)->f64` - that
+In English: `apply` works for _any_ type `F` such that `F` implements `Fn(f64)->f64` - that
 is, is a function which takes `f64` and returns `f64`.
 
 After the call to `apply(3.0,lin)`, trying to access `lin` gives an interesting error:
