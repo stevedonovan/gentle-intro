@@ -213,7 +213,7 @@ parsers from simpler parsers, which you can test individually. (At this point, t
 regex is starting to look like a Perl program: regexes do not combine well.)
 
 However, we are not yet home and dry!  `full_greeting(" bye ")` will fail with an
-`Imcomplete` error. Nom knows that "bye" may be followed by a name and wants us to give it more
+`Incomplete` error. Nom knows that "bye" may be followed by a name and wants us to give it more
 data. This is how a _streaming_ parser needs to work, so you can feed it a file chunk by chunk,
 but here we need to tell Nom that the input is complete.
 
