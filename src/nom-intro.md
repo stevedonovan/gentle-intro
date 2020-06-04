@@ -128,7 +128,7 @@ from the standard `Result` type - there are three possibilities:
 
   - `Done` - success - you get both the result and the remaining bytes
   - `Error` - failed to parse - you get an error
-  - `Imcomplete` - more data needed
+  - `Incomplete` - more data needed
 
 We can write a generic `dump` function that handles any return value that can be debug-printed.
 This also demonstrates the `to_result` method which returns a regular `Result` - this is probably
