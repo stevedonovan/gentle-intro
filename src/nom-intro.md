@@ -128,7 +128,7 @@ from the standard `Result` type - there are three possibilities:
 
   - `Done` - success - you get both the result and the remaining bytes
   - `Error` - failed to parse - you get an error
-  - `Imcomplete` - more data needed
+  - `Incomplete` - more data needed
 
 We can write a generic `dump` function that handles any return value that can be debug-printed.
 This also demonstrates the `to_result` method which returns a regular `Result` - this is probably
@@ -213,7 +213,7 @@ parsers from simpler parsers, which you can test individually. (At this point, t
 regex is starting to look like a Perl program: regexes do not combine well.)
 
 However, we are not yet home and dry!  `full_greeting(" bye ")` will fail with an
-`Imcomplete` error. Nom knows that "bye" may be followed by a name and wants us to give it more
+`Incomplete` error. Nom knows that "bye" may be followed by a name and wants us to give it more
 data. This is how a _streaming_ parser needs to work, so you can feed it a file chunk by chunk,
 but here we need to tell Nom that the input is complete.
 
