@@ -581,7 +581,7 @@ does not invalidate the conservative approach of the borrow checker. Remember th
 compile time. From Rust's perspective, C++ operates in unsafe mode all the time!
 So if a large application needs a few dozen lines of unsafe code, then that's fine,
 since these few lines can be carefully checked by a human. Humans are not good at
-checking 100Kloc+ of code.
+checking 100K+ lines of code.
 
 I mention this, because there appears to be a pattern:
 an experienced C++ person tries to implement a linked list or a tree structure,
