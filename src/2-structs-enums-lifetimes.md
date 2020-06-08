@@ -292,10 +292,10 @@ struct Person {
 
 impl Person {
 
-    fn new(first: &str, name: &str) -> Person {
+    fn new(first: &str, last: &str) -> Person {
         Person {
             first_name: first.to_string(),
-            last_name: name.to_string()
+            last_name: last.to_string()
         }
     }
 
@@ -400,10 +400,10 @@ struct Person {
 
 impl Person {
 
-    fn new(first: &str, name: &str) -> Person {
+    fn new(first: &str, last: &str) -> Person {
         Person {
             first_name: first.to_string(),
-            last_name: name.to_string()
+            last_name: last.to_string()
         }
     }
 
