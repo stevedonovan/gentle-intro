@@ -352,7 +352,7 @@ And the data will _move_ into the method when a plain self argument is used:
 ```
 (Try that with `&self` - structs will not let go of their data without a fight!)
 
-Note that after `v.to_tuple()` is called, then `v` has moved and is no longer
+Note that after `p.to_tuple()` is called, then `p` has moved and is no longer
 available.
 
 To summarize:
