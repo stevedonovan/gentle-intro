@@ -19,7 +19,7 @@ impl <R: Read> Lines<R> {
             Ok(nbytes) => if nbytes == 0 {
                 None
             } else {
-                let line = self.buf.trim_right();
+                let line = self.buf.trim_end();
                 Some(Ok(line))
             },
             Err(e) => Some(Err(e))

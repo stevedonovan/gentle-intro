@@ -10,10 +10,8 @@ fn read_all_lines(filename: &str) -> io::Result<()> {
     let mut buf = String::new();
     let mut stdout = io::stdout();
     while reader.read_line(&mut buf)? > 0 {
-        {
-            let line = buf.trim_right();
-            write!(stdout,"{}\n",line)?;
-        }
+        let line = buf.trim_end();
+        write!(stdout,"{}\n",line)?;
         buf.clear();
     }
 
