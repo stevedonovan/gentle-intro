@@ -540,7 +540,6 @@ regular expression is "match exactly two digits, the character ':', and then any
 Capture both sets of digits":
 
 ```rust
-extern crate regex;
 use regex::Regex;
 
 let re = Regex::new(r"(\d{2}):(\d+)").unwrap();
@@ -585,7 +584,6 @@ For this, you need dedicated date-time processing, which is provided by [chrono]
 You need to decide on a time zone when doing dates:
 
 ```rust
-extern crate chrono;
 use chrono::*;
 
 fn main() {
