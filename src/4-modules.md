@@ -448,17 +448,14 @@ the `test-serde-json` directory, and edit `Cargo.toml`. Edit it like so:
 
 ```
 [dependencies]
-serde="0.9"
-serde_derive="0.9"
-serde_json="0.9"
+serde = { version = "1.0", features = ["derive"] }
+serde_json= " 1.0"
 ```
 
 And edit `src/main.rs` to be this:
 
 ```rust
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Person {
@@ -487,8 +484,9 @@ fn main() {
 }
 ```
 
-You have seen the `derive` attribute before, but the `serde_derive` crate defines _custom derives_
-for the special `Serialize` and `Deserialize` traits. And the result shows the generated Rust struct:
+You have seen the `derive` attribute before, but the `derive` feature on the serde crate defines
+_custom derives_ for the special `Serialize` and `Deserialize` traits. And the result shows the
+generated Rust struct:
 
 ```
 Please call John Doe at the number 27726550023
