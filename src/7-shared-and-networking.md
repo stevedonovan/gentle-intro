@@ -548,7 +548,6 @@ API. Here's the 'Hello, World!' - an iterator feeds us inputs and we execute up 
 on the values in parallel.
 
 ```rust
-extern crate pipeliner;
 use pipeliner::Pipeline;
 
 fn main() {
@@ -579,7 +578,6 @@ on the principle. We reuse the `shell` function defined in section 4 to call `pi
 of IP4 addresses.
 
 ```rust
-extern crate pipeliner;
 use pipeliner::Pipeline;
 
 use std::process::Command;
@@ -666,7 +664,6 @@ So, let's naively use this method to rewrite the pipeliner example. Most network
 address and a port:
 
 ```rust
-extern crate pipeliner;
 use pipeliner::Pipeline;
 
 use std::net::*;

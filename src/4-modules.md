@@ -222,13 +222,13 @@ We can now _link_ this into our main program:
 ```
 src$ rustc mod4.rs --extern foo=libfoo.rlib
 ```
-But the main program must now look like this, where the `extern` name is the same
-as the one used when linking. There is an implicit top-level module `foo` associated
-with the library crate:
+Crates provided to the the compiler, as in `rustc` using `--extern`, are added to the
+"extern prelude". Crates in the "extern prelude" are in scope for the entire crate.
+Beginning in the 2018 edition, use declarations can reference crates in the extern prelude,
+so it is considered unidiomatic to use `extern crate`.
 
 ```
 // mod4.rs
-extern crate foo;
 
 fn main() {
     let f = foo::Foo::new("hello");
@@ -341,7 +341,7 @@ and end up with ugliness:
 
 ```rust
 // test-json/src/main.rs
-extern crate json;
+use json;
 
 fn main() {
     let doc = json::parse(r#"
@@ -429,11 +429,11 @@ Here's a truly beautiful use of macros to generate _JSON literals_:
     );
 ```
 
-For this to work, you need to explicitly import macros from the JSON crate thus:
+For this to work, you need to import macros from the JSON crate thus:
 
 ```rust
-#[macro_use]
-extern crate json;
+use json;
+use json::{array, object};
 ```
 
 There is a downside to using this crate, because of the mismatch between the amorphous, dynamically-typed
@@ -448,17 +448,14 @@ the `test-serde-json` directory, and edit `Cargo.toml`. Edit it like so:
 
 ```
 [dependencies]
-serde="0.9"
-serde_derive="0.9"
-serde_json="0.9"
+serde = { version = "1.0", features = ["derive"] }
+serde_json= " 1.0"
 ```
 
 And edit `src/main.rs` to be this:
 
 ```rust
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Person {
@@ -487,8 +484,9 @@ fn main() {
 }
 ```
 
-You have seen the `derive` attribute before, but the `serde_derive` crate defines _custom derives_
-for the special `Serialize` and `Deserialize` traits. And the result shows the generated Rust struct:
+You have seen the `derive` attribute before, but the `derive` feature on the serde crate defines
+_custom derives_ for the special `Serialize` and `Deserialize` traits. And the result shows the
+generated Rust struct:
 
 ```
 Please call John Doe at the number 27726550023
@@ -542,7 +540,6 @@ regular expression is "match exactly two digits, the character ':', and then any
 Capture both sets of digits":
 
 ```rust
-extern crate regex;
 use regex::Regex;
 
 let re = Regex::new(r"(\d{2}):(\d+)").unwrap();
@@ -587,7 +584,6 @@ For this, you need dedicated date-time processing, which is provided by [chrono]
 You need to decide on a time zone when doing dates:
 
 ```rust
-extern crate chrono;
 use chrono::*;
 
 fn main() {
