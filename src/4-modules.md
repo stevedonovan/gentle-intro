@@ -341,7 +341,7 @@ and end up with ugliness:
 
 ```rust
 // test-json/src/main.rs
-extern crate json;
+use json;
 
 fn main() {
     let doc = json::parse(r#"
@@ -429,11 +429,11 @@ Here's a truly beautiful use of macros to generate _JSON literals_:
     );
 ```
 
-For this to work, you need to explicitly import macros from the JSON crate thus:
+For this to work, you need to import macros from the JSON crate thus:
 
 ```rust
-#[macro_use]
-extern crate json;
+use json;
+use json::{array, object};
 ```
 
 There is a downside to using this crate, because of the mismatch between the amorphous, dynamically-typed

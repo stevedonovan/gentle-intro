@@ -1,5 +1,5 @@
 // test-json/src/main.rs
-extern crate json;
+use json;
 
 fn main() {
     let mut doc = json::parse(r#"
