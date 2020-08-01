@@ -50,16 +50,14 @@ of strings using `collect`, or print out the line with line numbers using the
 It isn't the most efficient way to read all the lines, however, because a new
 string is allocated for each line. It is more efficient to use `read_line`, although
 more awkward. Note that the returned line includes the linefeed, which
-can be removed using `trim_right`.
+can be removed using `trim_end`.
 
 ```rust
     let mut reader = io::BufReader::new(file);
     let mut buf = String::new();
     while reader.read_line(&mut buf)? > 0 {
-        {
-            let line = buf.trim_right();
-            println!("{}", line);
-        }
+        let line = buf.trim_end();
+        println!("{}", line);
         buf.clear();
     }
 ```
@@ -67,13 +65,6 @@ can be removed using `trim_right`.
 This results in far less allocations, because _clearing_ that string does not free its
 allocated memory; once the string has enough capacity, no more allocations will take
 place.
-
-This is one of those cases where we use a block to control a borrow. `line` is
-borrowed from `buf`, and this borrow must finish before we modify `buf`.  Again,
-Rust is trying to stop us doing something stupid, which is to access `line` _after_
-we've cleared the buffer. (The borrow checker can be restrictive sometimes.
-Rust is due to get 'non-lexical lifetimes', where
-it will analyze the code and see that `line` isn't used after `buf.clear()`.)
 
 This isn't very pretty. I cannot give you a proper iterator that returns references
 to a buffer, but I can give you something that _looks_ like an iterator.
@@ -117,7 +108,7 @@ Trim this away, and package up the string slice.
             Ok(nbytes) => if nbytes == 0 {
                 None // no more lines!
             } else {
-                let line = self.buf.trim_right();
+                let line = self.buf.trim_end();
                 Some(Ok(line))
             },
             Err(e) => Some(Err(e))
@@ -540,7 +531,7 @@ fn shell(cmd: &str) -> (String,bool) {
         .output()
         .expect("no shell?");
     (
-        String::from_utf8_lossy(&output.stdout).trim_right().to_string(),
+        String::from_utf8_lossy(&output.stdout).trim_end().to_string(),
         output.status.success()
     )
 }
