@@ -159,12 +159,11 @@ a basic error type based on a string, as we have defined it here, and a few conv
 Like any error, it works fine with `Box<Error>`:
 
 ```rust
-#[macro_use]
-extern crate simple_error;
+use simple_error::bail;
 
 use std::error::Error;
 
-type BoxResult<T> = Result<T,Box<Error>>;
+type BoxResult<T> = Result<T,Box<dyn Error>>;
 
 fn run(s: &str) -> BoxResult<i32> {
     if s.len() == 0 {
