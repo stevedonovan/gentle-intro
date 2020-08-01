@@ -222,13 +222,13 @@ We can now _link_ this into our main program:
 ```
 src$ rustc mod4.rs --extern foo=libfoo.rlib
 ```
-But the main program must now look like this, where the `extern` name is the same
-as the one used when linking. There is an implicit top-level module `foo` associated
-with the library crate:
+Crates provided to the the compiler, as in `rustc` using `--extern`, are added to the
+"extern prelude". Crates in the "extern prelude" are in scope for the entire crate.
+Beginning in the 2018 edition, use declarations can reference crates in the extern prelude,
+so it is considered unidiomatic to use `extern crate`.
 
 ```
 // mod4.rs
-extern crate foo;
 
 fn main() {
     let f = foo::Foo::new("hello");
