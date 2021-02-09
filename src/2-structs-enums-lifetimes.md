@@ -390,7 +390,6 @@ Here is the final little program:
 
 ```rust
 // struct4.rs
-use std::fmt;
 
 #[derive(Debug)]
 struct Person {
@@ -426,6 +425,8 @@ fn main() {
     println!("{:?}", p);
 
     p.set_first_name("Jane");
+
+    println!("{}", p.full_name());
 
     println!("{:?}", p);
 
