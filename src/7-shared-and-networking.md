@@ -445,7 +445,7 @@ spawned thread and the main thread are completely locked together.
 
 Barrier synchronization is a checkpoint where the threads must wait until _all_ of
 them have reached that point. Then they can keep going as before. The barrier is
-created with the number of threads that we want to wait for. As before we use use `Arc`
+created with the number of threads that we want to wait for. As before we use `Arc`
 to share the barrier with all the threads.
 
 ```rust
