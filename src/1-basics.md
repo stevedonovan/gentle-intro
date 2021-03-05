@@ -1263,13 +1263,12 @@ The `_` is like C `default` - it's a fall-back case. If you don't provide one th
 `rustc` will consider it an error. (In C++ the best you can expect is a warning, which
 says a lot about the respective languages).
 
-Rust `match` statements can also match on ranges. Note that these ranges have
-_three_ dots and are inclusive ranges, so that the first condition would match 3.
+Rust `match` statements can also match on ranges. Note that these ranges are inclusive, so that the first condition would match 3.
 
 ```rust
     let text = match n {
-        0...3 => "small",
-        4...6 => "medium",
+        0..=3 => "small",
+        4..=6 => "medium",
         _ => "large",
      };
 ```
