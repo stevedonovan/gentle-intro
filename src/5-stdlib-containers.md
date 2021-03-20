@@ -113,7 +113,7 @@ either is a vector or an error:
 And if there was a bad conversion? Then you would just get `Err` with the first
 error encountered. It's a good example of how extremely flexible `collect` is.
 (The notation here can be intimidating - `Vec<_>` means "this is a vector, work
-out the actual type for me` and `Result<Vec<_>,_>` is furthermore asking
+out the actual type for me and `Result<Vec<_>,_>` is furthermore asking
 Rust to work out the error type as well.)
 
 So there's a _lot_ of detail in the documentation.
