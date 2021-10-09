@@ -504,7 +504,7 @@ evaluate it.
 ```rust
     macro_rules! expr_eq {
         ($e:expr) => (assert_relative_eq!(
-            expr(stringify!($e).to_result().unwrap(),
+            expr(stringify!($e)).to_result().unwrap(),
             $e)
         )
     }
