@@ -1,3 +1,7 @@
+[book]
 title = "A Gentle Introduction to Rust"
-description = "Introduction to the Rust language, standard library and ecosystem"
 author = "Steve Donovan"
+description = "Introduction to the Rust language, standard library and ecosystem"
+
+[rust]
+edition = "2018"
