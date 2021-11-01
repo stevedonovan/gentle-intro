@@ -481,7 +481,7 @@ fn main() {
     println!("first {}", first);
 
     for i in 0..4 {
-        println!("[{}] = {}", i,arr[i]);
+        println!("[{}] = {}", i, arr[i]);
     }
     println!("length {}", arr.len());
 }
