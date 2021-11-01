@@ -481,7 +481,7 @@ fn main() {
     println!("first {}", first);
 
     for i in 0..4 {
-        println!("[{}] = {}", i,arr[i]);
+        println!("[{}] = {}", i, arr[i]);
     }
     println!("length {}", arr.len());
 }
@@ -532,7 +532,7 @@ fn sum(values: &[i32]) -> i32 {
 }
 
 fn main() {
-    let arr = [10,20,30,40];
+    let arr = [10, 20, 30, 40];
     // look at that &
     let res = sum(&arr);
     println!("sum {}", res);
