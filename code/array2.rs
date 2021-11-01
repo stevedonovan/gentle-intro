@@ -8,8 +8,8 @@ fn sum(values: &[i32]) -> i32 {
     res
 }
 fn main() {
-    let arr = [10,20,30,40];
+    let arr = [10, 20, 30, 40];
     // look at that &
     let res = sum(&arr);
-    println!("sum {}",res);
+    println!("sum {}", res);
 }
