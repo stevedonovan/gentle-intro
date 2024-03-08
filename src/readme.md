@@ -12,7 +12,7 @@ online, in particular [The Book](https://doc.rust-lang.org/stable/book/).
 It's an opportunity to _try before you buy_, and get enough feeling for the
 power of the language to want to go deeper.
 
-As Einstein might have said, "As gentle as possible, but no gentler.". There is a
+As Einstein might have said, "As gentle as possible, but no gentler." There is a
 lot of new stuff to learn here, and it's different enough to require some
 rearrangement of your mental furniture. By 'gentle' I mean that the features are
 presented practically with examples; as we encounter difficulties, I hope to
